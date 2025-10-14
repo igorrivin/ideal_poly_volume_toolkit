@@ -1,0 +1,12 @@
+### PATCH for ideal_poly_volume_toolkit/geometry.py
+
+# 1) Add this function alongside triangle_volume_from_points:
+def triangle_volume_from_points_torch(z1t, z2t, z3t, series_terms=64):
+    """Pure-Torch version that returns a Tensor (keeps autograd graph)."""
+    a1, a2, a3 = _angles_for_triangle_torch(z1t, z2t, z3t)
+    return lob_fast(a1, series_terms) + lob_fast(a2, series_terms) + lob_fast(a3, series_terms)
+
+# 2) (Optional) In triangle_volume_from_points(), keep fast branch as:
+#     return triangle_volume_from_points_torch(z1t, z2t, z3t, series_terms=series_terms).item()
+#    (This is fine for evaluation, but NOT for optimization. Use the pure-torch
+#     function above inside optimization closures.)
