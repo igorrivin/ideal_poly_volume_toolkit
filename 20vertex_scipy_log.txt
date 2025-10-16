@@ -1,0 +1,2245 @@
+
+======================================================================
+20-VERTEX IDEAL POLYHEDRON OPTIMIZATION
+Started at 2025-10-14 16:25:54.354531
+Process ID: 14756
+======================================================================
+
+Regular dodecahedron volume: 32.23052334
+Goal: Find configuration with larger volume
+
+
+==================================================
+TRIAL 1/5
+==================================================
+Starting optimization from near-symmetric configuration...
+*** New best! Volume = 17.40231113 at evaluation 1
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 17.40231117 at evaluation 2
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 17.40231120 at evaluation 16
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 17.40231121 at evaluation 22
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 23.96666077 at evaluation 36
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 23.96666079 at evaluation 38
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 23.96666080 at evaluation 47
+Saved to 20vertex_maximal_intermediate.json
+  Evaluation 100: volume = 22.494325
+*** New best! Volume = 25.77891076 at evaluation 106
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 25.77891077 at evaluation 107
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 25.77891077 at evaluation 108
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 25.77891077 at evaluation 122
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 25.77891077 at evaluation 132
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.01188259 at evaluation 176
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.01188260 at evaluation 177
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.01188260 at evaluation 178
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.01188260 at evaluation 179
+Saved to 20vertex_maximal_intermediate.json
+  Evaluation 200: volume = 26.011883
+*** New best! Volume = 26.07194751 at evaluation 211
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.07194752 at evaluation 216
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.07194753 at evaluation 242
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.15071834 at evaluation 246
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.15071834 at evaluation 247
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.15071834 at evaluation 250
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.15071835 at evaluation 277
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.18784734 at evaluation 281
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.18784734 at evaluation 282
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.18784734 at evaluation 286
+Saved to 20vertex_maximal_intermediate.json
+  Evaluation 300: volume = 26.187847
+*** New best! Volume = 26.18784734 at evaluation 313
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.23233064 at evaluation 316
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.23233064 at evaluation 321
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.25245190 at evaluation 351
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.25245190 at evaluation 352
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.25245190 at evaluation 354
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.25245190 at evaluation 373
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.25245190 at evaluation 377
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.25245190 at evaluation 383
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.27446527 at evaluation 386
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.27446528 at evaluation 387
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.27446528 at evaluation 388
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.27446528 at evaluation 389
+Saved to 20vertex_maximal_intermediate.json
+  Evaluation 400: volume = 26.274465
+*** New best! Volume = 26.28177495 at evaluation 456
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.28177495 at evaluation 457
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.28177495 at evaluation 458
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.28177496 at evaluation 459
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.28177496 at evaluation 483
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.28752348 at evaluation 491
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.28752348 at evaluation 492
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.28752348 at evaluation 493
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.28752348 at evaluation 494
+Saved to 20vertex_maximal_intermediate.json
+  Evaluation 500: volume = 26.287523
+*** New best! Volume = 26.28752348 at evaluation 517
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.29002314 at evaluation 561
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.29002314 at evaluation 562
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.29002314 at evaluation 564
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.29197885 at evaluation 596
+Saved to 20vertex_maximal_intermediate.json
+  Evaluation 600: volume = 26.291979
+*** New best! Volume = 26.29197885 at evaluation 600
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.29197885 at evaluation 606
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.29197885 at evaluation 608
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.29197885 at evaluation 611
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.29197885 at evaluation 618
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.29239369 at evaluation 631
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.29239369 at evaluation 633
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.29239369 at evaluation 635
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.29311548 at evaluation 666
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.29311548 at evaluation 667
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.29311548 at evaluation 668
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.29311548 at evaluation 670
+Saved to 20vertex_maximal_intermediate.json
+  Evaluation 700: volume = 26.293115
+*** New best! Volume = 26.29403359 at evaluation 701
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.29403359 at evaluation 703
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.29403359 at evaluation 705
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.29403359 at evaluation 717
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.29470211 at evaluation 736
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.29470211 at evaluation 737
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.29470211 at evaluation 740
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.29470211 at evaluation 741
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.29544607 at evaluation 771
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.29544607 at evaluation 772
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.29544607 at evaluation 776
+Saved to 20vertex_maximal_intermediate.json
+  Evaluation 800: volume = 26.295446
+*** New best! Volume = 26.29554761 at evaluation 806
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.29554761 at evaluation 808
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.29554761 at evaluation 809
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.29554761 at evaluation 826
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.29554761 at evaluation 828
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.29570487 at evaluation 841
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.29570487 at evaluation 843
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.29570487 at evaluation 844
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.29570487 at evaluation 854
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.29570487 at evaluation 863
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.29570487 at evaluation 867
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.29594994 at evaluation 876
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.29594994 at evaluation 877
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.29594994 at evaluation 878
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.29594994 at evaluation 879
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.29594994 at evaluation 883
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.29594994 at evaluation 888
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.29594994 at evaluation 896
+Saved to 20vertex_maximal_intermediate.json
+  Evaluation 900: volume = 26.295950
+*** New best! Volume = 26.29594994 at evaluation 901
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.29594994 at evaluation 902
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.29612121 at evaluation 911
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.29612121 at evaluation 913
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.29612121 at evaluation 914
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.29612121 at evaluation 918
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.29612121 at evaluation 923
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.29612122 at evaluation 933
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.29625561 at evaluation 946
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.29625561 at evaluation 949
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.29625561 at evaluation 954
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.29625561 at evaluation 955
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.29625561 at evaluation 958
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.29625561 at evaluation 967
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.29635059 at evaluation 981
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.29635059 at evaluation 983
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.29635059 at evaluation 985
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.29635059 at evaluation 990
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.29635059 at evaluation 999
+Saved to 20vertex_maximal_intermediate.json
+  Evaluation 1000: volume = 26.296351
+*** New best! Volume = 26.29635059 at evaluation 1002
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.29635059 at evaluation 1009
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.29644124 at evaluation 1016
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.29644124 at evaluation 1018
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.29644124 at evaluation 1020
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.29644124 at evaluation 1034
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.29644124 at evaluation 1044
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.29650340 at evaluation 1051
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.29650340 at evaluation 1053
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.29650340 at evaluation 1055
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.29650340 at evaluation 1056
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.29655566 at evaluation 1086
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.29655566 at evaluation 1089
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.29655566 at evaluation 1090
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.29655566 at evaluation 1091
+Saved to 20vertex_maximal_intermediate.json
+  Evaluation 1100: volume = 26.296556
+*** New best! Volume = 26.29655566 at evaluation 1112
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.29656309 at evaluation 1121
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.29656309 at evaluation 1124
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.29656309 at evaluation 1127
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.29656309 at evaluation 1135
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.29656309 at evaluation 1141
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.29658490 at evaluation 1156
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.29658490 at evaluation 1159
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.29658490 at evaluation 1162
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.29658490 at evaluation 1176
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.29658490 at evaluation 1182
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.29661476 at evaluation 1191
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.29661476 at evaluation 1194
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.29661476 at evaluation 1197
+Saved to 20vertex_maximal_intermediate.json
+  Evaluation 1200: volume = 26.296615
+*** New best! Volume = 26.29661476 at evaluation 1205
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.29661476 at evaluation 1207
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.29663856 at evaluation 1226
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.29663856 at evaluation 1227
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.29663856 at evaluation 1233
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.29663856 at evaluation 1237
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.29663856 at evaluation 1241
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.29663856 at evaluation 1243
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.29663856 at evaluation 1258
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.29664349 at evaluation 1261
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.29664349 at evaluation 1262
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.29664349 at evaluation 1264
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.29664349 at evaluation 1290
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.29665166 at evaluation 1296
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.29665166 at evaluation 1297
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.29665166 at evaluation 1299
+Saved to 20vertex_maximal_intermediate.json
+  Evaluation 1300: volume = 26.296652
+*** New best! Volume = 26.29665166 at evaluation 1325
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.29666367 at evaluation 1331
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.29666367 at evaluation 1332
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.29666367 at evaluation 1349
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.29666367 at evaluation 1355
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.29666367 at evaluation 1360
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.29666391 at evaluation 1366
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.29666391 at evaluation 1368
+Saved to 20vertex_maximal_intermediate.json
+  Evaluation 1400: volume = 26.296664
+*** New best! Volume = 26.29666963 at evaluation 1401
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.29666963 at evaluation 1403
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.29666963 at evaluation 1425
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.29667472 at evaluation 1436
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.29667472 at evaluation 1438
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.29667472 at evaluation 1439
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.29667472 at evaluation 1447
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.29667472 at evaluation 1453
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.29667472 at evaluation 1461
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.29667733 at evaluation 1471
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.29667733 at evaluation 1472
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.29667733 at evaluation 1476
+Saved to 20vertex_maximal_intermediate.json
+  Evaluation 1500: volume = 26.296677
+*** New best! Volume = 26.29667987 at evaluation 1506
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.29667987 at evaluation 1507
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.29667987 at evaluation 1522
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.29667987 at evaluation 1525
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.29667987 at evaluation 1533
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.29667987 at evaluation 1534
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.29668168 at evaluation 1541
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.29668168 at evaluation 1543
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.29668168 at evaluation 1545
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.29668168 at evaluation 1566
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.29668383 at evaluation 1576
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.29668383 at evaluation 1579
+Saved to 20vertex_maximal_intermediate.json
+  Evaluation 1600: volume = 26.296684
+*** New best! Volume = 26.29668696 at evaluation 1611
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.29668696 at evaluation 1613
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.29668696 at evaluation 1614
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.29668696 at evaluation 1627
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.29668696 at evaluation 1628
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.29668696 at evaluation 1637
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.29668696 at evaluation 1638
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.29669108 at evaluation 1646
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.29669108 at evaluation 1647
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.29669108 at evaluation 1652
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.29669108 at evaluation 1662
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.29669681 at evaluation 1681
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.29669681 at evaluation 1682
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.29669681 at evaluation 1687
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.29669681 at evaluation 1697
+Saved to 20vertex_maximal_intermediate.json
+  Evaluation 1700: volume = 26.296697
+*** New best! Volume = 26.29669681 at evaluation 1708
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.29670134 at evaluation 1716
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.29670134 at evaluation 1717
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.29670134 at evaluation 1722
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.29670134 at evaluation 1732
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.29670597 at evaluation 1751
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.29670597 at evaluation 1752
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.29670597 at evaluation 1754
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.29670597 at evaluation 1783
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.29670682 at evaluation 1786
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.29670682 at evaluation 1790
+Saved to 20vertex_maximal_intermediate.json
+  Evaluation 1800: volume = 26.296707
+*** New best! Volume = 26.29670776 at evaluation 1821
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.29670776 at evaluation 1823
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.29670776 at evaluation 1825
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.29670776 at evaluation 1839
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.29670790 at evaluation 1856
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.29670790 at evaluation 1860
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.29670790 at evaluation 1861
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.29670790 at evaluation 1867
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.29670790 at evaluation 1872
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.29670802 at evaluation 1891
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.29670802 at evaluation 1892
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.29670802 at evaluation 1894
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.29670802 at evaluation 1895
+Saved to 20vertex_maximal_intermediate.json
+  Evaluation 1900: volume = 26.296708
+*** New best! Volume = 26.29670802 at evaluation 1904
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.29670802 at evaluation 1917
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.29670807 at evaluation 1926
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.29670807 at evaluation 1928
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.29670807 at evaluation 1929
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.29670807 at evaluation 1944
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.29670811 at evaluation 1961
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.29670811 at evaluation 1963
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.29670811 at evaluation 1968
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.29670811 at evaluation 1979
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.29670811 at evaluation 1983
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.29670812 at evaluation 1996
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.29670812 at evaluation 1997
+Saved to 20vertex_maximal_intermediate.json
+  Evaluation 2000: volume = 26.296708
+*** New best! Volume = 26.29670812 at evaluation 2000
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.29670812 at evaluation 2001
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.29670812 at evaluation 2007
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.29670812 at evaluation 2012
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.29670813 at evaluation 2031
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.29670813 at evaluation 2032
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.29670813 at evaluation 2035
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.29670813 at evaluation 2036
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.29670813 at evaluation 2042
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.29670813 at evaluation 2057
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.29670813 at evaluation 2058
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.29670813 at evaluation 2066
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.29670813 at evaluation 2068
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.29670813 at evaluation 2071
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.29670813 at evaluation 2088
+Saved to 20vertex_maximal_intermediate.json
+  Evaluation 2100: volume = 26.296708
+*** New best! Volume = 26.29670813 at evaluation 2101
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.29670813 at evaluation 2104
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.29670813 at evaluation 2113
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.29670813 at evaluation 2127
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.29670813 at evaluation 2129
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.29670813 at evaluation 2136
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.29670813 at evaluation 2137
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.29670813 at evaluation 2142
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.29670813 at evaluation 2147
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.29670813 at evaluation 2148
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.29670813 at evaluation 2171
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.29670813 at evaluation 2173
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.29670813 at evaluation 2176
+Saved to 20vertex_maximal_intermediate.json
+  Evaluation 2200: volume = 26.296708
+*** New best! Volume = 26.29670813 at evaluation 2203
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.29670813 at evaluation 2206
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.29670813 at evaluation 2208
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.29670813 at evaluation 2217
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.29670813 at evaluation 2223
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.29670813 at evaluation 2241
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.29670813 at evaluation 2243
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.29670813 at evaluation 2246
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.29670813 at evaluation 2253
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.29670813 at evaluation 2257
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.29670813 at evaluation 2276
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.29670813 at evaluation 2279
+Saved to 20vertex_maximal_intermediate.json
+  Evaluation 2300: volume = 26.296708
+*** New best! Volume = 26.29670813 at evaluation 2311
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.29670813 at evaluation 2314
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.29670813 at evaluation 2337
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.29670813 at evaluation 2342
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.29670813 at evaluation 2346
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.29670813 at evaluation 2348
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.29670813 at evaluation 2350
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.29670813 at evaluation 2380
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.29670813 at evaluation 2381
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.29670813 at evaluation 2390
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.29670813 at evaluation 2392
+Saved to 20vertex_maximal_intermediate.json
+  Evaluation 2400: volume = 26.296708
+*** New best! Volume = 26.29670813 at evaluation 2416
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.29670813 at evaluation 2417
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.29670813 at evaluation 2428
+Saved to 20vertex_maximal_intermediate.json
+Optimization terminated successfully.
+         Current function value: -26.296708
+         Iterations: 63
+         Function evaluations: 2450
+         Gradient evaluations: 70
+
+Trial 1 complete:
+  Final volume: 26.29670813
+  Ratio to dodecahedron: 0.815895
+  Function evaluations: 2450
+  Success: True
+
+==================================================
+TRIAL 2/5
+==================================================
+Starting optimization from random configuration...
+  Evaluation 100: volume = 24.484665
+  Evaluation 200: volume = 25.695281
+*** New best! Volume = 26.34442778 at evaluation 281
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.34442778 at evaluation 282
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.34442778 at evaluation 283
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.34442778 at evaluation 298
+Saved to 20vertex_maximal_intermediate.json
+  Evaluation 300: volume = 26.344428
+*** New best! Volume = 26.34442778 at evaluation 304
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.34442778 at evaluation 306
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.38631099 at evaluation 316
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.38631099 at evaluation 319
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.38631100 at evaluation 321
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.38631100 at evaluation 322
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.45534026 at evaluation 351
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.45534026 at evaluation 354
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.45534026 at evaluation 356
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.45534027 at evaluation 357
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.52807523 at evaluation 386
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.52807523 at evaluation 389
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.52807523 at evaluation 391
+Saved to 20vertex_maximal_intermediate.json
+  Evaluation 400: volume = 26.528075
+*** New best! Volume = 26.57705255 at evaluation 421
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.57705255 at evaluation 422
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.57705255 at evaluation 423
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.57705255 at evaluation 424
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.57705255 at evaluation 436
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.57705256 at evaluation 439
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.57705256 at evaluation 446
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.59503598 at evaluation 491
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.59503598 at evaluation 492
+Saved to 20vertex_maximal_intermediate.json
+  Evaluation 500: volume = 26.595036
+*** New best! Volume = 26.59503598 at evaluation 516
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.60469709 at evaluation 526
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.60469709 at evaluation 527
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.60469709 at evaluation 560
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.61965390 at evaluation 561
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.61965390 at evaluation 562
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.61965390 at evaluation 570
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.61965390 at evaluation 573
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.61965390 at evaluation 595
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.63866621 at evaluation 596
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.63866621 at evaluation 597
+Saved to 20vertex_maximal_intermediate.json
+  Evaluation 600: volume = 26.638666
+*** New best! Volume = 26.63866621 at evaluation 601
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.63866621 at evaluation 608
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.63866621 at evaluation 625
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.65422110 at evaluation 631
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.65422110 at evaluation 637
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.65593283 at evaluation 666
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.65593283 at evaluation 667
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.65593283 at evaluation 668
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.65593283 at evaluation 672
+Saved to 20vertex_maximal_intermediate.json
+  Evaluation 700: volume = 26.655933
+*** New best! Volume = 26.65875997 at evaluation 701
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.65875998 at evaluation 702
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.65875998 at evaluation 703
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.65875998 at evaluation 707
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.66345249 at evaluation 736
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.66345249 at evaluation 737
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.66345249 at evaluation 738
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.66984553 at evaluation 771
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.66984553 at evaluation 773
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.66984553 at evaluation 776
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.66984553 at evaluation 779
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.66984553 at evaluation 782
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.66984553 at evaluation 788
+Saved to 20vertex_maximal_intermediate.json
+  Evaluation 800: volume = 26.669846
+*** New best! Volume = 26.67520067 at evaluation 806
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.67520067 at evaluation 811
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.67520068 at evaluation 818
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.68326554 at evaluation 841
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.68326554 at evaluation 846
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.68326554 at evaluation 849
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.68326554 at evaluation 852
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.68326554 at evaluation 853
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.69532407 at evaluation 876
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.69532407 at evaluation 881
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.69532407 at evaluation 885
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.69532407 at evaluation 886
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.69532407 at evaluation 887
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.69532407 at evaluation 888
+Saved to 20vertex_maximal_intermediate.json
+  Evaluation 900: volume = 26.695324
+*** New best! Volume = 26.69532407 at evaluation 902
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.70847387 at evaluation 911
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.70847387 at evaluation 915
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.70847387 at evaluation 922
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.70847387 at evaluation 928
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.71602545 at evaluation 946
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.71602545 at evaluation 947
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.71602545 at evaluation 955
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.71602545 at evaluation 956
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.71602545 at evaluation 960
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.71602545 at evaluation 963
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.71602545 at evaluation 975
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.71959952 at evaluation 981
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.71959952 at evaluation 982
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.71959952 at evaluation 983
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.71959952 at evaluation 986
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.71959953 at evaluation 987
+Saved to 20vertex_maximal_intermediate.json
+  Evaluation 1000: volume = 26.719600
+*** New best! Volume = 26.72352893 at evaluation 1016
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.72352893 at evaluation 1017
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.72352893 at evaluation 1018
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.72352893 at evaluation 1043
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.72757786 at evaluation 1051
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.72757786 at evaluation 1052
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.72757786 at evaluation 1058
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.72757786 at evaluation 1060
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.72757786 at evaluation 1061
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.72757786 at evaluation 1063
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.72757786 at evaluation 1077
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.73236159 at evaluation 1086
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.73236159 at evaluation 1093
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.73236160 at evaluation 1096
+Saved to 20vertex_maximal_intermediate.json
+  Evaluation 1100: volume = 26.732362
+*** New best! Volume = 26.73627557 at evaluation 1121
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.73627557 at evaluation 1123
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.73627557 at evaluation 1128
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.73627557 at evaluation 1132
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.73627557 at evaluation 1138
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.73993746 at evaluation 1156
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.73993746 at evaluation 1158
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.73993746 at evaluation 1159
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.73993746 at evaluation 1163
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.73993746 at evaluation 1174
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.73993746 at evaluation 1175
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.74269302 at evaluation 1191
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.74269302 at evaluation 1192
+Saved to 20vertex_maximal_intermediate.json
+  Evaluation 1200: volume = 26.742693
+*** New best! Volume = 26.74269302 at evaluation 1218
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.74269302 at evaluation 1224
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.74415675 at evaluation 1226
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.74415675 at evaluation 1229
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.74415675 at evaluation 1231
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.74415675 at evaluation 1232
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.74473835 at evaluation 1261
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.74473835 at evaluation 1262
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.74473835 at evaluation 1285
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.74502986 at evaluation 1296
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.74502986 at evaluation 1299
+Saved to 20vertex_maximal_intermediate.json
+  Evaluation 1300: volume = 26.745030
+*** New best! Volume = 26.74502986 at evaluation 1307
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.74502986 at evaluation 1324
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.74502986 at evaluation 1326
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.74522410 at evaluation 1331
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.74522410 at evaluation 1333
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.74522410 at evaluation 1336
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.74537218 at evaluation 1366
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.74537218 at evaluation 1368
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.74537218 at evaluation 1371
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.74537218 at evaluation 1372
+Saved to 20vertex_maximal_intermediate.json
+  Evaluation 1400: volume = 26.745372
+*** New best! Volume = 26.74543659 at evaluation 1436
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.74543659 at evaluation 1437
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.74543659 at evaluation 1440
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.74543659 at evaluation 1442
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.74543659 at evaluation 1453
+Saved to 20vertex_maximal_intermediate.json
+  Evaluation 1500: volume = 26.745410
+*** New best! Volume = 26.74546132 at evaluation 1506
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.74546132 at evaluation 1507
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.74546132 at evaluation 1516
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.74546132 at evaluation 1530
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.74547111 at evaluation 1576
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.74547111 at evaluation 1577
+Saved to 20vertex_maximal_intermediate.json
+  Evaluation 1600: volume = 26.745471
+*** New best! Volume = 26.74547352 at evaluation 1611
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.74547352 at evaluation 1614
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.74547352 at evaluation 1615
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.74547352 at evaluation 1616
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.74547352 at evaluation 1622
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.74547755 at evaluation 1646
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.74547755 at evaluation 1649
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.74547755 at evaluation 1650
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.74547755 at evaluation 1651
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.74547755 at evaluation 1652
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.74547755 at evaluation 1657
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.74548255 at evaluation 1681
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.74548255 at evaluation 1682
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.74548255 at evaluation 1685
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.74548255 at evaluation 1692
+Saved to 20vertex_maximal_intermediate.json
+  Evaluation 1700: volume = 26.745483
+*** New best! Volume = 26.74548364 at evaluation 1716
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.74548364 at evaluation 1717
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.74548364 at evaluation 1718
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.74548548 at evaluation 1751
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.74548548 at evaluation 1752
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.74548548 at evaluation 1753
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.74548850 at evaluation 1786
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.74548850 at evaluation 1787
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.74548850 at evaluation 1788
+Saved to 20vertex_maximal_intermediate.json
+  Evaluation 1800: volume = 26.745489
+*** New best! Volume = 26.74549329 at evaluation 1821
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.74549329 at evaluation 1822
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.74549329 at evaluation 1823
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.74549329 at evaluation 1839
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.74549733 at evaluation 1856
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.74549733 at evaluation 1859
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.74549733 at evaluation 1861
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.74549733 at evaluation 1862
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.74549733 at evaluation 1874
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.74550235 at evaluation 1891
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.74550235 at evaluation 1896
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.74550235 at evaluation 1897
+Saved to 20vertex_maximal_intermediate.json
+  Evaluation 1900: volume = 26.745502
+*** New best! Volume = 26.74550235 at evaluation 1909
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.74550451 at evaluation 1926
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.74550451 at evaluation 1927
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.74550451 at evaluation 1937
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.74550451 at evaluation 1953
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.74550451 at evaluation 1960
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.74550715 at evaluation 1961
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.74550715 at evaluation 1962
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.74550715 at evaluation 1972
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.74550715 at evaluation 1988
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.74550751 at evaluation 1996
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.74550751 at evaluation 1998
+Saved to 20vertex_maximal_intermediate.json
+  Evaluation 2000: volume = 26.745508
+*** New best! Volume = 26.74550751 at evaluation 2005
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.74550815 at evaluation 2031
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.74550815 at evaluation 2033
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.74550815 at evaluation 2040
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.74550914 at evaluation 2066
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.74550914 at evaluation 2068
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.74550914 at evaluation 2075
+Saved to 20vertex_maximal_intermediate.json
+  Evaluation 2100: volume = 26.745509
+*** New best! Volume = 26.74551025 at evaluation 2101
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.74551025 at evaluation 2102
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.74551025 at evaluation 2103
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.74551025 at evaluation 2108
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.74551025 at evaluation 2126
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.74551147 at evaluation 2136
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.74551147 at evaluation 2137
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.74551147 at evaluation 2147
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.74551303 at evaluation 2171
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.74551303 at evaluation 2172
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.74551303 at evaluation 2182
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.74551303 at evaluation 2188
+Saved to 20vertex_maximal_intermediate.json
+  Evaluation 2200: volume = 26.745513
+*** New best! Volume = 26.74551344 at evaluation 2206
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.74551344 at evaluation 2207
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.74551344 at evaluation 2217
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.74551402 at evaluation 2241
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.74551402 at evaluation 2242
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.74551402 at evaluation 2252
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.74551402 at evaluation 2258
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.74551527 at evaluation 2276
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.74551527 at evaluation 2277
+Saved to 20vertex_maximal_intermediate.json
+  Evaluation 2300: volume = 26.745515
+*** New best! Volume = 26.74551550 at evaluation 2346
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.74551550 at evaluation 2351
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.74551550 at evaluation 2357
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.74551550 at evaluation 2374
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.74551550 at evaluation 2380
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.74551552 at evaluation 2381
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.74551552 at evaluation 2383
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.74551552 at evaluation 2385
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.74551552 at evaluation 2387
+Saved to 20vertex_maximal_intermediate.json
+  Evaluation 2400: volume = 26.745516
+*** New best! Volume = 26.74551552 at evaluation 2406
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.74551555 at evaluation 2416
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.74551555 at evaluation 2418
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.74551555 at evaluation 2422
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.74551555 at evaluation 2441
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.74551558 at evaluation 2451
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.74551558 at evaluation 2455
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.74551558 at evaluation 2456
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.74551558 at evaluation 2457
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.74551558 at evaluation 2476
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.74551559 at evaluation 2486
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.74551559 at evaluation 2487
+Saved to 20vertex_maximal_intermediate.json
+  Evaluation 2500: volume = 26.745516
+*** New best! Volume = 26.74551559 at evaluation 2521
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.74551559 at evaluation 2522
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.74551559 at evaluation 2554
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.74551559 at evaluation 2556
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.74551559 at evaluation 2558
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.74551559 at evaluation 2561
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.74551559 at evaluation 2562
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.74551559 at evaluation 2581
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.74551559 at evaluation 2591
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.74551559 at evaluation 2593
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.74551559 at evaluation 2597
+Saved to 20vertex_maximal_intermediate.json
+  Evaluation 2600: volume = 26.745516
+*** New best! Volume = 26.74551559 at evaluation 2601
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.74551559 at evaluation 2604
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.74551559 at evaluation 2616
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.74551560 at evaluation 2626
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.74551560 at evaluation 2627
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.74551560 at evaluation 2628
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.74551560 at evaluation 2638
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.74551560 at evaluation 2643
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.74551560 at evaluation 2659
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.74551560 at evaluation 2661
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.74551560 at evaluation 2662
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.74551560 at evaluation 2671
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.74551560 at evaluation 2687
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.74551560 at evaluation 2696
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.74551560 at evaluation 2698
+Saved to 20vertex_maximal_intermediate.json
+  Evaluation 2700: volume = 26.745516
+*** New best! Volume = 26.74551560 at evaluation 2700
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.74551560 at evaluation 2701
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.74551560 at evaluation 2706
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.74551560 at evaluation 2713
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.74551560 at evaluation 2731
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.74551560 at evaluation 2732
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.74551560 at evaluation 2737
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.74551560 at evaluation 2743
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.74551560 at evaluation 2747
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.74551560 at evaluation 2766
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.74551560 at evaluation 2769
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.74551560 at evaluation 2772
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.74551560 at evaluation 2777
+Saved to 20vertex_maximal_intermediate.json
+  Evaluation 2800: volume = 26.745516
+*** New best! Volume = 26.74551560 at evaluation 2801
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.74551560 at evaluation 2803
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.74551560 at evaluation 2804
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.74551560 at evaluation 2806
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.74551560 at evaluation 2819
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.74551560 at evaluation 2836
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.74551560 at evaluation 2840
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.74551560 at evaluation 2845
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.74551560 at evaluation 2847
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.74551560 at evaluation 2852
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.74551560 at evaluation 2853
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.74551560 at evaluation 2871
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.74551560 at evaluation 2877
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.74551560 at evaluation 2887
+Saved to 20vertex_maximal_intermediate.json
+  Evaluation 2900: volume = 26.745516
+*** New best! Volume = 26.74551560 at evaluation 2906
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.74551560 at evaluation 2911
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.74551560 at evaluation 2924
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.74551560 at evaluation 2941
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.74551560 at evaluation 2942
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.74551560 at evaluation 2946
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.74551560 at evaluation 2959
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.74551560 at evaluation 2976
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.74551560 at evaluation 2977
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.74551560 at evaluation 2978
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.74551560 at evaluation 2981
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.74551560 at evaluation 2994
+Saved to 20vertex_maximal_intermediate.json
+  Evaluation 3000: volume = 26.745516
+*** New best! Volume = 26.74551560 at evaluation 3011
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.74551560 at evaluation 3012
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.74551560 at evaluation 3021
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.74551560 at evaluation 3028
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.74551560 at evaluation 3046
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.74551560 at evaluation 3050
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.74551560 at evaluation 3052
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.74551560 at evaluation 3057
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.74551560 at evaluation 3072
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.74551560 at evaluation 3081
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.74551560 at evaluation 3082
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.74551560 at evaluation 3085
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.74551560 at evaluation 3091
+Saved to 20vertex_maximal_intermediate.json
+  Evaluation 3100: volume = 26.745516
+*** New best! Volume = 26.74551560 at evaluation 3107
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.74551560 at evaluation 3116
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.74551560 at evaluation 3122
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.74551560 at evaluation 3133
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.74551560 at evaluation 3151
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.74551560 at evaluation 3157
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.74551560 at evaluation 3168
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.74551560 at evaluation 3186
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.74551560 at evaluation 3190
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.74551560 at evaluation 3192
+Saved to 20vertex_maximal_intermediate.json
+  Evaluation 3200: volume = 26.745516
+*** New best! Volume = 26.74551560 at evaluation 3203
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.74551560 at evaluation 3221
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.74551560 at evaluation 3227
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.74551560 at evaluation 3232
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.74551560 at evaluation 3238
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.74551560 at evaluation 3256
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.74551560 at evaluation 3267
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.74551560 at evaluation 3273
+Saved to 20vertex_maximal_intermediate.json
+Optimization terminated successfully.
+         Current function value: -26.745516
+         Iterations: 85
+         Function evaluations: 3290
+         Gradient evaluations: 94
+
+Trial 2 complete:
+  Final volume: 26.74551560
+  Ratio to dodecahedron: 0.829819
+  Function evaluations: 3290
+  Success: True
+
+==================================================
+TRIAL 3/5
+==================================================
+Starting optimization from random configuration...
+  Evaluation 100: volume = 25.721994
+  Evaluation 200: volume = 26.539578
+*** New best! Volume = 26.79227951 at evaluation 246
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.79227951 at evaluation 249
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.79227952 at evaluation 251
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.79227952 at evaluation 254
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.79227952 at evaluation 269
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.91767139 at evaluation 281
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.91767139 at evaluation 283
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.91767139 at evaluation 286
+Saved to 20vertex_maximal_intermediate.json
+  Evaluation 300: volume = 26.917671
+*** New best! Volume = 26.97765965 at evaluation 316
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.97765965 at evaluation 317
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.97765966 at evaluation 322
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 26.97765966 at evaluation 340
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 27.05000586 at evaluation 351
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 27.05000587 at evaluation 352
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 27.05000587 at evaluation 378
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 27.08309539 at evaluation 386
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 27.08309539 at evaluation 387
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 27.08309539 at evaluation 392
+Saved to 20vertex_maximal_intermediate.json
+  Evaluation 400: volume = 27.083095
+*** New best! Volume = 27.13277829 at evaluation 421
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 27.13277829 at evaluation 422
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 27.13277829 at evaluation 423
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 27.13277829 at evaluation 428
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 27.13277829 at evaluation 429
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 27.13277829 at evaluation 453
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 27.18492826 at evaluation 456
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 27.18492827 at evaluation 458
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 27.18492827 at evaluation 462
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 27.22717986 at evaluation 491
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 27.22717986 at evaluation 493
+Saved to 20vertex_maximal_intermediate.json
+  Evaluation 500: volume = 27.227180
+*** New best! Volume = 27.22717986 at evaluation 517
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 27.22717986 at evaluation 519
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 27.25266145 at evaluation 526
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 27.25266145 at evaluation 530
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 27.25266145 at evaluation 531
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 27.25266145 at evaluation 548
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 27.28068139 at evaluation 561
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 27.28068139 at evaluation 563
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 27.28068139 at evaluation 575
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 27.28068139 at evaluation 578
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 27.28068139 at evaluation 582
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 27.28068139 at evaluation 591
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 27.28068139 at evaluation 593
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 27.30816847 at evaluation 596
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 27.30816847 at evaluation 597
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 27.30816847 at evaluation 598
+Saved to 20vertex_maximal_intermediate.json
+  Evaluation 600: volume = 27.308168
+*** New best! Volume = 27.30816847 at evaluation 602
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 27.30816847 at evaluation 613
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 27.30816847 at evaluation 627
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 27.34398838 at evaluation 631
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 27.34398838 at evaluation 633
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 27.34398838 at evaluation 637
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 27.34398838 at evaluation 654
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 27.37287024 at evaluation 666
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 27.37287024 at evaluation 667
+Saved to 20vertex_maximal_intermediate.json
+  Evaluation 700: volume = 27.372870
+*** New best! Volume = 27.40162455 at evaluation 701
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 27.40162455 at evaluation 705
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 27.40162455 at evaluation 707
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 27.40162455 at evaluation 709
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 27.40162455 at evaluation 713
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 27.42593554 at evaluation 736
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 27.42593555 at evaluation 740
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 27.42593555 at evaluation 743
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 27.44984239 at evaluation 771
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 27.44984239 at evaluation 773
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 27.44984239 at evaluation 778
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 27.44984239 at evaluation 789
+Saved to 20vertex_maximal_intermediate.json
+  Evaluation 800: volume = 27.449842
+*** New best! Volume = 27.44984239 at evaluation 800
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 27.47588858 at evaluation 806
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 27.47588858 at evaluation 807
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 27.47588858 at evaluation 818
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 27.47588858 at evaluation 832
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 27.47588858 at evaluation 834
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 27.49484430 at evaluation 841
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 27.49484430 at evaluation 842
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 27.49484430 at evaluation 843
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 27.49484430 at evaluation 846
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 27.49484430 at evaluation 849
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 27.49484430 at evaluation 868
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 27.51496734 at evaluation 876
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 27.51496734 at evaluation 877
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 27.51496734 at evaluation 882
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 27.51496734 at evaluation 884
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 27.51496734 at evaluation 893
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 27.51496734 at evaluation 899
+Saved to 20vertex_maximal_intermediate.json
+  Evaluation 900: volume = 27.514967
+*** New best! Volume = 27.53024041 at evaluation 911
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 27.53024041 at evaluation 917
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 27.53024041 at evaluation 918
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 27.54486161 at evaluation 946
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 27.54486161 at evaluation 952
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 27.54486161 at evaluation 953
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 27.55789837 at evaluation 981
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 27.55789837 at evaluation 986
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 27.55789837 at evaluation 988
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 27.55789837 at evaluation 991
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 27.55789837 at evaluation 994
+Saved to 20vertex_maximal_intermediate.json
+  Evaluation 1000: volume = 27.557898
+*** New best! Volume = 27.55789837 at evaluation 1001
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 27.56937312 at evaluation 1016
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 27.56937313 at evaluation 1018
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 27.56937313 at evaluation 1044
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 27.58387284 at evaluation 1051
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 27.58387284 at evaluation 1052
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 27.58387284 at evaluation 1053
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 27.59676968 at evaluation 1086
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 27.59676968 at evaluation 1087
+Saved to 20vertex_maximal_intermediate.json
+  Evaluation 1100: volume = 27.596770
+*** New best! Volume = 27.59676968 at evaluation 1104
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 27.60720925 at evaluation 1121
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 27.60720925 at evaluation 1125
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 27.60720925 at evaluation 1127
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 27.61204596 at evaluation 1156
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 27.61204596 at evaluation 1158
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 27.61204596 at evaluation 1163
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 27.61204596 at evaluation 1170
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 27.61363733 at evaluation 1191
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 27.61363733 at evaluation 1195
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 27.61363733 at evaluation 1196
+Saved to 20vertex_maximal_intermediate.json
+  Evaluation 1200: volume = 27.613637
+*** New best! Volume = 27.61363733 at evaluation 1208
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 27.61527793 at evaluation 1226
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 27.61527793 at evaluation 1227
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 27.61527793 at evaluation 1230
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 27.61527793 at evaluation 1231
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 27.61527793 at evaluation 1233
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 27.61527793 at evaluation 1235
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 27.61527793 at evaluation 1254
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 27.61635871 at evaluation 1261
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 27.61635871 at evaluation 1262
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 27.61635871 at evaluation 1263
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 27.61803217 at evaluation 1296
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 27.61803217 at evaluation 1297
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 27.61803217 at evaluation 1298
+Saved to 20vertex_maximal_intermediate.json
+  Evaluation 1300: volume = 27.618032
+*** New best! Volume = 27.61803217 at evaluation 1317
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 27.61981819 at evaluation 1331
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 27.61981819 at evaluation 1332
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 27.61981819 at evaluation 1333
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 27.61981819 at evaluation 1338
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 27.62146269 at evaluation 1366
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 27.62146269 at evaluation 1369
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 27.62146269 at evaluation 1371
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 27.62146269 at evaluation 1373
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 27.62146269 at evaluation 1379
+Saved to 20vertex_maximal_intermediate.json
+  Evaluation 1400: volume = 27.621463
+*** New best! Volume = 27.62354900 at evaluation 1401
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 27.62354900 at evaluation 1402
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 27.62354900 at evaluation 1406
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 27.62354900 at evaluation 1429
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 27.62589069 at evaluation 1436
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 27.62589069 at evaluation 1437
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 27.62589069 at evaluation 1439
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 27.62589069 at evaluation 1440
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 27.62589069 at evaluation 1441
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 27.62789995 at evaluation 1471
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 27.62789995 at evaluation 1472
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 27.62789995 at evaluation 1496
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 27.62789995 at evaluation 1498
+Saved to 20vertex_maximal_intermediate.json
+  Evaluation 1500: volume = 27.627900
+*** New best! Volume = 27.62911874 at evaluation 1506
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 27.62911874 at evaluation 1508
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 27.63030616 at evaluation 1541
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 27.63030616 at evaluation 1543
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 27.63030616 at evaluation 1544
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 27.63030616 at evaluation 1549
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 27.63057345 at evaluation 1576
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 27.63057345 at evaluation 1578
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 27.63057345 at evaluation 1583
+Saved to 20vertex_maximal_intermediate.json
+  Evaluation 1600: volume = 27.630573
+*** New best! Volume = 27.63096353 at evaluation 1611
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 27.63096353 at evaluation 1613
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 27.63096353 at evaluation 1618
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 27.63096353 at evaluation 1625
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 27.63138928 at evaluation 1646
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 27.63138929 at evaluation 1649
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 27.63138929 at evaluation 1652
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 27.63138929 at evaluation 1659
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 27.63138929 at evaluation 1664
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 27.63152939 at evaluation 1681
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 27.63152939 at evaluation 1682
+Saved to 20vertex_maximal_intermediate.json
+  Evaluation 1700: volume = 27.631529
+*** New best! Volume = 27.63152939 at evaluation 1704
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 27.63152939 at evaluation 1706
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 27.63152939 at evaluation 1713
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 27.63176632 at evaluation 1716
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 27.63176632 at evaluation 1717
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 27.63176632 at evaluation 1719
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 27.63176632 at evaluation 1724
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 27.63176632 at evaluation 1735
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 27.63176632 at evaluation 1741
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 27.63196574 at evaluation 1751
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 27.63196574 at evaluation 1752
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 27.63196574 at evaluation 1760
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 27.63196574 at evaluation 1768
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 27.63196574 at evaluation 1773
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 27.63197653 at evaluation 1786
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 27.63197653 at evaluation 1787
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 27.63197653 at evaluation 1791
+Saved to 20vertex_maximal_intermediate.json
+  Evaluation 1800: volume = 27.631977
+*** New best! Volume = 27.63197653 at evaluation 1800
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 27.63197653 at evaluation 1813
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 27.63199748 at evaluation 1821
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 27.63199748 at evaluation 1822
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 27.63199748 at evaluation 1826
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 27.63199748 at evaluation 1835
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 27.63199748 at evaluation 1848
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 27.63206303 at evaluation 1856
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 27.63206303 at evaluation 1857
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 27.63206303 at evaluation 1861
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 27.63206303 at evaluation 1870
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 27.63206303 at evaluation 1883
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 27.63214457 at evaluation 1891
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 27.63214457 at evaluation 1896
+Saved to 20vertex_maximal_intermediate.json
+  Evaluation 1900: volume = 27.632145
+*** New best! Volume = 27.63217998 at evaluation 1926
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 27.63217998 at evaluation 1927
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 27.63217998 at evaluation 1947
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 27.63221285 at evaluation 1961
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 27.63221285 at evaluation 1962
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 27.63221285 at evaluation 1969
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 27.63221285 at evaluation 1978
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 27.63224238 at evaluation 1996
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 27.63224238 at evaluation 1999
+Saved to 20vertex_maximal_intermediate.json
+  Evaluation 2000: volume = 27.632242
+*** New best! Volume = 27.63224238 at evaluation 2001
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 27.63224445 at evaluation 2031
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 27.63224445 at evaluation 2033
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 27.63224445 at evaluation 2038
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 27.63225826 at evaluation 2066
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 27.63225826 at evaluation 2069
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 27.63225826 at evaluation 2071
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 27.63225826 at evaluation 2073
+Saved to 20vertex_maximal_intermediate.json
+  Evaluation 2100: volume = 27.632258
+*** New best! Volume = 27.63226706 at evaluation 2101
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 27.63226706 at evaluation 2102
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 27.63226706 at evaluation 2107
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 27.63226706 at evaluation 2108
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 27.63227593 at evaluation 2136
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 27.63227593 at evaluation 2137
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 27.63227593 at evaluation 2150
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 27.63227593 at evaluation 2157
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 27.63227961 at evaluation 2171
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 27.63227961 at evaluation 2174
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 27.63227961 at evaluation 2176
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 27.63227961 at evaluation 2177
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 27.63227961 at evaluation 2178
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 27.63227961 at evaluation 2194
+Saved to 20vertex_maximal_intermediate.json
+  Evaluation 2200: volume = 27.632280
+*** New best! Volume = 27.63227961 at evaluation 2201
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 27.63227961 at evaluation 2203
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 27.63228385 at evaluation 2206
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 27.63228385 at evaluation 2209
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 27.63228385 at evaluation 2210
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 27.63228385 at evaluation 2213
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 27.63228385 at evaluation 2219
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 27.63228385 at evaluation 2229
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 27.63228385 at evaluation 2238
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 27.63228584 at evaluation 2241
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 27.63228584 at evaluation 2242
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 27.63228852 at evaluation 2276
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 27.63228852 at evaluation 2277
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 27.63228852 at evaluation 2290
+Saved to 20vertex_maximal_intermediate.json
+  Evaluation 2300: volume = 27.632289
+*** New best! Volume = 27.63229233 at evaluation 2311
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 27.63229233 at evaluation 2315
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 27.63229233 at evaluation 2316
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 27.63229233 at evaluation 2325
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 27.63229233 at evaluation 2333
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 27.63229233 at evaluation 2334
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 27.63229374 at evaluation 2346
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 27.63229374 at evaluation 2348
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 27.63229374 at evaluation 2353
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 27.63229374 at evaluation 2363
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 27.63229374 at evaluation 2369
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 27.63229494 at evaluation 2381
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 27.63229494 at evaluation 2383
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 27.63229494 at evaluation 2388
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 27.63229494 at evaluation 2399
+Saved to 20vertex_maximal_intermediate.json
+  Evaluation 2400: volume = 27.632295
+*** New best! Volume = 27.63229494 at evaluation 2403
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 27.63229494 at evaluation 2404
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 27.63229564 at evaluation 2416
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 27.63229564 at evaluation 2419
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 27.63229564 at evaluation 2421
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 27.63229564 at evaluation 2429
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 27.63229564 at evaluation 2433
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 27.63229664 at evaluation 2451
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 27.63229664 at evaluation 2453
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 27.63229664 at evaluation 2464
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 27.63229664 at evaluation 2467
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 27.63229664 at evaluation 2468
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 27.63229664 at evaluation 2473
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 27.63229664 at evaluation 2474
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 27.63229877 at evaluation 2486
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 27.63229877 at evaluation 2489
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 27.63229877 at evaluation 2493
+Saved to 20vertex_maximal_intermediate.json
+  Evaluation 2500: volume = 27.632299
+*** New best! Volume = 27.63229877 at evaluation 2503
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 27.63229877 at evaluation 2509
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 27.63230030 at evaluation 2521
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 27.63230030 at evaluation 2522
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 27.63230030 at evaluation 2523
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 27.63230030 at evaluation 2534
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 27.63230152 at evaluation 2556
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 27.63230152 at evaluation 2557
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 27.63230152 at evaluation 2562
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 27.63230152 at evaluation 2564
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 27.63230163 at evaluation 2591
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 27.63230163 at evaluation 2593
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 27.63230163 at evaluation 2596
+Saved to 20vertex_maximal_intermediate.json
+  Evaluation 2600: volume = 27.632302
+*** New best! Volume = 27.63230163 at evaluation 2619
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 27.63230181 at evaluation 2626
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 27.63230181 at evaluation 2628
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 27.63230181 at evaluation 2631
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 27.63230181 at evaluation 2654
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 27.63230203 at evaluation 2661
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 27.63230203 at evaluation 2666
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 27.63230203 at evaluation 2674
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 27.63230203 at evaluation 2679
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 27.63230203 at evaluation 2685
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 27.63230203 at evaluation 2696
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 27.63230203 at evaluation 2697
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 27.63230203 at evaluation 2698
+Saved to 20vertex_maximal_intermediate.json
+  Evaluation 2700: volume = 27.632302
+*** New best! Volume = 27.63230203 at evaluation 2702
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 27.63230203 at evaluation 2727
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 27.63230209 at evaluation 2731
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 27.63230209 at evaluation 2732
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 27.63230209 at evaluation 2733
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 27.63230209 at evaluation 2737
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 27.63230210 at evaluation 2766
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 27.63230210 at evaluation 2768
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 27.63230210 at evaluation 2774
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 27.63230210 at evaluation 2795
+Saved to 20vertex_maximal_intermediate.json
+  Evaluation 2800: volume = 27.632302
+*** New best! Volume = 27.63230212 at evaluation 2801
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 27.63230212 at evaluation 2802
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 27.63230212 at evaluation 2803
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 27.63230212 at evaluation 2823
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 27.63230212 at evaluation 2828
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 27.63230212 at evaluation 2832
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 27.63230212 at evaluation 2836
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 27.63230212 at evaluation 2837
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 27.63230212 at evaluation 2839
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 27.63230212 at evaluation 2841
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 27.63230212 at evaluation 2843
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 27.63230212 at evaluation 2850
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 27.63230213 at evaluation 2871
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 27.63230213 at evaluation 2876
+Saved to 20vertex_maximal_intermediate.json
+  Evaluation 2900: volume = 27.632302
+*** New best! Volume = 27.63230213 at evaluation 2906
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 27.63230213 at evaluation 2907
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 27.63230213 at evaluation 2941
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 27.63230213 at evaluation 2942
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 27.63230213 at evaluation 2976
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 27.63230213 at evaluation 2977
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 27.63230213 at evaluation 2982
+Saved to 20vertex_maximal_intermediate.json
+  Evaluation 3000: volume = 27.632302
+*** New best! Volume = 27.63230213 at evaluation 3004
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 27.63230213 at evaluation 3011
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 27.63230213 at evaluation 3013
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 27.63230213 at evaluation 3016
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 27.63230213 at evaluation 3019
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 27.63230213 at evaluation 3046
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 27.63230213 at evaluation 3049
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 27.63230213 at evaluation 3052
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 27.63230213 at evaluation 3053
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 27.63230213 at evaluation 3081
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 27.63230213 at evaluation 3082
+Saved to 20vertex_maximal_intermediate.json
+  Evaluation 3100: volume = 27.632302
+*** New best! Volume = 27.63230213 at evaluation 3104
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 27.63230213 at evaluation 3105
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 27.63230213 at evaluation 3116
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 27.63230213 at evaluation 3117
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 27.63230213 at evaluation 3186
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 27.63230213 at evaluation 3187
+Saved to 20vertex_maximal_intermediate.json
+  Evaluation 3200: volume = 27.632302
+*** New best! Volume = 27.63230213 at evaluation 3210
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 27.63230213 at evaluation 3221
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 27.63230213 at evaluation 3222
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 27.63230213 at evaluation 3256
+Saved to 20vertex_maximal_intermediate.json
+*** New best! Volume = 27.63230213 at evaluation 3257
+Saved to 20vertex_maximal_intermediate.json
+Optimization terminated successfully.
+         Current function value: -27.632302
+         Iterations: 85
+         Function evaluations: 3290
+         Gradient evaluations: 94
+
+Trial 3 complete:
+  Final volume: 27.63230213
+  Ratio to dodecahedron: 0.857333
+  Function evaluations: 3290
+  Success: True
+
+==================================================
+TRIAL 4/5
+==================================================
+Starting optimization from random configuration...
+  Evaluation 100: volume = 24.795871
+  Evaluation 200: volume = 25.975125
+  Evaluation 300: volume = 26.818510
+  Evaluation 400: volume = 26.970605
+  Evaluation 500: volume = 27.075062
+  Evaluation 600: volume = 27.103934
+  Evaluation 700: volume = 27.110485
+  Evaluation 800: volume = 27.118457
+  Evaluation 900: volume = 27.123767
+  Evaluation 1000: volume = 27.127196
+  Evaluation 1100: volume = 27.128640
+  Evaluation 1200: volume = 27.129813
+  Evaluation 1300: volume = 27.131791
+  Evaluation 1400: volume = 27.132181
+  Evaluation 1500: volume = 27.132470
+  Evaluation 1600: volume = 27.132575
+  Evaluation 1700: volume = 27.132598
+  Evaluation 1800: volume = 27.132603
+  Evaluation 1900: volume = 27.132615
+  Evaluation 2000: volume = 27.132620
+  Evaluation 2100: volume = 27.132638
+  Evaluation 2200: volume = 27.132647
+  Evaluation 2300: volume = 27.132651
+  Evaluation 2400: volume = 27.132652
+  Evaluation 2500: volume = 27.132653
+  Evaluation 2600: volume = 27.132653
+  Evaluation 2700: volume = 27.132654
+  Evaluation 2800: volume = 27.132654
+  Evaluation 2900: volume = 27.132655
+  Evaluation 3000: volume = 27.132655
+  Evaluation 3100: volume = 27.132655
+  Evaluation 3200: volume = 27.132655
+  Evaluation 3300: volume = 27.132655
+Optimization terminated successfully.
+         Current function value: -27.132655
+         Iterations: 88
+         Function evaluations: 3395
+         Gradient evaluations: 97
+
+Trial 4 complete:
+  Final volume: 27.13265462
+  Ratio to dodecahedron: 0.841831
+  Function evaluations: 3395
+  Success: True
+
+==================================================
+TRIAL 5/5
+==================================================
+Starting optimization from random configuration...
+  Evaluation 100: volume = 24.520378
+  Evaluation 200: volume = 26.727210
+  Evaluation 300: volume = 27.041606
+  Evaluation 400: volume = 27.075909
+  Evaluation 500: volume = 27.093803
+  Evaluation 600: volume = 27.104983
+  Evaluation 700: volume = 27.115186
+  Evaluation 800: volume = 27.127729
+  Evaluation 900: volume = 27.137523
+  Evaluation 1000: volume = 27.156790
+  Evaluation 1100: volume = 27.162486
+  Evaluation 1200: volume = 27.163336
+  Evaluation 1300: volume = 27.163631
+  Evaluation 1400: volume = 27.163786
+  Evaluation 1500: volume = 27.163949
+  Evaluation 1600: volume = 27.164247
+  Evaluation 1700: volume = 27.164557
+  Evaluation 1800: volume = 27.164734
+  Evaluation 1900: volume = 27.164822
+  Evaluation 2000: volume = 27.164891
+  Evaluation 2100: volume = 27.164936
+  Evaluation 2200: volume = 27.164991
+  Evaluation 2300: volume = 27.164999
+  Evaluation 2400: volume = 27.165001
+  Evaluation 2500: volume = 27.165001
+  Evaluation 2600: volume = 27.165002
+  Evaluation 2700: volume = 27.165004
+  Evaluation 2800: volume = 27.165004
+  Evaluation 2900: volume = 27.165005
+  Evaluation 3000: volume = 27.165005
+  Evaluation 3100: volume = 27.165005
+  Evaluation 3200: volume = 27.165005
+Optimization terminated successfully.
+         Current function value: -27.165005
+         Iterations: 87
+         Function evaluations: 3290
+         Gradient evaluations: 94
+
+Trial 5 complete:
+  Final volume: 27.16500507
+  Ratio to dodecahedron: 0.842835
+  Function evaluations: 3290
+  Success: True
+Saved to 20vertex_maximal_final.json
+
+======================================================================
+OPTIMIZATION COMPLETE!
+======================================================================
+Best volume found: 27.63230213
+Regular dodecahedron: 32.23052334
+Ratio: 0.857333

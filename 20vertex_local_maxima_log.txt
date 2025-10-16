@@ -1,0 +1,585 @@
+
+======================================================================
+20-VERTEX OPTIMIZATION WITH LOCAL MAXIMA TRACKING
+Started at 2025-10-14 16:34:44.085420
+Process ID: 30618
+======================================================================
+
+Regular dodecahedron volume: 32.23052334
+Tracking all local maxima above volume 26.0
+
+
+==================================================
+TRIAL 1/5: symmetric initialization
+==================================================
+*** New global best! Volume = 14.36196032 at evaluation 1
+*** New global best! Volume = 14.36196049 at evaluation 2
+*** New global best! Volume = 23.10509131 at evaluation 36
+*** New global best! Volume = 23.10509132 at evaluation 37
+*** New global best! Volume = 23.10509132 at evaluation 38
+*** New global best! Volume = 23.10509133 at evaluation 39
+*** New global best! Volume = 23.10509133 at evaluation 43
+*** New global best! Volume = 23.10509133 at evaluation 44
+*** New global best! Volume = 23.10509136 at evaluation 57
+*** New global best! Volume = 23.77129004 at evaluation 71
+*** New global best! Volume = 23.77129005 at evaluation 72
+*** New global best! Volume = 23.77129006 at evaluation 75
+*** New global best! Volume = 23.77129010 at evaluation 77
+  Evaluation 100: volume = 23.771290
+*** New global best! Volume = 24.30490387 at evaluation 106
+*** New global best! Volume = 24.30490387 at evaluation 107
+*** New global best! Volume = 24.30490388 at evaluation 110
+*** New global best! Volume = 24.30490390 at evaluation 111
+*** New global best! Volume = 24.30490392 at evaluation 112
+*** New global best! Volume = 24.87214523 at evaluation 141
+*** New global best! Volume = 24.87214524 at evaluation 142
+*** New global best! Volume = 24.87214524 at evaluation 145
+*** New global best! Volume = 24.87214525 at evaluation 146
+*** New global best! Volume = 24.87214529 at evaluation 147
+*** New global best! Volume = 25.35416187 at evaluation 176
+*** New global best! Volume = 25.35416187 at evaluation 177
+*** New global best! Volume = 25.35416189 at evaluation 181
+*** New global best! Volume = 25.35416191 at evaluation 194
+  Evaluation 200: volume = 25.354162
+*** New global best! Volume = 25.94263774 at evaluation 211
+*** New global best! Volume = 25.94263774 at evaluation 212
+*** New global best! Volume = 25.94263774 at evaluation 217
+*** New global best! Volume = 25.94263774 at evaluation 221
+*** New global best! Volume = 25.94263774 at evaluation 227
+*** New global best! Volume = 25.94263776 at evaluation 228
+*** Saved local maximum #1: volume = 26.15382274
+*** New global best! Volume = 26.15382274 at evaluation 281
+*** New global best! Volume = 26.15382274 at evaluation 282
+*** New global best! Volume = 26.15382275 at evaluation 286
+*** New global best! Volume = 26.15382276 at evaluation 298
+*** New global best! Volume = 26.15382276 at evaluation 299
+  Evaluation 300: volume = 26.153823
+*** Saved local maximum #2: volume = 26.29563358
+*** New global best! Volume = 26.29563358 at evaluation 316
+*** New global best! Volume = 26.29563358 at evaluation 317
+*** New global best! Volume = 26.29563359 at evaluation 321
+*** New global best! Volume = 26.29563360 at evaluation 326
+*** New global best! Volume = 26.29563360 at evaluation 334
+*** New global best! Volume = 26.29563362 at evaluation 337
+*** Saved local maximum #3: volume = 26.41100138
+*** New global best! Volume = 26.41100138 at evaluation 351
+*** New global best! Volume = 26.41100138 at evaluation 353
+*** New global best! Volume = 26.41100138 at evaluation 357
+*** New global best! Volume = 26.41100140 at evaluation 361
+*** New global best! Volume = 26.41100142 at evaluation 372
+*** Saved local maximum #4: volume = 26.50786527
+*** New global best! Volume = 26.50786527 at evaluation 386
+*** New global best! Volume = 26.50786528 at evaluation 390
+*** New global best! Volume = 26.50786529 at evaluation 396
+  Evaluation 400: volume = 26.507865
+*** New global best! Volume = 26.50786531 at evaluation 407
+*** Saved local maximum #5: volume = 26.63918692
+*** New global best! Volume = 26.63918692 at evaluation 421
+*** New global best! Volume = 26.63918692 at evaluation 422
+*** New global best! Volume = 26.63918692 at evaluation 425
+*** New global best! Volume = 26.63918693 at evaluation 431
+*** New global best! Volume = 26.63918695 at evaluation 442
+*** Saved local maximum #6: volume = 26.74731704
+*** New global best! Volume = 26.74731704 at evaluation 456
+*** New global best! Volume = 26.74731704 at evaluation 457
+*** New global best! Volume = 26.74731705 at evaluation 466
+*** New global best! Volume = 26.74731706 at evaluation 477
+*** Saved local maximum #7: volume = 26.88923764
+*** New global best! Volume = 26.88923764 at evaluation 491
+*** New global best! Volume = 26.88923764 at evaluation 492
+*** New global best! Volume = 26.88923765 at evaluation 497
+  Evaluation 500: volume = 26.889238
+*** New global best! Volume = 26.88923765 at evaluation 501
+*** New global best! Volume = 26.88923766 at evaluation 512
+*** Saved local maximum #8: volume = 26.94063727
+*** New global best! Volume = 26.94063727 at evaluation 526
+*** New global best! Volume = 26.94063727 at evaluation 527
+*** New global best! Volume = 26.94063728 at evaluation 532
+*** Saved local maximum #9: volume = 27.01985904
+*** New global best! Volume = 27.01985904 at evaluation 561
+*** New global best! Volume = 27.01985904 at evaluation 562
+*** New global best! Volume = 27.01985905 at evaluation 567
+*** New global best! Volume = 27.01985905 at evaluation 576
+*** New global best! Volume = 27.01985905 at evaluation 588
+*** Saved local maximum #10: volume = 27.14219851
+*** New global best! Volume = 27.14219851 at evaluation 596
+*** New global best! Volume = 27.14219851 at evaluation 597
+*** New global best! Volume = 27.14219851 at evaluation 598
+  Evaluation 600: volume = 27.142199
+*** New global best! Volume = 27.14219852 at evaluation 602
+*** Saved local maximum #11: volume = 27.24406061
+*** New global best! Volume = 27.24406061 at evaluation 631
+*** New global best! Volume = 27.24406061 at evaluation 632
+*** New global best! Volume = 27.24406061 at evaluation 633
+*** New global best! Volume = 27.24406062 at evaluation 636
+*** New global best! Volume = 27.24406062 at evaluation 658
+*** Saved local maximum #12: volume = 27.28679987
+*** New global best! Volume = 27.28679987 at evaluation 666
+*** New global best! Volume = 27.28679988 at evaluation 667
+*** New global best! Volume = 27.28679988 at evaluation 669
+*** New global best! Volume = 27.28679988 at evaluation 671
+*** New global best! Volume = 27.28679988 at evaluation 681
+*** New global best! Volume = 27.28679989 at evaluation 693
+  Evaluation 700: volume = 27.286800
+*** Saved local maximum #13: volume = 27.35444818
+*** New global best! Volume = 27.35444818 at evaluation 701
+*** New global best! Volume = 27.35444818 at evaluation 702
+*** New global best! Volume = 27.35444818 at evaluation 704
+*** New global best! Volume = 27.35444819 at evaluation 706
+*** New global best! Volume = 27.35444820 at evaluation 728
+*** Saved local maximum #14: volume = 27.42549566
+*** New global best! Volume = 27.42549566 at evaluation 736
+*** New global best! Volume = 27.42549566 at evaluation 737
+*** New global best! Volume = 27.42549566 at evaluation 739
+*** New global best! Volume = 27.42549566 at evaluation 741
+*** New global best! Volume = 27.42549566 at evaluation 763
+*** Saved local maximum #15: volume = 27.44234801
+*** New global best! Volume = 27.44234801 at evaluation 771
+*** New global best! Volume = 27.44234801 at evaluation 772
+*** New global best! Volume = 27.44234801 at evaluation 776
+*** New global best! Volume = 27.44234801 at evaluation 777
+*** New global best! Volume = 27.44234802 at evaluation 780
+  Evaluation 800: volume = 27.442348
+*** Saved local maximum #16: volume = 27.46865399
+*** New global best! Volume = 27.46865399 at evaluation 806
+*** New global best! Volume = 27.46865399 at evaluation 807
+*** New global best! Volume = 27.46865399 at evaluation 811
+*** New global best! Volume = 27.46865399 at evaluation 812
+*** New global best! Volume = 27.46865399 at evaluation 815
+*** Saved local maximum #17: volume = 27.50378691
+*** New global best! Volume = 27.50378691 at evaluation 841
+*** New global best! Volume = 27.50378691 at evaluation 842
+*** New global best! Volume = 27.50378691 at evaluation 846
+*** New global best! Volume = 27.50378691 at evaluation 847
+*** New global best! Volume = 27.50378691 at evaluation 850
+*** New global best! Volume = 27.50378691 at evaluation 863
+*** Saved local maximum #18: volume = 27.51478985
+*** New global best! Volume = 27.51478985 at evaluation 876
+*** New global best! Volume = 27.51478986 at evaluation 877
+*** New global best! Volume = 27.51478986 at evaluation 892
+  Evaluation 900: volume = 27.514790
+*** Saved local maximum #19: volume = 27.52700220
+*** New global best! Volume = 27.52700220 at evaluation 911
+*** New global best! Volume = 27.52700220 at evaluation 912
+*** New global best! Volume = 27.52700220 at evaluation 914
+*** Saved local maximum #20: volume = 27.53855018
+*** New global best! Volume = 27.53855018 at evaluation 946
+*** New global best! Volume = 27.53855018 at evaluation 947
+*** New global best! Volume = 27.53855018 at evaluation 949
+*** New global best! Volume = 27.53855018 at evaluation 976
+  Evaluation 1000: volume = 27.513365
+*** Saved local maximum #21: volume = 27.54102460
+*** New global best! Volume = 27.54102460 at evaluation 1016
+*** New global best! Volume = 27.54102460 at evaluation 1019
+*** Saved local maximum #22: volume = 27.54384230
+*** New global best! Volume = 27.54384230 at evaluation 1051
+*** New global best! Volume = 27.54384230 at evaluation 1052
+*** New global best! Volume = 27.54384230 at evaluation 1058
+*** New global best! Volume = 27.54384230 at evaluation 1060
+*** New global best! Volume = 27.54384230 at evaluation 1073
+*** Saved local maximum #23: volume = 27.54555943
+*** New global best! Volume = 27.54555943 at evaluation 1086
+*** New global best! Volume = 27.54555943 at evaluation 1087
+*** New global best! Volume = 27.54555943 at evaluation 1096
+  Evaluation 1100: volume = 27.545559
+*** New global best! Volume = 27.54555943 at evaluation 1103
+*** New global best! Volume = 27.54641607 at evaluation 1121
+*** New global best! Volume = 27.54641607 at evaluation 1123
+*** New global best! Volume = 27.54641607 at evaluation 1127
+*** New global best! Volume = 27.54641607 at evaluation 1133
+*** Saved local maximum #24: volume = 27.54711714
+*** New global best! Volume = 27.54711714 at evaluation 1156
+*** New global best! Volume = 27.54711714 at evaluation 1158
+*** New global best! Volume = 27.54711714 at evaluation 1159
+*** New global best! Volume = 27.54711714 at evaluation 1162
+*** New global best! Volume = 27.54743772 at evaluation 1191
+*** New global best! Volume = 27.54743772 at evaluation 1195
+  Evaluation 1200: volume = 27.547438
+*** New global best! Volume = 27.54743772 at evaluation 1204
+*** New global best! Volume = 27.54743772 at evaluation 1207
+*** New global best! Volume = 27.54743772 at evaluation 1212
+*** New global best! Volume = 27.54743772 at evaluation 1218
+*** New global best! Volume = 27.54785263 at evaluation 1226
+*** New global best! Volume = 27.54785263 at evaluation 1230
+*** New global best! Volume = 27.54785263 at evaluation 1232
+*** New global best! Volume = 27.54785263 at evaluation 1247
+*** New global best! Volume = 27.54806049 at evaluation 1261
+*** New global best! Volume = 27.54806049 at evaluation 1264
+*** New global best! Volume = 27.54806049 at evaluation 1266
+*** New global best! Volume = 27.54806049 at evaluation 1282
+*** Saved local maximum #25: volume = 27.54829929
+*** New global best! Volume = 27.54829929 at evaluation 1296
+*** New global best! Volume = 27.54829929 at evaluation 1298
+*** New global best! Volume = 27.54829929 at evaluation 1299
+  Evaluation 1300: volume = 27.548299
+*** New global best! Volume = 27.54829929 at evaluation 1300
+*** New global best! Volume = 27.54829929 at evaluation 1301
+*** New global best! Volume = 27.54832618 at evaluation 1331
+*** New global best! Volume = 27.54832618 at evaluation 1335
+*** New global best! Volume = 27.54832618 at evaluation 1337
+*** New global best! Volume = 27.54837515 at evaluation 1366
+*** New global best! Volume = 27.54837515 at evaluation 1370
+*** New global best! Volume = 27.54837515 at evaluation 1372
+  Evaluation 1400: volume = 27.548375
+*** New global best! Volume = 27.54845720 at evaluation 1401
+*** New global best! Volume = 27.54845720 at evaluation 1405
+*** New global best! Volume = 27.54845720 at evaluation 1407
+*** New global best! Volume = 27.54849266 at evaluation 1471
+*** New global best! Volume = 27.54849266 at evaluation 1475
+*** New global best! Volume = 27.54849266 at evaluation 1477
+*** New global best! Volume = 27.54849266 at evaluation 1483
+  Evaluation 1500: volume = 27.548493
+*** New global best! Volume = 27.54851059 at evaluation 1506
+*** New global best! Volume = 27.54851059 at evaluation 1507
+*** New global best! Volume = 27.54851059 at evaluation 1508
+*** New global best! Volume = 27.54851059 at evaluation 1509
+*** New global best! Volume = 27.54851059 at evaluation 1511
+*** New global best! Volume = 27.54851059 at evaluation 1540
+*** New global best! Volume = 27.54852680 at evaluation 1541
+*** New global best! Volume = 27.54852680 at evaluation 1543
+*** New global best! Volume = 27.54852680 at evaluation 1545
+*** New global best! Volume = 27.54852680 at evaluation 1546
+*** New global best! Volume = 27.54854236 at evaluation 1576
+*** New global best! Volume = 27.54854236 at evaluation 1584
+*** New global best! Volume = 27.54854236 at evaluation 1585
+*** New global best! Volume = 27.54854236 at evaluation 1594
+*** New global best! Volume = 27.54854236 at evaluation 1597
+*** New global best! Volume = 27.54854236 at evaluation 1598
+  Evaluation 1600: volume = 27.548542
+*** New global best! Volume = 27.54855126 at evaluation 1611
+*** New global best! Volume = 27.54855126 at evaluation 1613
+*** New global best! Volume = 27.54855126 at evaluation 1626
+*** New global best! Volume = 27.54855126 at evaluation 1628
+*** New global best! Volume = 27.54855126 at evaluation 1629
+*** New global best! Volume = 27.54855126 at evaluation 1638
+*** New global best! Volume = 27.54856180 at evaluation 1646
+*** New global best! Volume = 27.54856180 at evaluation 1648
+*** New global best! Volume = 27.54856180 at evaluation 1649
+*** New global best! Volume = 27.54856180 at evaluation 1663
+*** New global best! Volume = 27.54856180 at evaluation 1664
+*** New global best! Volume = 27.54856713 at evaluation 1681
+*** New global best! Volume = 27.54856713 at evaluation 1683
+*** New global best! Volume = 27.54856713 at evaluation 1685
+*** New global best! Volume = 27.54856713 at evaluation 1698
+  Evaluation 1700: volume = 27.548567
+*** New global best! Volume = 27.54857239 at evaluation 1716
+*** New global best! Volume = 27.54857239 at evaluation 1718
+*** New global best! Volume = 27.54857239 at evaluation 1720
+*** New global best! Volume = 27.54857239 at evaluation 1733
+*** New global best! Volume = 27.54857239 at evaluation 1749
+*** New global best! Volume = 27.54857608 at evaluation 1751
+*** New global best! Volume = 27.54857608 at evaluation 1753
+*** New global best! Volume = 27.54857608 at evaluation 1756
+*** New global best! Volume = 27.54857608 at evaluation 1758
+*** New global best! Volume = 27.54857608 at evaluation 1763
+*** New global best! Volume = 27.54857608 at evaluation 1773
+*** New global best! Volume = 27.54857608 at evaluation 1780
+*** New global best! Volume = 27.54857914 at evaluation 1786
+*** New global best! Volume = 27.54857914 at evaluation 1788
+*** New global best! Volume = 27.54857914 at evaluation 1789
+*** New global best! Volume = 27.54857914 at evaluation 1796
+*** New global best! Volume = 27.54857914 at evaluation 1798
+  Evaluation 1800: volume = 27.548579
+*** New global best! Volume = 27.54858372 at evaluation 1821
+*** New global best! Volume = 27.54858372 at evaluation 1823
+*** New global best! Volume = 27.54858372 at evaluation 1824
+*** New global best! Volume = 27.54858372 at evaluation 1832
+*** New global best! Volume = 27.54858372 at evaluation 1833
+*** New global best! Volume = 27.54858372 at evaluation 1855
+*** New global best! Volume = 27.54858516 at evaluation 1856
+*** New global best! Volume = 27.54858516 at evaluation 1858
+*** New global best! Volume = 27.54858516 at evaluation 1859
+*** New global best! Volume = 27.54858516 at evaluation 1867
+*** New global best! Volume = 27.54858661 at evaluation 1891
+*** New global best! Volume = 27.54858661 at evaluation 1893
+*** New global best! Volume = 27.54858661 at evaluation 1894
+  Evaluation 1900: volume = 27.548587
+*** New global best! Volume = 27.54858661 at evaluation 1902
+*** New global best! Volume = 27.54858990 at evaluation 1926
+*** New global best! Volume = 27.54858990 at evaluation 1928
+*** New global best! Volume = 27.54858990 at evaluation 1942
+*** New global best! Volume = 27.54858990 at evaluation 1944
+*** New global best! Volume = 27.54858990 at evaluation 1948
+*** New global best! Volume = 27.54859282 at evaluation 1961
+*** New global best! Volume = 27.54859282 at evaluation 1964
+*** New global best! Volume = 27.54859282 at evaluation 1966
+*** New global best! Volume = 27.54859282 at evaluation 1978
+*** New global best! Volume = 27.54859282 at evaluation 1983
+*** New global best! Volume = 27.54859898 at evaluation 1996
+*** New global best! Volume = 27.54859898 at evaluation 1998
+  Evaluation 2000: volume = 27.548599
+*** New global best! Volume = 27.54859898 at evaluation 2000
+*** New global best! Volume = 27.54859898 at evaluation 2001
+*** New global best! Volume = 27.54859898 at evaluation 2013
+*** New global best! Volume = 27.54859898 at evaluation 2018
+*** New global best! Volume = 27.54860251 at evaluation 2066
+*** New global best! Volume = 27.54860251 at evaluation 2068
+*** New global best! Volume = 27.54860251 at evaluation 2071
+  Evaluation 2100: volume = 27.548603
+*** New global best! Volume = 27.54860465 at evaluation 2136
+*** New global best! Volume = 27.54860465 at evaluation 2138
+*** New global best! Volume = 27.54860465 at evaluation 2140
+*** New global best! Volume = 27.54860465 at evaluation 2141
+*** New global best! Volume = 27.54860848 at evaluation 2171
+*** New global best! Volume = 27.54860848 at evaluation 2173
+*** New global best! Volume = 27.54860848 at evaluation 2175
+*** New global best! Volume = 27.54860848 at evaluation 2176
+  Evaluation 2200: volume = 27.548608
+*** New global best! Volume = 27.54861491 at evaluation 2206
+*** New global best! Volume = 27.54861491 at evaluation 2208
+*** New global best! Volume = 27.54861491 at evaluation 2210
+*** New global best! Volume = 27.54861491 at evaluation 2211
+*** New global best! Volume = 27.54862296 at evaluation 2241
+*** New global best! Volume = 27.54862296 at evaluation 2242
+*** New global best! Volume = 27.54862296 at evaluation 2244
+*** New global best! Volume = 27.54862296 at evaluation 2245
+*** New global best! Volume = 27.54862296 at evaluation 2247
+*** New global best! Volume = 27.54862531 at evaluation 2276
+*** New global best! Volume = 27.54862531 at evaluation 2277
+*** New global best! Volume = 27.54862531 at evaluation 2280
+*** New global best! Volume = 27.54862531 at evaluation 2282
+  Evaluation 2300: volume = 27.548625
+*** New global best! Volume = 27.54862721 at evaluation 2311
+*** New global best! Volume = 27.54862721 at evaluation 2312
+*** New global best! Volume = 27.54862721 at evaluation 2317
+*** New global best! Volume = 27.54862721 at evaluation 2320
+*** New global best! Volume = 27.54862721 at evaluation 2345
+*** New global best! Volume = 27.54862819 at evaluation 2346
+*** New global best! Volume = 27.54862819 at evaluation 2348
+*** New global best! Volume = 27.54862819 at evaluation 2352
+*** New global best! Volume = 27.54862819 at evaluation 2355
+*** New global best! Volume = 27.54862875 at evaluation 2381
+*** New global best! Volume = 27.54862875 at evaluation 2383
+*** New global best! Volume = 27.54862875 at evaluation 2384
+*** New global best! Volume = 27.54862875 at evaluation 2385
+*** New global best! Volume = 27.54862875 at evaluation 2386
+  Evaluation 2400: volume = 27.548629
+*** New global best! Volume = 27.54862875 at evaluation 2403
+*** New global best! Volume = 27.54862936 at evaluation 2416
+*** New global best! Volume = 27.54862936 at evaluation 2418
+*** New global best! Volume = 27.54862936 at evaluation 2420
+*** New global best! Volume = 27.54862936 at evaluation 2421
+*** New global best! Volume = 27.54862981 at evaluation 2451
+*** New global best! Volume = 27.54862981 at evaluation 2453
+*** New global best! Volume = 27.54862981 at evaluation 2461
+*** New global best! Volume = 27.54862981 at evaluation 2466
+*** New global best! Volume = 27.54862981 at evaluation 2469
+*** New global best! Volume = 27.54863007 at evaluation 2486
+*** New global best! Volume = 27.54863007 at evaluation 2490
+  Evaluation 2500: volume = 27.548630
+*** New global best! Volume = 27.54863007 at evaluation 2501
+*** New global best! Volume = 27.54863007 at evaluation 2502
+*** New global best! Volume = 27.54863007 at evaluation 2504
+*** New global best! Volume = 27.54863028 at evaluation 2521
+*** New global best! Volume = 27.54863028 at evaluation 2523
+*** New global best! Volume = 27.54863028 at evaluation 2524
+*** New global best! Volume = 27.54863028 at evaluation 2525
+*** New global best! Volume = 27.54863028 at evaluation 2536
+*** New global best! Volume = 27.54863028 at evaluation 2551
+*** New global best! Volume = 27.54863048 at evaluation 2556
+*** New global best! Volume = 27.54863048 at evaluation 2559
+*** New global best! Volume = 27.54863048 at evaluation 2562
+*** New global best! Volume = 27.54863060 at evaluation 2591
+*** New global best! Volume = 27.54863060 at evaluation 2594
+*** New global best! Volume = 27.54863060 at evaluation 2596
+  Evaluation 2600: volume = 27.548631
+*** New global best! Volume = 27.54863060 at evaluation 2609
+*** New global best! Volume = 27.54863067 at evaluation 2626
+*** New global best! Volume = 27.54863067 at evaluation 2628
+*** New global best! Volume = 27.54863067 at evaluation 2633
+*** New global best! Volume = 27.54863067 at evaluation 2635
+*** New global best! Volume = 27.54863067 at evaluation 2644
+*** New global best! Volume = 27.54863070 at evaluation 2661
+*** New global best! Volume = 27.54863070 at evaluation 2663
+*** New global best! Volume = 27.54863070 at evaluation 2664
+*** New global best! Volume = 27.54863070 at evaluation 2678
+*** New global best! Volume = 27.54863071 at evaluation 2696
+*** New global best! Volume = 27.54863071 at evaluation 2698
+*** New global best! Volume = 27.54863071 at evaluation 2699
+  Evaluation 2700: volume = 27.548631
+*** New global best! Volume = 27.54863071 at evaluation 2700
+*** New global best! Volume = 27.54863071 at evaluation 2701
+*** New global best! Volume = 27.54863071 at evaluation 2723
+*** New global best! Volume = 27.54863071 at evaluation 2729
+*** New global best! Volume = 27.54863072 at evaluation 2731
+*** New global best! Volume = 27.54863072 at evaluation 2732
+*** New global best! Volume = 27.54863072 at evaluation 2734
+*** New global best! Volume = 27.54863072 at evaluation 2736
+*** New global best! Volume = 27.54863072 at evaluation 2740
+*** New global best! Volume = 27.54863072 at evaluation 2752
+*** New global best! Volume = 27.54863072 at evaluation 2766
+*** New global best! Volume = 27.54863072 at evaluation 2768
+*** New global best! Volume = 27.54863072 at evaluation 2769
+  Evaluation 2800: volume = 27.548631
+*** New global best! Volume = 27.54863072 at evaluation 2801
+*** New global best! Volume = 27.54863072 at evaluation 2804
+*** New global best! Volume = 27.54863072 at evaluation 2822
+*** New global best! Volume = 27.54863072 at evaluation 2836
+*** New global best! Volume = 27.54863072 at evaluation 2837
+*** New global best! Volume = 27.54863072 at evaluation 2841
+*** New global best! Volume = 27.54863072 at evaluation 2871
+*** New global best! Volume = 27.54863072 at evaluation 2875
+*** New global best! Volume = 27.54863072 at evaluation 2882
+*** New global best! Volume = 27.54863072 at evaluation 2893
+  Evaluation 2900: volume = 27.548631
+
+Trial 1 complete:
+  Final volume: 27.54863072
+  Ratio to dodecahedron: 0.854737
+  Local maxima found: 25
+
+==================================================
+TRIAL 2/5: random_circle initialization
+==================================================
+  Evaluation 100: volume = 24.477535
+  Evaluation 200: volume = 25.261354
+  Evaluation 300: volume = 25.901184
+  Evaluation 400: volume = 26.467722
+  Evaluation 500: volume = 26.686910
+  Evaluation 600: volume = 26.831357
+  Evaluation 700: volume = 26.856382
+  Evaluation 800: volume = 26.897070
+  Evaluation 900: volume = 26.961072
+  Evaluation 1000: volume = 27.002003
+  Evaluation 1100: volume = 27.008570
+  Evaluation 1200: volume = 27.011630
+  Evaluation 1300: volume = 27.013357
+  Evaluation 1400: volume = 27.013978
+  Evaluation 1500: volume = 27.014628
+  Evaluation 1600: volume = 27.014887
+  Evaluation 1700: volume = 27.014979
+  Evaluation 1800: volume = 27.014988
+  Evaluation 1900: volume = 27.015002
+  Evaluation 2000: volume = 27.015018
+  Evaluation 2100: volume = 27.015043
+  Evaluation 2200: volume = 27.015058
+  Evaluation 2300: volume = 27.015063
+  Evaluation 2400: volume = 27.015064
+  Evaluation 2500: volume = 27.015064
+  Evaluation 2600: volume = 27.015064
+
+Trial 2 complete:
+  Final volume: 27.01506414
+  Ratio to dodecahedron: 0.838183
+  Local maxima found: 25
+
+==================================================
+TRIAL 3/5: random_disk initialization
+==================================================
+  Evaluation 100: volume = 23.459963
+  Evaluation 200: volume = 25.688866
+  Evaluation 300: volume = 25.910602
+  Evaluation 400: volume = 26.205103
+  Evaluation 500: volume = 26.714573
+  Evaluation 600: volume = 27.005293
+  Evaluation 700: volume = 27.054319
+  Evaluation 800: volume = 27.152379
+  Evaluation 900: volume = 27.215488
+  Evaluation 1000: volume = 27.260456
+  Evaluation 1100: volume = 27.272952
+  Evaluation 1200: volume = 27.274698
+  Evaluation 1300: volume = 27.275057
+  Evaluation 1400: volume = 27.275173
+  Evaluation 1500: volume = 27.275285
+  Evaluation 1600: volume = 27.275341
+  Evaluation 1700: volume = 27.275377
+  Evaluation 1800: volume = 27.275389
+  Evaluation 1900: volume = 27.275393
+  Evaluation 2000: volume = 27.275394
+  Evaluation 2100: volume = 27.275395
+  Evaluation 2200: volume = 27.275397
+  Evaluation 2300: volume = 27.275397
+  Evaluation 2400: volume = 27.275403
+  Evaluation 2500: volume = 27.275410
+  Evaluation 2600: volume = 27.275410
+  Evaluation 2700: volume = 27.275411
+  Evaluation 2800: volume = 27.275411
+  Evaluation 2900: volume = 27.275411
+
+Trial 3 complete:
+  Final volume: 27.27541060
+  Ratio to dodecahedron: 0.846260
+  Local maxima found: 25
+
+==================================================
+TRIAL 4/5: clustered initialization
+==================================================
+  Evaluation 100: volume = 21.141349
+  Evaluation 200: volume = 24.767845
+  Evaluation 300: volume = 25.628796
+  Evaluation 400: volume = 26.270812
+  Evaluation 500: volume = 26.491627
+  Evaluation 600: volume = 26.596261
+  Evaluation 700: volume = 26.647387
+  Evaluation 800: volume = 26.689073
+  Evaluation 900: volume = 26.704545
+  Evaluation 1000: volume = 26.709949
+  Evaluation 1100: volume = 26.713855
+  Evaluation 1200: volume = 26.714965
+  Evaluation 1300: volume = 26.715395
+  Evaluation 1400: volume = 26.715565
+  Evaluation 1500: volume = 26.715629
+  Evaluation 1600: volume = 26.715675
+  Evaluation 1700: volume = 26.715711
+  Evaluation 1800: volume = 26.715730
+  Evaluation 1900: volume = 26.715750
+  Evaluation 2000: volume = 26.715771
+  Evaluation 2100: volume = 26.715782
+  Evaluation 2200: volume = 26.715805
+  Evaluation 2300: volume = 26.715809
+  Evaluation 2400: volume = 26.715812
+  Evaluation 2500: volume = 26.715818
+  Evaluation 2600: volume = 26.715819
+  Evaluation 2700: volume = 26.715819
+  Evaluation 2800: volume = 26.715819
+
+Trial 4 complete:
+  Final volume: 26.71581916
+  Ratio to dodecahedron: 0.828898
+  Local maxima found: 25
+
+==================================================
+TRIAL 5/5: golden_spiral initialization
+==================================================
+  Evaluation 100: volume = 25.747184
+  Evaluation 200: volume = 25.947960
+  Evaluation 300: volume = 26.214834
+  Evaluation 400: volume = 26.365717
+  Evaluation 500: volume = 26.556443
+  Evaluation 600: volume = 26.680132
+  Evaluation 700: volume = 26.703868
+  Evaluation 800: volume = 26.724591
+  Evaluation 900: volume = 26.726848
+  Evaluation 1000: volume = 26.729143
+  Evaluation 1100: volume = 26.730151
+  Evaluation 1200: volume = 26.730859
+  Evaluation 1300: volume = 26.731128
+  Evaluation 1400: volume = 26.731196
+  Evaluation 1500: volume = 26.731266
+  Evaluation 1600: volume = 26.731301
+  Evaluation 1700: volume = 26.731310
+  Evaluation 1800: volume = 26.731315
+  Evaluation 1900: volume = 26.731317
+  Evaluation 2000: volume = 26.731318
+  Evaluation 2100: volume = 26.731319
+  Evaluation 2200: volume = 26.731320
+  Evaluation 2300: volume = 26.731320
+  Evaluation 2400: volume = 26.731320
+  Evaluation 2500: volume = 26.731320
+  Evaluation 2600: volume = 26.731320
+
+Trial 5 complete:
+  Final volume: 26.73131985
+  Ratio to dodecahedron: 0.829379
+  Local maxima found: 25
+
+======================================================================
+OPTIMIZATION COMPLETE!
+======================================================================
+Total local maxima found: 25
+Volume range: 26.153823 - 27.548299
+Best volume: 27.54863072
+Ratio to dodecahedron: 0.854737
+
+Local maxima saved to 20vertex_local_maxima.json
+Next step: Check each local maximum for arithmeticity!

@@ -1,0 +1,31 @@
+Starting 20-vertex ideal polyhedron optimization
+This will run in the background and save results periodically.
+To stop gracefully, use: kill -SIGTERM <pid>
+Process ID: 87411
+
+======================================================================
+Starting optimization with seed 0 at 2025-10-14 16:09:45.056801
+======================================================================
+Regular dodecahedron volume (approx): 32.230523
+Traceback (most recent call last):
+  File "/Users/igorrivin/devel/delideal/ideal_poly_volume_toolkit_final/optimize_20vertex_background.py", line 214, in <module>
+    run_multiple_seeds(n_seeds=10, max_iterations=10000)
+  File "/Users/igorrivin/devel/delideal/ideal_poly_volume_toolkit_final/optimize_20vertex_background.py", line 169, in run_multiple_seeds
+    config, history = optimize_20vertex_volume(seed=seed, 
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/igorrivin/devel/delideal/ideal_poly_volume_toolkit_final/optimize_20vertex_background.py", line 98, in optimize_20vertex_volume
+    volume = ideal_poly_volume_via_delaunay(vertices, mode='fast', series_terms=200)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/igorrivin/devel/delideal/ideal_poly_volume_toolkit_final/ideal_poly_volume_toolkit/geometry.py", line 109, in ideal_poly_volume_via_delaunay
+    idx_tris = delaunay_triangulation_indices(z_finite_complex)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/igorrivin/devel/delideal/ideal_poly_volume_toolkit_final/ideal_poly_volume_toolkit/geometry.py", line 37, in delaunay_triangulation_indices
+    pts = np.column_stack([z_finite.real, z_finite.imag])
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/anaconda3/envs/accel/lib/python3.12/site-packages/numpy/lib/shape_base.py", line 648, in column_stack
+    arr = asanyarray(v)
+          ^^^^^^^^^^^^^
+  File "/opt/anaconda3/envs/accel/lib/python3.12/site-packages/torch/_tensor.py", line 1192, in __array__
+    return self.numpy()
+           ^^^^^^^^^^^^
+RuntimeError: Can't call numpy() on Tensor that requires grad. Use tensor.detach().numpy() instead.
