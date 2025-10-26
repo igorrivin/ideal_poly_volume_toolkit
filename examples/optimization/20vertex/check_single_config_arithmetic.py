@@ -3,7 +3,8 @@
 
 import json
 import sys
-sys.path.append('/Users/igorrivin/devel/platonic')
+# Import from local module
+sys.path.insert(0, '.')
 from check_local_maxima_arithmetic import check_arithmeticity
 
 # Load the current best configuration

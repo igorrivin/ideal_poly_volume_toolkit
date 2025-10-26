@@ -1,9 +1,7 @@
 import numpy as np
-import sys
-sys.path.append('/Users/igorrivin/devel/platonic')
-from rivin_holonomy import Triangulation, generators_from_triangulation
 import json
 from scipy.spatial import Delaunay
+from ideal_poly_volume_toolkit.rivin_holonomy import Triangulation, generators_from_triangulation
 
 def compute_holonomy_traces(vertices_complex, triangles):
     """

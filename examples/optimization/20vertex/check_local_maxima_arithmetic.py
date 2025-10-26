@@ -6,11 +6,9 @@ Tests the conjecture that local maxima are more likely to be arithmetic.
 
 import numpy as np
 import json
-import sys
-sys.path.append('/Users/igorrivin/devel/platonic')
-from rivin_holonomy import Triangulation, generators_from_triangulation
-from scipy.spatial import Delaunay
 import os
+from scipy.spatial import Delaunay
+from ideal_poly_volume_toolkit.rivin_holonomy import Triangulation, generators_from_triangulation
 
 def build_triangulation_from_config(vertices_dict):
     """Convert vertex configuration to triangulation for holonomy computation."""

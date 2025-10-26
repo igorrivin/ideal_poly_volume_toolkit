@@ -8,4 +8,9 @@ version = "0.3.0"
 description = "Ideal hyperbolic polyhedron volume: Delaunay + hull-project, fast+exact Lobachevsky, LBFGS examples."
 readme = "README.md"
 requires-python = ">=3.9"
-dependencies = ["numpy","scipy","mpmath","torch"]
+dependencies = ["numpy","scipy","mpmath","torch","matplotlib","gradio","trimesh","plotly","pynauty"]
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["ideal_poly_volume_toolkit*"]
+exclude = ["examples*", "results*", "scripts*", "docs*"]
