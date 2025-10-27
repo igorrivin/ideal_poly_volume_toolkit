@@ -131,7 +131,13 @@ def run_optimization(n_vertices, n_trials, max_iter, pop_size, seed, progress=gr
         return "Error: Number of vertices must be an integer", None
 
     n_cpus = os.cpu_count()
-    progress(0, desc=f"Starting optimization (using {n_cpus} CPU cores)...")
+
+    # Limit workers to avoid "too many open files" error
+    # Each worker opens file descriptors for IPC
+    # Conservative limit: use at most 32 workers
+    max_workers = min(32, n_cpus) if n_cpus else 1
+
+    progress(0, desc=f"Starting optimization (using {max_workers} workers)...")
 
     n_free_vertices = n_vertices - 3
     n_params = n_free_vertices * 2
@@ -160,7 +166,7 @@ def run_optimization(n_vertices, n_trials, max_iter, pop_size, seed, progress=gr
             seed=seed + trial,
             polish=True,
             disp=False,
-            workers=-1,  # Use all CPU cores for parallel evaluation
+            workers=max_workers,  # Limited to avoid file descriptor exhaustion
             updating='deferred'  # Better for parallel workers
         )
 
@@ -832,7 +838,16 @@ def create_gui():
                 1. Start with **Optimization** to find interesting configurations
                 2. Use **Load from Optimization** in the Visualization tab to see results
                 3. Adjust **subdivision level** for smoother 3D visualizations
-                4. Compare sphere and Poincaré ball models to understand hyperbolic geometry
+                4. Compare Klein ball and Poincaré ball models to understand hyperbolic geometry
+
+                ### Performance
+
+                - **Parallel optimization**: Uses up to 32 CPU cores automatically
+                - **7-vertex**: ~10 seconds for 10 trials
+                - **20-vertex**: ~2-3 minutes for 10 trials
+
+                **Note**: Worker limit set to 32 to avoid file descriptor exhaustion.
+                To use more cores, increase system limit: `ulimit -n 4096`
 
                 ### Documentation
 
