@@ -26,6 +26,7 @@ from PIL import Image
 from ideal_poly_volume_toolkit.geometry import (
     delaunay_triangulation_indices,
     triangle_volume_from_points_torch,
+    triangle_volume_bloch_wigner,
     ideal_poly_volume_via_delaunay,
 )
 from ideal_poly_volume_toolkit.visualization import (
@@ -102,8 +103,9 @@ def compute_volume(params, n_vertices):
     total_volume = 0
     for (i, j, k) in idx:
         try:
-            vol = triangle_volume_from_points_torch(
-                Z_torch[i], Z_torch[j], Z_torch[k], series_terms=64
+            # Use Bloch-Wigner dilogarithm (faster and more accurate than Lobachevsky series)
+            vol = triangle_volume_bloch_wigner(
+                Z_torch[i], Z_torch[j], Z_torch[k]
             )
             total_volume += vol.item()
         except:
