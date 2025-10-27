@@ -256,14 +256,15 @@ def analyze_volume_distribution(n_vertices, n_samples, seed, progress=gr.Progres
     """Analyze volume distribution with progress tracking.
 
     Note: n_vertices is the number of random vertices to add.
-    Total vertices = n_vertices + 2 fixed (0, 1) + 1 at infinity = n_vertices + 3
+    Finite vertices = n_vertices random + 2 fixed (0, 1) = n_vertices + 2
+    Total with infinity = n_vertices + 3
     """
     np.random.seed(seed)
 
     # Fixed vertices: 0, 1 (infinity is implicit in the volume computation)
     fixed_vertices = [complex(0, 0), complex(1, 0)]
     n_random = n_vertices
-    total_vertices = n_vertices + 3  # 0, 1, ∞ + n_vertices random
+    total_vertices = n_vertices + 2  # 0, 1 + n_vertices random (∞ is implicit, not counted)
 
     volumes = []
 
@@ -351,7 +352,8 @@ def analyze_volume_distribution(n_vertices, n_samples, seed, progress=gr.Progres
 **Configuration:**
 - Random vertices: {n_random}
 - Fixed vertices: 2 (at 0, 1)
-- **Total vertices: {total_vertices}** (including ∞)
+- **Finite vertices: {total_vertices}**
+- **Total (with ∞): {total_vertices + 1}**
 - Samples requested: {n_samples}
 - Valid samples: {len(volumes)}
 
