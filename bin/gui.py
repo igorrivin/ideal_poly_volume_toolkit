@@ -80,8 +80,8 @@ def compute_volume(params, n_vertices):
         PyTorch autodiff could be used but the Delaunay triangulation is
         not differentiable, making gradients unreliable near topology changes.
     """
-    complex_points = [complex(0, 0), complex(1, 0), complex(0, 1)]
-    n_params = n_vertices - 3
+    complex_points = [complex(0, 0), complex(1, 0)]
+    n_params = n_vertices - 3  # n_vertices includes 0, 1, ∞, plus (n_vertices-3) free
 
     for i in range(n_params):
         theta = params[2*i]
@@ -254,14 +254,14 @@ def analyze_volume_distribution(n_vertices, n_samples, seed, progress=gr.Progres
     """Analyze volume distribution with progress tracking.
 
     Note: n_vertices is the number of random vertices to add.
-    Total vertices = n_vertices + 3 fixed (0, 1, i) + 1 at infinity = n_vertices + 4
+    Total vertices = n_vertices + 2 fixed (0, 1) + 1 at infinity = n_vertices + 3
     """
     np.random.seed(seed)
 
-    # Fixed vertices: 0, 1, i (infinity is implicit in the volume computation)
-    fixed_vertices = [complex(0, 0), complex(1, 0), complex(0, 1)]
+    # Fixed vertices: 0, 1 (infinity is implicit in the volume computation)
+    fixed_vertices = [complex(0, 0), complex(1, 0)]
     n_random = n_vertices
-    total_vertices = n_vertices + 3  # Will have infinity implicitly
+    total_vertices = n_vertices + 3  # 0, 1, ∞ + n_vertices random
 
     volumes = []
 
@@ -328,8 +328,8 @@ def analyze_volume_distribution(n_vertices, n_samples, seed, progress=gr.Progres
 
 **Configuration:**
 - Random vertices: {n_random}
-- Fixed vertices: 3 (at 0, 1, i)
-- **Total vertices: {total_vertices}** (+ ∞)
+- Fixed vertices: 2 (at 0, 1)
+- **Total vertices: {total_vertices}** (including ∞)
 - Samples requested: {n_samples}
 - Valid samples: {len(volumes)}
 
@@ -664,8 +664,8 @@ def create_gui():
                 gr.Markdown("""
                 Analyze volume distributions by sampling random configurations.
 
-                **Note:** Vertices are added to fixed base (0, 1, i, ∞).
-                So 4 random vertices = 7 total vertices.
+                **Note:** Vertices are added to fixed base (0, 1, ∞).
+                So 4 random vertices = 7 total vertices (4 + 0, 1, ∞).
                 """)
 
                 with gr.Row():
