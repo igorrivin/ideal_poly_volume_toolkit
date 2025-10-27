@@ -294,12 +294,32 @@ def analyze_volume_distribution(n_vertices, n_samples, seed, progress=gr.Progres
         try:
             vertices_np = np.array(vertices, dtype=np.complex128)
             vol = ideal_poly_volume_via_delaunay(vertices_np, mode='fast', series_terms=96)
-            if 0 < vol < 1000:
+            if np.isfinite(vol) and 0 < vol < 1000:
                 volumes.append(vol)
-        except:
+        except Exception as e:
+            # Silently skip failed computations
             pass
 
     volumes = np.array(volumes)
+
+    # Check if we have any valid volumes
+    if len(volumes) == 0:
+        error_msg = f"""
+## Distribution Analysis Failed
+
+**Error:** No valid volume computations succeeded.
+
+**Possible causes:**
+- Random vertices may be generating degenerate configurations
+- Try increasing the number of samples
+- Try a different number of vertices
+
+**Configuration:**
+- Random vertices requested: {n_random}
+- Samples attempted: {n_samples}
+- Valid samples: 0
+"""
+        return error_msg, None
 
     # Create histogram
     fig, ax = plt.subplots(figsize=(10, 6))
