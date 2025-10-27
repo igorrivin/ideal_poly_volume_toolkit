@@ -306,10 +306,34 @@ def ideal_poly_volume_via_hull_project_back(W, index_inf=0, mode="fast", dps=120
         total += triangle_volume_from_points(z1, z2, z3, mode=mode, series_terms=series_terms, dps=dps)
     return total
 
-def ideal_poly_volume_via_delaunay(z_finite_complex: np.ndarray, mode="fast", dps=120, series_terms=64):
+def ideal_poly_volume_via_delaunay(z_finite_complex: np.ndarray, mode="fast", dps=120, series_terms=64, use_bloch_wigner=False):
+    """
+    Compute volume of ideal polyhedron using Delaunay triangulation.
+
+    Args:
+        z_finite_complex: Array of finite vertices (complex numbers)
+        mode: "fast" (series) or "exact" (mpmath) - only used if use_bloch_wigner=False
+        dps: Decimal precision for exact mode
+        series_terms: Number of terms for fast mode
+        use_bloch_wigner: If True, use Bloch-Wigner dilogarithm (most accurate)
+
+    Returns:
+        Total volume as float
+    """
     idx_tris = delaunay_triangulation_indices(z_finite_complex)
     total = 0.0
-    for (i,j,k) in idx_tris:
-        z1, z2, z3 = z_finite_complex[i], z_finite_complex[j], z_finite_complex[k]
-        total += triangle_volume_from_points(z1, z2, z3, mode=mode, series_terms=series_terms, dps=dps)
+
+    if use_bloch_wigner:
+        # Use Bloch-Wigner dilogarithm (most accurate and fast)
+        for (i,j,k) in idx_tris:
+            z1 = torch.tensor(z_finite_complex[i], dtype=torch.complex128)
+            z2 = torch.tensor(z_finite_complex[j], dtype=torch.complex128)
+            z3 = torch.tensor(z_finite_complex[k], dtype=torch.complex128)
+            total += triangle_volume_bloch_wigner(z1, z2, z3).item()
+    else:
+        # Use Lobachevsky function (series or exact)
+        for (i,j,k) in idx_tris:
+            z1, z2, z3 = z_finite_complex[i], z_finite_complex[j], z_finite_complex[k]
+            total += triangle_volume_from_points(z1, z2, z3, mode=mode, series_terms=series_terms, dps=dps)
+
     return total

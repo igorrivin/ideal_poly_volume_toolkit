@@ -2,7 +2,9 @@
 """
 Find optimal 9-vertex ideal polyhedron for LLM benchmark test.
 
-9 vertices = 0, 1, i, ∞ + 5 free vertices = 10 real parameters
+9 vertices = 0, 1, ∞ + 6 free vertices = 12 real parameters
+
+Uses Bloch-Wigner dilogarithm for precise volume computation.
 """
 
 import numpy as np
@@ -20,12 +22,15 @@ from ideal_poly_volume_toolkit.geometry import ideal_poly_volume_via_delaunay
 
 
 def compute_volume_objective(params, n_free):
-    """Objective function: negative volume for minimization."""
+    """Objective function: negative volume for minimization.
+
+    Uses Bloch-Wigner dilogarithm for precise, fast volume computation.
+    """
     real_parts = params[:n_free]
     imag_parts = params[n_free:]
 
-    # Fixed vertices: 0, 1, i
-    z_fixed = np.array([0.0 + 0.0j, 1.0 + 0.0j, 0.0 + 1.0j])
+    # Fixed vertices: 0, 1 (∞ is implicit in the triangulation)
+    z_fixed = np.array([0.0 + 0.0j, 1.0 + 0.0j])
 
     # Free vertices
     z_free = np.array([complex(r, i) for r, i in zip(real_parts, imag_parts)])
@@ -34,7 +39,8 @@ def compute_volume_objective(params, n_free):
     z_all = np.concatenate([z_fixed, z_free])
 
     try:
-        vol = ideal_poly_volume_via_delaunay(z_all, mode="fast", series_terms=64)
+        # Use Bloch-Wigner dilogarithm for precise computation
+        vol = ideal_poly_volume_via_delaunay(z_all, use_bloch_wigner=True)
         return -vol  # Negative for maximization
     except:
         return 1e10  # Penalty for invalid configurations
@@ -42,12 +48,12 @@ def compute_volume_objective(params, n_free):
 
 def main():
     print("=" * 70)
-    print("Optimizing 9-vertex ideal polyhedron (5 free + 0,1,i,∞)")
+    print("Optimizing 9-vertex ideal polyhedron (6 free + 0,1,∞)")
     print("=" * 70)
 
-    n_free_vertices = 5
+    n_free_vertices = 6  # 9 total = 0, 1, ∞ + 6 free
     n_params = n_free_vertices * 2
-    n_trials = 5  # Reduced from 10 for speed
+    n_trials = 10  # More trials for better optimization
 
     # Bounds for optimization
     bounds = [(-2, 2)] * n_params
@@ -97,15 +103,15 @@ def main():
     real_parts = best_config[:n_free]
     imag_parts = best_config[n_free:]
 
-    z_fixed = np.array([0.0 + 0.0j, 1.0 + 0.0j, 0.0 + 1.0j])
+    z_fixed = np.array([0.0 + 0.0j, 1.0 + 0.0j])
     z_free = np.array([complex(r, i) for r, i in zip(real_parts, imag_parts)])
     z_all = np.concatenate([z_fixed, z_free])
 
     print("\nVertices:")
-    print("  Fixed: 0, 1, i, ∞")
+    print("  Fixed: 0, 1, ∞")
     print("  Free:")
     for i, z in enumerate(z_free):
-        print(f"    z{i+3}: {z.real:.6f} + {z.imag:.6f}i")
+        print(f"    z{i+2}: {z.real:.6f} + {z.imag:.6f}i")
 
     # Save results
     result_data = {
@@ -114,15 +120,15 @@ def main():
             "date": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
             "n_vertices": 9,
             "n_trials": n_trials,
-            "best_seed": int(best_seed)
+            "best_seed": int(best_seed),
+            "computation_method": "Bloch-Wigner dilogarithm"
         },
         "optimal_configuration": {
             "volume": float(best_volume),
             "vertices": {
                 "fixed": [
                     {"real": 0.0, "imag": 0.0},
-                    {"real": 1.0, "imag": 0.0},
-                    {"real": 0.0, "imag": 1.0}
+                    {"real": 1.0, "imag": 0.0}
                 ],
                 "free": [
                     {"real": float(z.real), "imag": float(z.imag)}
