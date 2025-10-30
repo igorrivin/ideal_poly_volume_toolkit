@@ -180,7 +180,7 @@ def run_optimization(n_vertices, n_trials, max_iter, pop_size, seed, progress=gr
             best_params = result.x
 
     # Reconstruct best configuration
-    complex_points = [complex(0, 0), complex(1, 0), complex(0, 1)]
+    complex_points = [complex(0, 0), complex(1, 0)]
     for i in range(n_free_vertices):
         theta = best_params[2*i]
         phi = best_params[2*i + 1]

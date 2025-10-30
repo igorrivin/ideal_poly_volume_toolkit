@@ -13,7 +13,6 @@ from ideal_poly_volume_toolkit.geometry import (
 # Test a simple configuration
 z1 = complex(0, 0)
 z2 = complex(1, 0)
-z3 = complex(0, 1)
 z4 = complex(-1, 0)
 z5 = complex(0, -1)
 z6 = complex(0.5, 0.5)
@@ -52,7 +51,6 @@ print("\n" + "="*50)
 print("Testing 4-vertex configuration (tetrahedron):")
 z1 = complex(0, 0)
 z2 = complex(1, 0)
-z3 = complex(0, 1)
 z4 = complex(0.5, 0.5)
 
 complex_points = [z1, z2, z3, z4]

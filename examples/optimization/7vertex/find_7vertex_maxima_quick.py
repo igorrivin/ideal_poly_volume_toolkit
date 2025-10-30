@@ -12,7 +12,7 @@ from ideal_poly_volume_toolkit.geometry import (
 from scipy.optimize import differential_evolution
 
 def compute_volume(params):
-    Z = [complex(0, 0), complex(1, 0), complex(0, 1)]
+    Z = [complex(0, 0), complex(1, 0)]
     for i in range(4):
         theta = params[2*i]
         phi = params[2*i + 1]
@@ -41,7 +41,7 @@ def compute_volume(params):
         return 1000.0
 
 def get_degree_signature(params):
-    Z = [complex(0, 0), complex(1, 0), complex(0, 1)]
+    Z = [complex(0, 0), complex(1, 0)]
     for i in range(4):
         theta = params[2*i]
         phi = params[2*i + 1]
@@ -126,7 +126,7 @@ else:
     
     for i, (vol, sig) in enumerate(maxima[:3]):  # Check top 3
         params = signatures_seen[sig]['params']
-        Z = [complex(0, 0), complex(1, 0), complex(0, 1)]
+        Z = [complex(0, 0), complex(1, 0)]
         for j in range(4):
             theta = params[2*j]
             phi = params[2*j + 1]

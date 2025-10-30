@@ -31,15 +31,15 @@ def compute_volume(params, n_vertices):
     """
     Compute volume for a polyhedron with n_vertices.
 
-    First 3 vertices are fixed to break symmetry:
+    Fixed vertices to break symmetry:
     - z1 = 0
     - z2 = 1
-    - z3 = i
+    - z_∞ = ∞ (implicit in Delaunay triangulation)
 
     Remaining (n_vertices - 3) vertices are parameterized by spherical coords.
     """
-    # Fixed vertices
-    complex_points = [complex(0, 0), complex(1, 0), complex(0, 1)]
+    # Fixed vertices: 0 and 1 (infinity is implicit)
+    complex_points = [complex(0, 0), complex(1, 0)]
 
     # Parameterized vertices (2 params each: theta, phi)
     n_params = n_vertices - 3
@@ -107,7 +107,7 @@ def analyze_structure(Z_np, idx):
 
 def reconstruct_vertices(params, n_vertices):
     """Reconstruct complex vertices from parameters."""
-    complex_points = [complex(0, 0), complex(1, 0), complex(0, 1)]
+    complex_points = [complex(0, 0), complex(1, 0)]
 
     n_params = n_vertices - 3
     for i in range(n_params):

@@ -14,7 +14,7 @@ from scipy.optimize import differential_evolution
 def compute_volume(params):
     """Compute volume from spherical parameters."""
     # Fixed vertices
-    Z = [complex(0, 0), complex(1, 0), complex(0, 1)]
+    Z = [complex(0, 0), complex(1, 0)]
     
     # Add 4 parameterized vertices
     for i in range(4):
@@ -68,7 +68,7 @@ for trial in range(5):
 print(f"\nBest volume: {best_volume:.6f}")
 
 # Reconstruct for analysis
-Z = [complex(0, 0), complex(1, 0), complex(0, 1)]
+Z = [complex(0, 0), complex(1, 0)]
 for i in range(4):
     theta = best_config[2*i]
     phi = best_config[2*i + 1]

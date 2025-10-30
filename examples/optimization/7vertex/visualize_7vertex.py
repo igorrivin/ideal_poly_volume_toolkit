@@ -7,7 +7,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 # The configuration from our optimization
-Z = [complex(0, 0), complex(1, 0), complex(0, 1),
+Z = [complex(0, 0), complex(1, 0),
      complex(-0.9959, 0.1942), complex(-0.4018, -0.9331),
      complex(0.8441, -1.2772), complex(0.3669, -0.5609)]
 

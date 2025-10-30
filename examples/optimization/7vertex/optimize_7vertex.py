@@ -22,10 +22,8 @@ def compute_volume_numpy(params):
     # First 3 points fixed to break symmetry
     z1 = complex(0, 0)
     z2 = complex(1, 0) 
-    z3 = complex(0, 1)
-    
     # Other 4 points from parameters (spherical coords)
-    complex_points = [z1, z2, z3]
+    complex_points = [z1, z2]
     for i in range(4):
         theta = params[2*i]
         phi = params[2*i + 1]
@@ -127,9 +125,7 @@ for trial in range(n_trials):
         # Reconstruct best configuration for analysis
         z1 = complex(0, 0)
         z2 = complex(1, 0)
-        z3 = complex(0, 1)
-        
-        complex_points = [z1, z2, z3]
+        complex_points = [z1, z2]
         for i in range(4):
             theta = best_params[2*i]
             phi = best_params[2*i + 1]

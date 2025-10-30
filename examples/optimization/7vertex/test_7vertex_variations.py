@@ -52,27 +52,27 @@ def evaluate_config(Z):
 configs = []
 
 # Config 1: Previous optimum
-Z1 = [complex(0, 0), complex(1, 0), complex(0, 1),
+Z1 = [complex(0, 0), complex(1, 0),
       complex(-0.9959, 0.1942), complex(-0.4018, -0.9331),
       complex(0.8441, -1.2772), complex(0.3669, -0.5609)]
 configs.append(("Previous optimum", Z1))
 
 # Config 2: Regular hexagon + center
 angles = np.linspace(0, 2*np.pi, 7)[:-1]
-Z2 = [complex(0, 0), complex(1, 0), complex(0, 1)]
-for a in angles[3:]:
+Z2 = [complex(0, 0), complex(1, 0)]
+for a in angles[2:]:
     Z2.append(complex(np.cos(a), np.sin(a)))
 configs.append(("Hexagon + center", Z2))
 
 # Config 3: Two triangles
-Z3 = [complex(0, 0), complex(1, 0), complex(0, 1),
+Z3 = [complex(0, 0), complex(1, 0),
       complex(0.5, 0.5), complex(-1, 0), complex(0, -1),
       complex(-0.5, -0.5)]
 configs.append(("Two triangles", Z3))
 
 # Config 4: Star pattern
-Z4 = [complex(0, 0), complex(1, 0), complex(0, 1)]
-for r, a in [(2, 0.5), (2, 2.5), (0.5, 4), (0.5, 5.5)]:
+Z4 = [complex(0, 0), complex(1, 0)]
+for r, a in [(2, 0.5), (2, 2.5), (0.5, 4), (0.5, 5.5), (1.5, 1.0)]:
     Z4.append(complex(r*np.cos(a), r*np.sin(a)))
 configs.append(("Star pattern", Z4))
 
@@ -112,8 +112,8 @@ best_vol = results[0][0]
 
 for i in range(5):
     # Perturb slightly
-    Z_perturbed = best_Z[:3]  # Keep first 3 fixed
-    for z in best_Z[3:]:
+    Z_perturbed = best_Z[:2]  # Keep first 2 fixed (0 and 1)
+    for z in best_Z[2:]:
         noise = 0.1 * (np.random.randn() + 1j*np.random.randn())
         Z_perturbed.append(z + noise)
     

@@ -15,7 +15,7 @@ import json
 def compute_volume(params):
     """Compute volume from spherical parameters."""
     # Fixed vertices
-    Z = [complex(0, 0), complex(1, 0), complex(0, 1)]
+    Z = [complex(0, 0), complex(1, 0)]
     
     # Add 4 parameterized vertices
     for i in range(4):
@@ -50,7 +50,7 @@ def compute_volume(params):
 
 def analyze_configuration(params):
     """Analyze the structure of a configuration."""
-    Z = [complex(0, 0), complex(1, 0), complex(0, 1)]
+    Z = [complex(0, 0), complex(1, 0)]
     for i in range(4):
         theta = params[2*i]
         phi = params[2*i + 1]

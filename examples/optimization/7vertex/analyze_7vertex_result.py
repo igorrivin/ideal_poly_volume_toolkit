@@ -15,7 +15,7 @@ best_params = [1.3962632, 0.0, 0.34906593, 3.14159277,
                2.09439515, 1.57079633, 2.79252652, 4.71238910]
 
 # Reconstruct configuration
-Z = [complex(0, 0), complex(1, 0), complex(0, 1)]
+Z = [complex(0, 0), complex(1, 0)]
 for i in range(4):
     theta = best_params[2*i]
     phi = best_params[2*i + 1]
