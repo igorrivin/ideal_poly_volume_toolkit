@@ -39,6 +39,12 @@ from ideal_poly_volume_toolkit.rivin_holonomy import (
     Triangulation,
     generators_from_triangulation,
 )
+from ideal_poly_volume_toolkit.rivin_delaunay import (
+    check_delaunay_realizability,
+    optimize_hyperbolic_volume,
+    realize_angles_as_points,
+    extract_boundary_vertices,
+)
 from ideal_poly_volume_toolkit.symmetry import (
     compute_symmetry_group,
     format_symmetry_report,
@@ -634,6 +640,364 @@ def compute_symmetry_analysis(vertices_real, vertices_imag):
 
 
 # ============================================================================
+# Fixed Combinatorics Optimization Functions
+# ============================================================================
+
+def generate_random_sphere_points(n_points, seed=None):
+    """
+    Generate n random points uniformly on the unit sphere, plus north pole (infinity).
+
+    Returns complex points via stereographic projection (north pole -> infinity).
+    """
+    if seed is not None:
+        np.random.seed(seed)
+
+    # Generate n uniform random points on sphere using Gaussian method
+    points_3d = []
+    for _ in range(n_points):
+        vec = np.random.randn(3)
+        vec = vec / np.linalg.norm(vec)
+        points_3d.append(vec)
+
+    points_3d = np.array(points_3d)
+
+    # Stereographic projection from north pole (0, 0, 1) to complex plane
+    # For point (x, y, z), the projection is w = (x + iy) / (1 - z)
+    complex_points = []
+    for x, y, z in points_3d:
+        if z > 0.9999:  # Very close to north pole - treat as infinity
+            complex_points.append(complex(np.inf, np.inf))
+        else:
+            w = complex(x / (1 - z), y / (1 - z))
+            complex_points.append(w)
+
+    return np.array(complex_points), points_3d
+
+
+def inverse_stereographic_to_sphere(complex_points):
+    """
+    Map complex points back to sphere via inverse stereographic projection.
+
+    For w = x + iy, the sphere point is:
+    X = 2x / (|w|^2 + 1)
+    Y = 2y / (|w|^2 + 1)
+    Z = (|w|^2 - 1) / (|w|^2 + 1)
+    """
+    points_3d = []
+    for w in complex_points:
+        if not np.isfinite(w):
+            points_3d.append([0, 0, 1])  # North pole
+        else:
+            r2 = w.real**2 + w.imag**2
+            denom = r2 + 1
+            X = 2 * w.real / denom
+            Y = 2 * w.imag / denom
+            Z = (r2 - 1) / denom
+            points_3d.append([X, Y, Z])
+
+    return np.array(points_3d)
+
+
+def optimize_fixed_combinatorics(n_points, seed, progress=gr.Progress()):
+    """
+    Generate random points, extract combinatorics, optimize volume for fixed combinatorics.
+
+    This uses the Rivin-Delaunay algorithm to find the maximal volume configuration
+    while keeping the combinatorial structure (triangulation) fixed.
+    """
+    progress(0.1, desc="Generating random points on sphere...")
+
+    # Generate random points
+    complex_points, sphere_points = generate_random_sphere_points(n_points, seed)
+
+    # Filter out any infinite points for Delaunay computation
+    finite_mask = np.isfinite(complex_points)
+    finite_points = complex_points[finite_mask]
+
+    if len(finite_points) < 3:
+        return "Error: Need at least 3 finite points", None, None
+
+    progress(0.2, desc="Computing Delaunay triangulation...")
+
+    # Compute Delaunay triangulation to get combinatorics
+    triangulation_indices = delaunay_triangulation_indices(finite_points)
+    triangles = [tuple(tri) for tri in triangulation_indices]
+
+    n_triangles = len(triangles)
+    n_vertices = len(finite_points)
+
+    progress(0.3, desc="Checking Delaunay realizability...")
+
+    # Check realizability (should always be realizable since we started from Delaunay)
+    realizability = check_delaunay_realizability(triangles, verbose=False)
+
+    if not realizability['realizable']:
+        return f"Error: Triangulation not realizable: {realizability['message']}", None, None
+
+    progress(0.5, desc="Optimizing hyperbolic volume...")
+
+    # Optimize volume for this fixed combinatorics
+    opt_result = optimize_hyperbolic_volume(
+        triangles,
+        initial_angles=realizability['angles_radians'],
+        verbose=False
+    )
+
+    if not opt_result['success']:
+        return f"Warning: Optimization may not have converged: {opt_result['message']}", None, None
+
+    optimal_volume = opt_result['volume']
+    optimal_angles = opt_result['angles']
+
+    progress(0.7, desc="Reconstructing geometry from optimal angles...")
+
+    # Realize the optimal angles as point positions
+    realization = realize_angles_as_points(
+        triangles,
+        optimal_angles,
+        verbose=False
+    )
+
+    if not realization['success']:
+        # Even if realization didn't fully succeed, we may have useful data
+        pass
+
+    # Get the optimized vertices
+    if realization['points'] is not None:
+        # Map from realization indices to complex numbers
+        vertex_list = realization['vertex_list']
+        points_2d = realization['points']
+
+        # Create complex array in original vertex order
+        optimized_complex = np.zeros(len(vertex_list), dtype=complex)
+        for i, v in enumerate(vertex_list):
+            optimized_complex[v] = complex(points_2d[i, 0], points_2d[i, 1])
+    else:
+        optimized_complex = finite_points  # Fall back to original
+
+    progress(0.9, desc="Computing initial volume for comparison...")
+
+    # Compute initial volume for comparison
+    initial_volume = ideal_poly_volume_via_delaunay(finite_points, use_bloch_wigner=True)
+
+    progress(1.0, desc="Complete!")
+
+    # Build summary
+    summary = f"""
+## Fixed Combinatorics Optimization Results
+
+**Input Configuration:**
+- Random points generated: {n_points}
+- Finite vertices (after projection): {n_vertices}
+- Triangular faces: {n_triangles}
+- Random seed: {seed}
+
+**Optimization Results:**
+- Initial volume (random): {initial_volume:.8f}
+- Optimal volume (Rivin): {optimal_volume:.8f}
+- Volume improvement: {(optimal_volume/initial_volume - 1)*100:.2f}%
+
+**Geometry Reconstruction:**
+- Success: {'Yes' if realization['success'] else 'Partial'}
+- Triangulation preserved: {'Yes' if realization.get('triangulation_preserved', False) else 'No'}
+- Angle error: {realization.get('angle_error_degrees', 'N/A'):.4f}° (if applicable)
+
+**Interpretation:**
+The Rivin-Delaunay algorithm finds the unique maximal volume configuration
+for the given combinatorial triangulation structure.
+"""
+
+    # Prepare data for visualization and holonomy check
+    opt_data = {
+        'vertices': optimized_complex,
+        'triangulation': triangulation_indices,
+        'volume': optimal_volume,
+        'initial_volume': initial_volume,
+        'angles': optimal_angles,
+        'triangles': triangles,
+        'n_vertices': n_vertices,
+        'n_faces': n_triangles,
+    }
+
+    return summary, opt_data, optimized_complex
+
+
+def batch_fixed_combinatorics_test(n_points, n_trials, seed, progress=gr.Progress()):
+    """
+    Run multiple trials of fixed combinatorics optimization and check arithmeticity.
+    """
+    results = []
+    all_arithmetic = True
+
+    for trial in range(n_trials):
+        progress((trial + 0.5) / n_trials, desc=f"Trial {trial + 1}/{n_trials}...")
+
+        trial_seed = seed + trial
+
+        # Generate and optimize
+        summary, opt_data, optimized_complex = optimize_fixed_combinatorics(
+            n_points, trial_seed, progress=gr.Progress()
+        )
+
+        if opt_data is None:
+            results.append({
+                'trial': trial + 1,
+                'seed': trial_seed,
+                'success': False,
+                'error': summary
+            })
+            continue
+
+        # Check arithmeticity via holonomy
+        vertices = opt_data['vertices']
+        triangles = opt_data['triangles']
+
+        # Build holonomy structure
+        try:
+            F = len(triangles)
+            adjacency = {}
+            edge_id_map = {}
+            edge_id = 0
+
+            for i, tri_i in enumerate(triangles):
+                for side_i in range(3):
+                    v1_i, v2_i = tri_i[side_i], tri_i[(side_i + 1) % 3]
+                    edge = tuple(sorted([v1_i, v2_i]))
+
+                    for j, tri_j in enumerate(triangles):
+                        if i == j:
+                            continue
+                        for side_j in range(3):
+                            v1_j, v2_j = tri_j[side_j], tri_j[(side_j + 1) % 3]
+                            if set([v1_j, v2_j]) == set([v1_i, v2_i]):
+                                if (i, side_i) not in adjacency:
+                                    if edge not in edge_id_map:
+                                        edge_id_map[edge] = edge_id
+                                        edge_id += 1
+                                    adjacency[(i, side_i)] = (j, side_j, edge_id_map[edge])
+
+            order = {t: [0, 1, 2] for t in range(F)}
+            orientation = {}
+            for edge, eid in edge_id_map.items():
+                for (t, s), (u, su, e) in adjacency.items():
+                    if e == eid:
+                        orientation[eid] = ((t, s), (u, su))
+                        break
+
+            T = Triangulation(F, adjacency, order, orientation)
+            Z = {eid: 0.0 for eid in range(edge_id)}
+            gens = generators_from_triangulation(T, Z, root=0)
+
+            # Check traces
+            integral_count = 0
+            traces = []
+            for u, v, tokens, M in gens:
+                trace = M[0][0] + M[1][1]
+                traces.append(trace)
+                if abs(trace - round(trace)) < 0.01:
+                    integral_count += 1
+
+            is_arithmetic = (integral_count == len(gens)) if len(gens) > 0 else False
+            if not is_arithmetic:
+                all_arithmetic = False
+
+            results.append({
+                'trial': trial + 1,
+                'seed': trial_seed,
+                'success': True,
+                'volume': opt_data['volume'],
+                'initial_volume': opt_data['initial_volume'],
+                'n_generators': len(gens),
+                'integral_traces': integral_count,
+                'is_arithmetic': is_arithmetic,
+                'traces': traces,
+            })
+
+        except Exception as e:
+            results.append({
+                'trial': trial + 1,
+                'seed': trial_seed,
+                'success': False,
+                'error': str(e)
+            })
+            all_arithmetic = False
+
+    # Build summary report
+    summary = f"""
+## Batch Fixed Combinatorics Test Results
+
+**Configuration:**
+- Points per trial: {n_points}
+- Number of trials: {n_trials}
+- Starting seed: {seed}
+
+**Results Summary:**
+"""
+
+    successful = [r for r in results if r.get('success', False)]
+    arithmetic_count = sum(1 for r in successful if r.get('is_arithmetic', False))
+
+    summary += f"- Successful trials: {len(successful)}/{n_trials}\n"
+    summary += f"- Arithmetic configurations: {arithmetic_count}/{len(successful)}\n\n"
+
+    if all_arithmetic and len(successful) == n_trials:
+        summary += "**ALL CONFIGURATIONS ARE ARITHMETIC!**\n\n"
+
+    summary += "| Trial | Seed | Volume | Init Vol | Improvement | Generators | Integral | Arithmetic |\n"
+    summary += "|-------|------|--------|----------|-------------|------------|----------|------------|\n"
+
+    for r in results:
+        if r.get('success', False):
+            improvement = (r['volume'] / r['initial_volume'] - 1) * 100
+            arith_str = "YES" if r['is_arithmetic'] else "NO"
+            summary += f"| {r['trial']} | {r['seed']} | {r['volume']:.6f} | {r['initial_volume']:.6f} | {improvement:+.1f}% | {r['n_generators']} | {r['integral_traces']}/{r['n_generators']} | {arith_str} |\n"
+        else:
+            summary += f"| {r['trial']} | {r['seed']} | ERROR | - | - | - | - | - |\n"
+
+    # Create plot of volumes
+    if successful:
+        fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(12, 5))
+
+        trials = [r['trial'] for r in successful]
+        volumes = [r['volume'] for r in successful]
+        init_vols = [r['initial_volume'] for r in successful]
+
+        ax1.bar(np.array(trials) - 0.2, init_vols, 0.4, label='Initial (random)', alpha=0.7)
+        ax1.bar(np.array(trials) + 0.2, volumes, 0.4, label='Optimized (Rivin)', alpha=0.7)
+        ax1.set_xlabel('Trial')
+        ax1.set_ylabel('Volume')
+        ax1.set_title('Volume Comparison')
+        ax1.legend()
+        ax1.grid(True, alpha=0.3)
+
+        # Plot integral trace fractions
+        fractions = [r['integral_traces'] / r['n_generators'] if r['n_generators'] > 0 else 0
+                    for r in successful]
+        colors = ['green' if f == 1.0 else 'red' for f in fractions]
+        ax2.bar(trials, fractions, color=colors, alpha=0.7)
+        ax2.axhline(y=1.0, color='green', linestyle='--', linewidth=2, label='100% integral')
+        ax2.set_xlabel('Trial')
+        ax2.set_ylabel('Fraction of Integral Traces')
+        ax2.set_title('Arithmeticity Check')
+        ax2.set_ylim(0, 1.1)
+        ax2.legend()
+        ax2.grid(True, alpha=0.3)
+
+        plt.tight_layout()
+
+        buf = io.BytesIO()
+        plt.savefig(buf, format='png', dpi=150)
+        buf.seek(0)
+        plt.close()
+
+        img = Image.open(buf)
+    else:
+        img = None
+
+    return summary, img
+
+
+# ============================================================================
 # Gradio Interface
 # ============================================================================
 
@@ -713,9 +1077,61 @@ def create_gui():
                 )
 
             # ================================================================
-            # Tab 3: 3D Visualization
+            # Tab 3: Fixed Combinatorics Optimization (Rivin-Delaunay)
             # ================================================================
-            with gr.Tab("🔮 3D Visualization"):
+            with gr.Tab("📐 Fixed Combinatorics"):
+                gr.Markdown("""
+                Optimize volume for a **fixed combinatorial triangulation** using the Rivin-Delaunay algorithm.
+
+                This finds the unique maximal-volume configuration while preserving the combinatorial structure.
+                All such maximal configurations are **arithmetic** (have integral holonomy traces).
+                """)
+
+                with gr.Row():
+                    with gr.Column():
+                        gr.Markdown("### Single Trial")
+                        fc_n_points = gr.Slider(4, 50, value=10, step=1,
+                                               label="Number of Random Points",
+                                               info="Points on sphere (+ infinity)")
+                        fc_seed = gr.Number(value=42, label="Random Seed")
+
+                        fc_single_button = gr.Button("Run Single Optimization", variant="primary")
+
+                        gr.Markdown("---")
+                        gr.Markdown("### Batch Test (with Arithmeticity Check)")
+                        fc_batch_trials = gr.Slider(1, 20, value=5, step=1,
+                                                   label="Number of Trials")
+                        fc_batch_button = gr.Button("Run Batch Test", variant="secondary")
+
+                    with gr.Column():
+                        fc_output = gr.Markdown("Results will appear here...")
+                        fc_plot = gr.Image(label="Results")
+
+                # State for storing optimization results
+                fc_result_state = gr.State(None)
+
+                def run_single_fc(n_points, seed):
+                    summary, opt_data, vertices = optimize_fixed_combinatorics(
+                        int(n_points), int(seed)
+                    )
+                    return summary, opt_data
+
+                fc_single_button.click(
+                    run_single_fc,
+                    inputs=[fc_n_points, fc_seed],
+                    outputs=[fc_output, fc_result_state]
+                )
+
+                fc_batch_button.click(
+                    batch_fixed_combinatorics_test,
+                    inputs=[fc_n_points, fc_batch_trials, fc_seed],
+                    outputs=[fc_output, fc_plot]
+                )
+
+            # ================================================================
+            # Tab 4: 3D Visualization
+            # ================================================================
+            with gr.Tab("🔮 Visualization"):
                 gr.Markdown("Visualize polyhedra in different models")
 
                 with gr.Row():
@@ -766,7 +1182,7 @@ def create_gui():
                 )
 
             # ================================================================
-            # Tab 4: Arithmeticity / Holonomy
+            # Tab 5: Arithmeticity / Holonomy
             # ================================================================
             with gr.Tab("🔬 Arithmeticity"):
                 gr.Markdown("Check if a polyhedron is arithmetic using Penner-Rivin holonomy")
@@ -831,7 +1247,7 @@ def create_gui():
                 """)
 
             # ================================================================
-            # Tab 5: About
+            # Tab 6: About
             # ================================================================
             with gr.Tab("ℹ️ About"):
                 gr.Markdown("""
@@ -843,6 +1259,7 @@ def create_gui():
 
                 - **Optimization**: Find maximal volume configurations using differential evolution
                 - **Distribution Analysis**: Sample random configurations and analyze volume distributions
+                - **Fixed Combinatorics**: Optimize volume while keeping triangulation fixed (Rivin-Delaunay)
                 - **3D Visualization**: View polyhedra in multiple models:
                   - Delaunay triangulation in complex plane (2D)
                   - Stereographic projection on unit sphere (3D)

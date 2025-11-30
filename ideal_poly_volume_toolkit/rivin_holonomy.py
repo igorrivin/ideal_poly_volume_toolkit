@@ -187,7 +187,337 @@ def generators_from_triangulation(T: Triangulation, Z, root=0):
         gens.append((u, v, tokens, M))
     return gens
 
+def triangulation_from_faces(triangles: List[Tuple[int, int, int]]) -> Tuple[Triangulation, Dict[int, float]]:
+    """
+    Build a Triangulation object from a list of triangle faces.
+
+    Args:
+        triangles: List of triangles, each as (v0, v1, v2) tuple of vertex indices
+
+    Returns:
+        Tuple of (Triangulation, Z) where Z is zero shear dict
+    """
+    F = len(triangles)
+    adjacency = {}
+    edge_id_map = {}
+    edge_id = 0
+
+    for i, tri_i in enumerate(triangles):
+        for side_i in range(3):
+            v1_i, v2_i = tri_i[side_i], tri_i[(side_i + 1) % 3]
+            edge = tuple(sorted([v1_i, v2_i]))
+
+            for j, tri_j in enumerate(triangles):
+                if i == j:
+                    continue
+                for side_j in range(3):
+                    v1_j, v2_j = tri_j[side_j], tri_j[(side_j + 1) % 3]
+                    if set([v1_j, v2_j]) == set([v1_i, v2_i]):
+                        if (i, side_i) not in adjacency:
+                            if edge not in edge_id_map:
+                                edge_id_map[edge] = edge_id
+                                edge_id += 1
+                            adjacency[(i, side_i)] = (j, side_j, edge_id_map[edge])
+
+    order = {t: [0, 1, 2] for t in range(F)}
+    orientation = {}
+    for edge, eid in edge_id_map.items():
+        for (t, s), (u, su, e) in adjacency.items():
+            if e == eid:
+                orientation[eid] = ((t, s), (u, su))
+                break
+
+    T = Triangulation(F, adjacency, order, orientation)
+    Z = {eid: 0.0 for eid in range(edge_id)}
+
+    return T, Z
+
+
+def check_arithmeticity(triangles: List[Tuple[int, int, int]],
+                        tolerance: float = 0.01,
+                        verbose: bool = False) -> Dict[str, Any]:
+    """
+    Check if a triangulation has arithmetic holonomy (all traces are integers).
+
+    A triangulation is arithmetic if all holonomy generator traces lie in Z.
+    This is a necessary condition for the ideal polyhedron to be arithmetic
+    (i.e., commensurable with PSL(2, O_K) for some number field K).
+
+    Args:
+        triangles: List of triangles as (v0, v1, v2) tuples
+        tolerance: Maximum distance from nearest integer to count as integral
+        verbose: If True, print detailed trace information
+
+    Returns:
+        Dict with keys:
+        - 'is_arithmetic': bool, True if all traces are integers
+        - 'n_generators': int, number of holonomy generators
+        - 'n_integral': int, number of generators with integral traces
+        - 'traces': list of trace values
+        - 'trace_details': list of dicts with trace analysis for each generator
+    """
+    T, Z = triangulation_from_faces(triangles)
+    gens = generators_from_triangulation(T, Z, root=0)
+
+    trace_details = []
+    integral_count = 0
+
+    for u, v, tokens, M in gens:
+        trace = M[0][0] + M[1][1]
+        nearest_int = round(trace)
+        distance = abs(trace - nearest_int)
+        is_integral = distance < tolerance
+
+        if is_integral:
+            integral_count += 1
+
+        detail = {
+            'generator': (u, v),
+            'trace': trace,
+            'nearest_int': nearest_int,
+            'distance': distance,
+            'is_integral': is_integral
+        }
+        trace_details.append(detail)
+
+        if verbose:
+            status = "INTEGRAL" if is_integral else ""
+            print(f"  Generator {u}-{v}: trace = {trace:.6f}, "
+                  f"nearest int = {nearest_int}, dist = {distance:.6f} {status}")
+
+    is_arithmetic = (integral_count == len(gens)) if len(gens) > 0 else True
+
+    return {
+        'is_arithmetic': is_arithmetic,
+        'n_generators': len(gens),
+        'n_integral': integral_count,
+        'traces': [d['trace'] for d in trace_details],
+        'trace_details': trace_details
+    }
+
+
+def compute_shears_from_vertices(triangles: List[Tuple[int, int, int]],
+                                  vertices_complex) -> Dict[int, float]:
+    """
+    Compute shear parameters from actual vertex positions.
+
+    For each interior edge shared by two triangles, the shear is computed
+    from the cross-ratio of the four vertices involved.
+
+    The shear z on edge (v2, v3) shared by triangles (v1, v2, v3) and (v2, v4, v3) is:
+        z = log|cross_ratio(v1, v2, v4, v3)|
+
+    where cross_ratio(a, b, c, d) = (a-c)(b-d) / ((a-d)(b-c))
+
+    Args:
+        triangles: List of triangles as (v0, v1, v2) tuples
+        vertices_complex: Array of complex vertex coordinates
+
+    Returns:
+        Dict mapping edge_id -> shear value
+    """
+    import numpy as np
+
+    # Build edge adjacency structure
+    edge_triangles = {}  # edge -> list of (tri_idx, opposite_vertex)
+
+    for tri_idx, tri in enumerate(triangles):
+        for i in range(3):
+            v1, v2 = tri[i], tri[(i + 1) % 3]
+            opposite = tri[(i + 2) % 3]
+            edge = tuple(sorted([v1, v2]))
+
+            if edge not in edge_triangles:
+                edge_triangles[edge] = []
+            edge_triangles[edge].append((tri_idx, opposite, v1, v2))
+
+    # Assign edge IDs and compute shears
+    shears = {}
+    edge_id = 0
+
+    for edge, tri_list in edge_triangles.items():
+        if len(tri_list) == 2:  # Interior edge
+            # Get the four vertices: two on the edge, two opposite
+            _, opp1, e1, e2 = tri_list[0]
+            _, opp2, _, _ = tri_list[1]
+
+            # Get complex coordinates
+            z1 = complex(vertices_complex[opp1])  # opposite vertex 1
+            z2 = complex(vertices_complex[e1])     # edge vertex 1
+            z3 = complex(vertices_complex[e2])     # edge vertex 2
+            z4 = complex(vertices_complex[opp2])  # opposite vertex 2
+
+            # Compute cross-ratio: (z1-z3)(z2-z4) / ((z1-z4)(z2-z3))
+            num = (z1 - z3) * (z2 - z4)
+            den = (z1 - z4) * (z2 - z3)
+
+            if abs(den) > 1e-10:
+                cr = num / den
+                # Shear is log of absolute value of cross-ratio
+                shear = math.log(abs(cr)) if abs(cr) > 1e-10 else 0.0
+            else:
+                shear = 0.0
+
+            shears[edge_id] = shear
+            edge_id += 1
+
+    return shears
+
+
+def check_arithmeticity_from_vertices(vertices_complex, tolerance: float = 0.01,
+                                      verbose: bool = False) -> Dict[str, Any]:
+    """
+    Check arithmeticity given complex vertex coordinates.
+
+    Computes Delaunay triangulation and checks holonomy traces using
+    the actual shear parameters derived from the geometry.
+
+    For random vertex positions, shears are non-zero and traces are
+    typically non-integral (non-arithmetic).
+
+    For Rivin-Delaunay optimized positions, shears are zero and traces
+    are integers (arithmetic).
+
+    Args:
+        vertices_complex: Array of complex numbers (vertex positions)
+        tolerance: Maximum distance from nearest integer to count as integral
+        verbose: If True, print detailed trace information
+
+    Returns:
+        Same as check_arithmeticity(), plus 'shears' key with computed shears
+    """
+    import numpy as np
+    from scipy.spatial import Delaunay
+
+    # Compute Delaunay triangulation
+    pts = np.column_stack([np.real(vertices_complex), np.imag(vertices_complex)])
+    tri = Delaunay(pts)
+    triangles = [tuple(simplex) for simplex in tri.simplices]
+
+    # Build triangulation structure
+    T, Z_zero = triangulation_from_faces(triangles)
+
+    # Compute actual shears from geometry
+    shears = compute_shears_from_vertices(triangles, vertices_complex)
+
+    # Use actual shears for holonomy computation
+    gens = generators_from_triangulation(T, shears, root=0)
+
+    trace_details = []
+    integral_count = 0
+
+    for u, v, tokens, M in gens:
+        trace = M[0][0] + M[1][1]
+        nearest_int = round(trace)
+        distance = abs(trace - nearest_int)
+        is_integral = distance < tolerance
+
+        if is_integral:
+            integral_count += 1
+
+        detail = {
+            'generator': (u, v),
+            'trace': trace,
+            'nearest_int': nearest_int,
+            'distance': distance,
+            'is_integral': is_integral
+        }
+        trace_details.append(detail)
+
+        if verbose:
+            status = "INTEGRAL" if is_integral else ""
+            print(f"  Generator {u}-{v}: trace = {trace:.6f}, "
+                  f"nearest int = {nearest_int}, dist = {distance:.6f} {status}")
+
+    is_arithmetic = (integral_count == len(gens)) if len(gens) > 0 else True
+
+    return {
+        'is_arithmetic': is_arithmetic,
+        'n_generators': len(gens),
+        'n_integral': integral_count,
+        'traces': [d['trace'] for d in trace_details],
+        'trace_details': trace_details,
+        'shears': shears,
+    }
+
+
 if __name__ == "__main__":
-    print("rivin_holonomy.py loaded. Define a Triangulation(F, adjacency, order, orientation),")
-    print("provide a shear dict Z (edge_id -> real), then call generators_from_triangulation(T, Z, root=0).")
-    print("Each generator entry is (u, v, tokens, 2x2 matrix).")
+    import argparse
+    import json
+    import sys
+
+    parser = argparse.ArgumentParser(
+        description="Check arithmeticity of an ideal polyhedron via Penner-Rivin holonomy.",
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        epilog="""
+Examples:
+  %(prog)s config.json              # Check arithmeticity of configuration in JSON file
+  %(prog)s config.json --verbose    # Show detailed trace information
+
+JSON file format:
+  {
+    "vertices_real": [0.0, 1.0, 0.5, ...],
+    "vertices_imag": [0.0, 0.0, 0.866, ...]
+  }
+  OR
+  {
+    "triangles": [[0, 1, 2], [1, 2, 3], ...]
+  }
+
+Output:
+  ARITHMETIC    - All holonomy traces are integers (exit code 0)
+  NON-ARITHMETIC - Some traces are not integers (exit code 1)
+        """
+    )
+    parser.add_argument('input', nargs='?', help='JSON file with configuration')
+    parser.add_argument('--verbose', '-v', action='store_true',
+                        help='Show detailed trace information')
+    parser.add_argument('--tolerance', '-t', type=float, default=0.01,
+                        help='Tolerance for integrality check (default: 0.01)')
+
+    args = parser.parse_args()
+
+    if args.input is None:
+        print("Penner-Rivin Holonomy Arithmeticity Checker")
+        print("=" * 50)
+        print()
+        print("This module checks if an ideal polyhedron is arithmetic by computing")
+        print("the holonomy generators and verifying that all traces are integers.")
+        print()
+        print("Usage:")
+        print("  python -m ideal_poly_volume_toolkit.rivin_holonomy config.json")
+        print("  python -m ideal_poly_volume_toolkit.rivin_holonomy config.json --verbose")
+        print()
+        print("See --help for more information.")
+        sys.exit(0)
+
+    # Load configuration
+    with open(args.input, 'r') as f:
+        config = json.load(f)
+
+    # Check if we have vertices or triangles
+    if 'triangles' in config:
+        triangles = [tuple(t) for t in config['triangles']]
+        result = check_arithmeticity(triangles, args.tolerance, args.verbose)
+    elif 'vertices_real' in config and 'vertices_imag' in config:
+        import numpy as np
+        vertices = np.array(config['vertices_real']) + 1j * np.array(config['vertices_imag'])
+        result = check_arithmeticity_from_vertices(vertices, args.tolerance, args.verbose)
+    else:
+        print("Error: JSON must contain either 'triangles' or 'vertices_real'/'vertices_imag'")
+        sys.exit(2)
+
+    # Output result
+    if args.verbose:
+        print()
+        print("=" * 50)
+
+    print(f"Generators: {result['n_generators']}")
+    print(f"Integral traces: {result['n_integral']}/{result['n_generators']}")
+
+    if result['is_arithmetic']:
+        print("Result: ARITHMETIC")
+        sys.exit(0)
+    else:
+        print("Result: NON-ARITHMETIC")
+        sys.exit(1)

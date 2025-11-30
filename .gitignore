@@ -66,3 +66,20 @@ coverage.xml
 
 # Output images (keep the important ones)
 # *.png  # Commented out - we want to keep our visualization PNGs
+
+# Generated data files (root level only)
+/certificate_points.npy
+/delaunay_*.json
+/test_*.json
+/logs_*.txt
+/strict_mode_summary.txt
+
+# Challenge files (keep benchmark, ignore others at root)
+/challenge_for_llm.json
+/challenge_for_testing.json
+/complete_challenge_package.json
+/llm_benchmark_150v.json
+
+# Results data (keep structure, ignore large generated files)
+results/data/*.json
+bin/results/
