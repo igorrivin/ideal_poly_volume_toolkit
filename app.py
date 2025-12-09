@@ -41,7 +41,7 @@ except Exception as e:
         gr.Markdown("# Error Loading Application")
         gr.Markdown(f"```\n{error_msg}\n```")
 
-# HuggingFace Spaces will call demo.launch() automatically,
-# but we can also run this directly for testing
+# For Docker SDK on HF Spaces, we must explicitly launch
+# with server_name="0.0.0.0" to bind to all interfaces
 if __name__ == "__main__":
-    demo.launch()
+    demo.launch(server_name="0.0.0.0", server_port=7860)

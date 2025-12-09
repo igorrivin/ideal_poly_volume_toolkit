@@ -3,9 +3,7 @@ title: Ideal Polyhedron Volume Toolkit
 emoji: 🔺
 colorFrom: blue
 colorTo: purple
-sdk: gradio
-sdk_version: 5.6.0
-app_file: app.py
+sdk: docker
 pinned: false
 license: mit
 ---
