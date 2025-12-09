@@ -1,9 +1,11 @@
 # Dockerfile for HuggingFace Spaces (Docker SDK)
 FROM python:3.10-slim
 
-# Install system dependencies
+# Install system dependencies (including build tools for pynauty)
 RUN apt-get update && apt-get install -y \
     nauty \
+    libnauty-dev \
+    build-essential \
     git \
     && rm -rf /var/lib/apt/lists/*
 
