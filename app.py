@@ -9,6 +9,19 @@ HF Spaces automatically runs app.py and calls demo.launch().
 import os
 import sys
 
+# Debug: print versions before anything else
+try:
+    import gradio
+    print(f"Gradio version: {gradio.__version__}")
+except Exception as e:
+    print(f"Could not import gradio: {e}")
+
+try:
+    import huggingface_hub
+    print(f"HuggingFace Hub version: {huggingface_hub.__version__}")
+except Exception as e:
+    print(f"Could not import huggingface_hub: {e}")
+
 # Add the repo root to path so imports work
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
