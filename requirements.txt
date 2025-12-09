@@ -1,0 +1,15 @@
+# Requirements for HuggingFace Spaces deployment
+# Note: pynauty requires nauty system library (see packages.txt)
+
+numpy>=1.20
+scipy>=1.7
+mpmath>=1.3
+torch>=2.0
+matplotlib>=3.5
+gradio>=4.0
+trimesh>=3.15
+plotly>=5.0
+Pillow>=9.0
+
+# pynauty needs nauty C library - installed via packages.txt
+pynauty>=2.0

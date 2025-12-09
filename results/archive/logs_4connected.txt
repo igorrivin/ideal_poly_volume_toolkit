@@ -1,0 +1,253 @@
+======================================================================
+PARALLEL DELAUNAY REALIZABILITY ANALYSIS
+======================================================================
+
+Parameters:
+  Vertex range: 4 to 20
+  Parallel workers: 30
+  Min connectivity: 4
+  Time limit: 2.0 hours
+
+======================================================================
+Analyzing n=4 vertices (4-connected)
+======================================================================
+Generated 0 closed triangulations in 0.00s
+Creating 0 planar versions (remove each vertex)
+Total planar triangulations to test: 0
+Using 30 parallel workers
+Split into 0 chunks of ~1 triangulations each
+Testing realizability...
+
+Results:
+  Tested: 0/0
+  Realizable: 0 (0.0%)
+  Non-realizable: 0 (100.0%)
+  Testing time: 0.04s (no successful tests)
+
+======================================================================
+Analyzing n=5 vertices (4-connected)
+======================================================================
+Generated 0 closed triangulations in 0.00s
+Creating 0 planar versions (remove each vertex)
+Total planar triangulations to test: 0
+Using 30 parallel workers
+Split into 0 chunks of ~1 triangulations each
+Testing realizability...
+
+Results:
+  Tested: 0/0
+  Realizable: 0 (0.0%)
+  Non-realizable: 0 (100.0%)
+  Testing time: 0.04s (no successful tests)
+
+======================================================================
+Analyzing n=6 vertices (4-connected)
+======================================================================
+Generated 1 closed triangulations in 0.00s
+Creating 6 planar versions (remove each vertex)
+Total planar triangulations to test: 6
+Using 30 parallel workers
+Split into 6 chunks of ~1 triangulations each
+Testing realizability...
+
+Results:
+  Tested: 6/6
+  Realizable: 6 (100.0%)
+  Non-realizable: 0 (0.0%)
+  Testing time: 0.05s (8.36ms per triangulation)
+  Speedup: 250.90ms sequential equivalent
+
+======================================================================
+Analyzing n=7 vertices (4-connected)
+======================================================================
+Generated 1 closed triangulations in 0.00s
+Creating 7 planar versions (remove each vertex)
+Total planar triangulations to test: 7
+Using 30 parallel workers
+Split into 7 chunks of ~1 triangulations each
+Testing realizability...
+
+Results:
+  Tested: 7/7
+  Realizable: 7 (100.0%)
+  Non-realizable: 0 (0.0%)
+  Testing time: 0.05s (7.61ms per triangulation)
+  Speedup: 228.28ms sequential equivalent
+
+======================================================================
+Analyzing n=8 vertices (4-connected)
+======================================================================
+Generated 4 closed triangulations in 0.00s
+Creating 32 planar versions (remove each vertex)
+Total planar triangulations to test: 32
+Using 30 parallel workers
+Split into 32 chunks of ~1 triangulations each
+Testing realizability...
+
+Results:
+  Tested: 32/32
+  Realizable: 32 (100.0%)
+  Non-realizable: 0 (0.0%)
+  Testing time: 0.07s (2.25ms per triangulation)
+  Speedup: 67.63ms sequential equivalent
+
+======================================================================
+Analyzing n=9 vertices (4-connected)
+======================================================================
+Generated 10 closed triangulations in 0.00s
+Creating 90 planar versions (remove each vertex)
+Total planar triangulations to test: 90
+Using 30 parallel workers
+Split into 30 chunks of ~3 triangulations each
+Testing realizability...
+
+Results:
+  Tested: 90/90
+  Realizable: 90 (100.0%)
+  Non-realizable: 0 (0.0%)
+  Testing time: 0.08s (0.88ms per triangulation)
+  Speedup: 26.29ms sequential equivalent
+
+======================================================================
+Analyzing n=10 vertices (4-connected)
+======================================================================
+Generated 53 closed triangulations in 0.00s
+Creating 530 planar versions (remove each vertex)
+Total planar triangulations to test: 530
+Using 30 parallel workers
+Split into 32 chunks of ~17 triangulations each
+Testing realizability...
+
+Results:
+  Tested: 530/530
+  Realizable: 530 (100.0%)
+  Non-realizable: 0 (0.0%)
+  Testing time: 0.11s (0.21ms per triangulation)
+  Speedup: 6.32ms sequential equivalent
+
+======================================================================
+Analyzing n=11 vertices (4-connected)
+======================================================================
+Generated 292 closed triangulations in 0.01s
+Creating 3212 planar versions (remove each vertex)
+Total planar triangulations to test: 3212
+Using 30 parallel workers
+Split into 31 chunks of ~107 triangulations each
+Testing realizability...
+
+Results:
+  Tested: 3212/3212
+  Realizable: 3207 (99.8%)
+  Non-realizable: 5 (0.2%)
+  Testing time: 0.26s (0.08ms per triangulation)
+  Speedup: 2.44ms sequential equivalent
+
+======================================================================
+Analyzing n=12 vertices (4-connected)
+======================================================================
+Generated 2224 closed triangulations in 0.05s
+Creating 26688 planar versions (remove each vertex)
+Total planar triangulations to test: 26688
+Using 30 parallel workers
+Split into 31 chunks of ~889 triangulations each
+Testing realizability...
+
+Results:
+  Tested: 26688/26688
+  Realizable: 26478 (99.2%)
+  Non-realizable: 210 (0.8%)
+  Testing time: 1.47s (0.06ms per triangulation)
+  Speedup: 1.65ms sequential equivalent
+
+======================================================================
+Analyzing n=13 vertices (4-connected)
+======================================================================
+Generated 18493 closed triangulations in 0.35s
+Creating 240409 planar versions (remove each vertex)
+Total planar triangulations to test: 240409
+Using 30 parallel workers
+Split into 31 chunks of ~8013 triangulations each
+Testing realizability...
+
+Results:
+  Tested: 240409/240409
+  Realizable: 236078 (98.2%)
+  Non-realizable: 4331 (1.8%)
+  Testing time: 13.30s (0.06ms per triangulation)
+  Speedup: 1.66ms sequential equivalent
+
+======================================================================
+Analyzing n=14 vertices (4-connected)
+======================================================================
+Generated 167504 closed triangulations in 3.53s
+Creating 2345056 planar versions (remove each vertex)
+Total planar triangulations to test: 2345056
+Using 30 parallel workers
+Split into 31 chunks of ~78168 triangulations each
+Testing realizability...
+
+Results:
+  Tested: 2345056/2345056
+  Realizable: 2265570 (96.6%)
+  Non-realizable: 79486 (3.4%)
+  Testing time: 133.34s (0.06ms per triangulation)
+  Speedup: 1.71ms sequential equivalent
+
+======================================================================
+Analyzing n=15 vertices (4-connected)
+======================================================================
+Generated 1571020 closed triangulations in 36.40s
+Creating 23565300 planar versions (remove each vertex)
+Total planar triangulations to test: 23565300
+Using 30 parallel workers
+Split into 30 chunks of ~785510 triangulations each
+Testing realizability...
+
+Results:
+  Tested: 23565300/23565300
+  Realizable: 22280366 (94.5%)
+  Non-realizable: 1284934 (5.5%)
+  Testing time: 1401.45s (0.06ms per triangulation)
+  Speedup: 1.78ms sequential equivalent
+
+======================================================================
+Analyzing n=16 vertices (4-connected)
+======================================================================
+Generated 15151289 closed triangulations in 360.14s
+Creating 242420624 planar versions (remove each vertex)
+Total planar triangulations to test: 242420624
+Using 30 parallel workers
+Split into 31 chunks of ~8080687 triangulations each
+Testing realizability...
+
+Results:
+  Tested: 242420624/242420624
+  Realizable: 223132255 (92.0%)
+  Non-realizable: 19288369 (8.0%)
+  Testing time: 14260.33s (0.06ms per triangulation)
+  Speedup: 1.76ms sequential equivalent
+
+⏱ Time limit reached (4.65 hours)
+
+======================================================================
+SUMMARY
+======================================================================
+
+n    Closed   Planar   Realizable   %Real    Time(s) 
+----------------------------------------------------------------------
+4    0        0        0               0.0%      0.0
+5    0        0        0               0.0%      0.0
+6    1        6        6             100.0%      0.1
+7    1        7        7             100.0%      0.1
+8    4        32       32            100.0%      0.1
+9    10       90       90            100.0%      0.1
+10   53       530      530           100.0%      0.1
+11   292      3212     3207           99.8%      0.3
+12   2224     26688    26478          99.2%      1.5
+13   18493    240409   236078         98.2%     13.7
+14   167504   2345056  2265570        96.6%    136.9
+15   1571020  23565300 22280366       94.5%   1437.9
+16   15151289 242420624 223132255      92.0%  14620.5
+
+Total runtime: 4.65 hours
+Results saved to: results/delaunay_4connected_exhaustive.json

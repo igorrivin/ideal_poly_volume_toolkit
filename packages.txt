@@ -1,0 +1,5 @@
+# System packages for HuggingFace Spaces (apt packages)
+# These are installed before pip requirements
+
+# nauty library for graph isomorphism (required by pynauty)
+nauty
