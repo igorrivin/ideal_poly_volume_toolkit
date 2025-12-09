@@ -9,13 +9,24 @@ HF Spaces automatically runs app.py and calls demo.launch().
 import os
 import sys
 
-# Add bin directory to path so we can import gui module
+# Add the repo root to path so imports work
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
-from bin.gui import create_gui
+try:
+    from bin.gui import create_gui
+    demo = create_gui()
+    print("Successfully loaded Ideal Polyhedron Volume Toolkit GUI")
+except Exception as e:
+    # Fallback: show error in a simple Gradio interface
+    import gradio as gr
+    import traceback
 
-# Create the Gradio demo
-demo = create_gui()
+    error_msg = f"Failed to load the main GUI:\n\n{str(e)}\n\n{traceback.format_exc()}"
+    print(error_msg)
+
+    with gr.Blocks() as demo:
+        gr.Markdown("# Error Loading Application")
+        gr.Markdown(f"```\n{error_msg}\n```")
 
 # HuggingFace Spaces will call demo.launch() automatically,
 # but we can also run this directly for testing
