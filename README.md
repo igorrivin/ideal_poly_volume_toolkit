@@ -1,3 +1,15 @@
+---
+title: Ideal Polyhedron Volume Toolkit
+emoji: "🔺"
+colorFrom: blue
+colorTo: purple
+sdk: gradio
+sdk_version: "4.44.0"
+app_file: app.py
+pinned: false
+license: mit
+---
+
 # Ideal Polyhedra Volume Toolkit
 
 A Python toolkit for computing and optimizing volumes of ideal hyperbolic polyhedra using Delaunay triangulation, hull projection, and fast/exact Lobachevsky functions.
