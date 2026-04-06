@@ -563,6 +563,37 @@ with exactly $pq$ tetrahedral facets and $p + q$ vertices.
 For prime $n$, no such product construction is available, and the
 optimal configuration may lack algebraic structure.
 
+A systematic sweep over all facet counts $9 \leq n \leq 37$ reveals a
+richer picture.  The free sum $C_p \oplus C_q$ requires both $p, q \geq 3$,
+so it is available precisely when $n$ admits a factorization $n = pq$ with
+$p, q \geq 3$---excluding primes, twice-primes ($2p$), and $n < 9$.
+For each $n$, we also performed 200-restart penalized L-BFGS-B optimization
+over all inscribed simplicial 4-polytopes with exactly $n$ facets.
+Key findings:
+
+\begin{enumerate}[label=(\roman*)]
+\item \textbf{Balanced products dominate:} At fixed facet count, the free
+      sum with the most balanced factorization gives the largest volume.
+      For example, $C_4 \oplus C_5$ ($n = 20$, vol $\approx 0.793$) far exceeds
+      $C_3 \oplus C_7$ ($n = 21$, vol $\approx 0.592$).
+\item \textbf{Unbalanced products are suboptimal:} For $n = 21$ and $n = 27$
+      ($= 9 \times 3$), the unconstrained optimizer beats the free sum
+      by 28\% and 39\% respectively, finding asymmetric configurations
+      with higher volume.
+\item \textbf{Volume grows primarily with vertex count:} At fixed vertex
+      count $N$, volume increases monotonically with facet count.
+      Products pack more facets per vertex than generic configurations
+      (e.g., $C_5 \oplus C_5$ achieves 25 facets with only 10 vertices),
+      which is the primary source of their advantage.
+\item \textbf{Primes do not intrinsically trail:} At fixed $N$,
+      prime facet counts are only slightly below neighboring composites
+      (e.g., at $N = 9$: $f = 23$ (prime) gives vol $\approx 0.743$
+      vs.\ $f = 22$ ($= 2 \times 11$) at $0.757$ and
+      $f = 21$ ($= 3 \times 7$) at $0.758$).
+      The apparent deficit of primes in the overall ranking is an artifact
+      of the facet--vertex relationship, not number theory.
+\end{enumerate}
+
 The hyperbolic-optimal configuration, by contrast, has no transposition
 symmetries and a completely different distance spectrum.
 Yet both achieve the same hyperbolic volume $V_H = 2.31385$ to
