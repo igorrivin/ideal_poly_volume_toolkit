@@ -2,11 +2,17 @@
 
 ## Optimization
 
-- **Multi-start L-BFGS-B beats annealing** for this problem. The volume is smooth within each combinatorial stratum, so gradient methods dominate locally. 500 restarts with three-phase L-BFGS-B (progressively tighter tolerances) is currently the best approach.
+- **Cartesian parameterization beats angles.** Use 4N Cartesian coordinates with norm projection (x / |x|) rather than 3N spherical angles. The angle parameterization has coordinate singularities at the poles; Cartesian is smooth everywhere. Confirmed: Cartesian L-BFGS-B reaches 12.4417 for N=30 area, while angles only get 12.4339.
+
+- **Powell beats L-BFGS-B for facet-constrained problems.** When the objective has a discontinuous penalty (wrong facet count), derivative-free Powell handles the transitions better. For 17-facet optimization: Powell 83% valid hit rate vs L-BFGS-B 36%. Powell also finds better optima from random starts (5.035 vs 4.995).
+
+- **Multi-start L-BFGS-B beats annealing** for unconstrained problems. The volume is smooth within each combinatorial stratum, so gradient methods dominate locally. 500 restarts with three-phase L-BFGS-B (progressively tighter tolerances) is currently the best approach for fixed-N optimization.
 
 - **Simulated annealing** with an all-on-hull constraint has ~99.6% rejection rate for N=30 in 4D. The constraint is too restrictive for random tangent-space perturbations. If revisiting, relax the constraint or use basin-hopping.
 
-- **Two-level facet optimization** (outer: normals, inner: solve for support numbers) has a degeneracy failure mode where all vertices collapse to one point. The inner solver (least_squares with |v|^2 = 1 constraints) can find trivial solutions. The vertex-based approach (optimize vertices, filter by hull facet count) is more robust.
+- **Two-level facet optimization** (outer: normals, inner: solve for support numbers) has a degeneracy failure mode where all vertices collapse to one point. The vertex-based approach (optimize vertices, filter by hull facet count) is more robust.
+
+- **GPT's code contributions:** (a) Cartesian + normalize parameterization, (b) Gram determinant for per-facet 3-volume, (c) `count_actual_facets` via equation rounding to merge coplanar simplices, (d) Powell for facet-constrained optimization. All four are improvements over our original approach.
 
 ## Geometry
 
@@ -21,3 +27,17 @@
 - **ConvexHull facet equations** from scipy use the convention a·x + b ≤ 0 inside, with a not necessarily unit normal. Always normalize when computing distances.
 
 - **GPT's 9-decimal-place coordinates** are a sign that the values were generated in a forward pass, not by iterative optimization (which would give 15+ digits). Useful forensic indicator.
+
+- **Gemini's numerical claims** should be treated with suspicion. It claimed "numerical optimization confirms" 12.4417 but when asked for code, took an hour and produced code that only reaches 12.423. The 12.4417 number was likely sourced from training data, not computation. Gemini's algebraic derivations (e.g., exact formula for free sum area) are often correct; its numerical claims are often fabricated.
+
+## Free Sum Polytopes
+
+- **Free sum C_p ⊕ C_q** of two regular polygons in orthogonal planes gives a simplicial 4-polytope with pq facets and p+q vertices, all on S^3. Requires both p,q >= 3.
+
+- **Balanced products dominate.** C_4 ⊕ C_5 (vol 0.793) far exceeds C_3 ⊕ C_7 (vol 0.592) despite having fewer vertices. At fixed facet count, the most balanced factorization wins.
+
+- **For unbalanced products, the optimizer beats the free sum** — up to 52% better (e.g., f=33: C_11⊕C_3 = 0.644, optimizer = 0.976).
+
+- **The free sum simultaneously maximizes both Euclidean volume and surface area** for the N=9 / 20-facet case. This dual optimality fails for non-product configurations.
+
+- **The hyperbolic volume maximum is achieved on a manifold** (not an isolated point) for 20 facets, with near-zero Hessian eigenvalues. The free sum and the hyperbolic optimizer's solution are different points on this manifold with identical hyperbolic volume but 10%+ different Euclidean volume. For prime facet counts (17), the maximum is isolated (no near-zero eigenvalues).
