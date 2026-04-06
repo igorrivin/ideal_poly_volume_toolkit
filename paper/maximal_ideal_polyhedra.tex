@@ -522,6 +522,61 @@ functionals are effectively measuring the same underlying geometric
 quantity---roughly, how ``uniformly spread'' the points are on
 $S^{d-1}$.
 
+\subsection{Non-Isolated Maxima: The Volume Plateau}
+
+A striking observation emerges at $N = 9$ (equivalently, 20 simplicial facets
+in $d = 4$). We performed two independent 500-restart optimizations:
+\begin{enumerate}[label=(\roman*)]
+\item Maximize \emph{Euclidean} hull volume $V_E$ over 9 points on $S^3$.
+\item Maximize \emph{hyperbolic} ideal polytope volume $V_H$ over 9 points on $S^3$.
+\end{enumerate}
+Both converge to the same hyperbolic volume
+$V_H = 2.313851299873$ (to 13 digits), yet the two
+optimal configurations are \emph{metrically distinct}: their sorted
+pairwise chordal distance vectors differ by up to $0.25$.
+A third configuration, found independently by GPT-o3
+(using a different optimization method), achieves
+$V_H = 2.313850783625$---the same to 6 digits but a demonstrably
+different polytope (different Gram matrix).
+
+The Euclidean maximizer turns out to be a classical algebraic object:
+the \emph{free sum} $C_5 \oplus I \oplus I$, the convex hull of a
+regular pentagon in the $(x_1,x_2)$-plane and two orthogonal diameters
+$\pm e_3$, $\pm e_4$.  Its volume is
+\[
+V_E^* = \tfrac{5}{6}\sin\tfrac{2\pi}{5}
+      = \tfrac{5}{24}\sqrt{10 + 2\sqrt{5}}
+      \approx 0.792547.
+\]
+This configuration has only four distinct pairwise distances,
+with $\sqrt{2}$ appearing 24 out of 36 times, and is the
+\emph{unique} Euclidean maximizer (500 independent restarts all
+converge to the same value).
+
+The hyperbolic-optimal configuration, by contrast, has no transposition
+symmetries and a completely different distance spectrum.
+Yet both achieve the same hyperbolic volume $V_H = 2.31385$ to
+13 significant digits. A third configuration, found independently by
+GPT-o3 using a different optimization method, achieves
+$V_H = 2.31385078$---the same to 6 digits but again a
+demonstrably different polytope (different Gram matrix).
+
+The Hessian of $V_H$ at the hyperbolic optimum
+has two near-zero eigenvalues ($\sim 10^{-3}$), indicating that
+the maximum is achieved on (at least) a 2-dimensional manifold
+in the 16-dimensional configuration space
+$\mathrm{Conf}_9(S^3) / \mathrm{O}(4)$.
+
+This suggests a phenomenon that is invisible to
+$f$-vector comparisons: not only do different metrics find the same
+combinatorial type, but the hyperbolic volume maximum is achieved on
+a \emph{locus} that contains configurations with very different
+Euclidean properties.  The free sum $C_5 \oplus I \oplus I$---the
+unique maximizer of $V_E$---and the asymmetric hyperbolic maximizer
+are different points on this locus, connected by a flat ridge along
+which $V_H$ is constant (to the precision of our computation)
+but $V_E$ varies by over 10\%.
+
 \subsection{Isoperimetric Ratio}
 
 For the isoperimetric ratio $I(P) = \mathrm{Vol}_4(P) / \mathrm{Area}_3(\partial P)$,
