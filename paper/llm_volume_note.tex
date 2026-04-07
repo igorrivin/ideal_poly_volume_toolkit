@@ -30,9 +30,9 @@ with a specified geometric measure (volume, surface area, or isoperimetric ratio
 within a prescribed tolerance window. Unlike traditional benchmarks that test
 symbolic manipulation or theorem proving, these problems require the model to
 \emph{construct} a geometric object and produce a verifiable numerical certificate.
-We evaluate three frontier models (Claude, GPT-o3, and Gemini) on problems
+We evaluate three frontier models (Claude, GPT-5.4 Pro, and Gemini 3.1 Pro DeepThink) on problems
 in $\mathbb{H}^4$ and $\mathbb{H}^6$, revealing qualitatively different failure
-modes: GPT-o3 excels at persistent numerical construction but occasionally
+modes: GPT-5.4 Pro excels at persistent numerical construction but occasionally
 misinterprets the problem; Gemini produces elegant algebraic reasoning but
 fabricates numerical results; Claude's toolkit provides brute-force optimization
 with certified answers. A standalone checker based on the Haagerup--Munkholm
@@ -141,7 +141,7 @@ Bold indicates the best answer. A dash indicates no numerical answer was produce
 \smallskip
 \begin{tabular}{l r r r r}
 \toprule
-Task & Best known & Claude & GPT-o3 & Gemini \\
+Task & Best known & Claude & GPT-5.4 Pro & Gemini 3.1 \\
 \midrule
 $\mathbb{H}^4$ vol, $N=30$ & 22.262 & \textbf{22.262} & 22.107 & --- \\
 $\mathbb{H}^4$ vol, 20 simpl.\ facets & 2.3139 & \textbf{2.3139} & 2.3139 & 1.61$^*$ \\
@@ -164,8 +164,8 @@ and falsely claimed numerical optimization confirmation.}
 
 The three models exhibit qualitatively different strengths and failure modes.
 
-\paragraph{GPT-o3: persistent numerical constructor.}
-Given a problem, GPT-o3 typically
+\paragraph{GPT-5.4 Pro: persistent numerical constructor.}
+Given a problem, GPT-5.4 Pro typically
 produces explicit coordinates, verifies them by multiple methods
 (e.g., star triangulations from all vertices), and states honest caveats
 (``I have not proved this is optimal''). It identified the free sum
@@ -176,10 +176,10 @@ Its main weakness is occasional misinterpretation of the problem
 (e.g., reading $\mathbb{H}^6$ as the 6-cube in one instance, despite
 correctly interpreting $\mathbb{H}^4$ in a dozen previous conversations),
 which is easily corrected by re-prompting.
-On the 17-facet surface area problem, GPT-o3 found a configuration
+On the 17-facet surface area problem, GPT-5.4 Pro found a configuration
 (area 5.036) that our 1000-restart optimizer could not beat.
 
-\paragraph{Gemini: strong algebraic reasoner, unreliable numerical claims.}
+\paragraph{Gemini 3.1 Pro DeepThink: strong algebraic reasoner, unreliable numerical claims.}
 Gemini independently derived the exact formula
 $A = \frac{5}{3}\sqrt{15-\sqrt{5}}$ for the 20-facet surface area,
 and proposed creative constructions (the 10-10 duoprism on the Clifford
@@ -199,11 +199,11 @@ supremum instead of maximizing the volume).
 Using multi-start L-BFGS-B
 with 500+ restarts and a standalone verification pipeline, Claude's toolkit
 provides the strongest numerical results on most tasks but lacks the
-algebraic insight that GPT-o3 and Gemini occasionally provide. The hybrid
+algebraic insight that GPT-5.4 Pro and Gemini occasionally provide. The hybrid
 approach---using Euclidean warm starts followed by hyperbolic polishing---was
 discovered during this evaluation and reduces optimization time by 38\%.
 Several code improvements (Cartesian parameterization, Powell optimizer
-for facet-constrained problems) were adopted from GPT-o3's code suggestions.
+for facet-constrained problems) were adopted from GPT-5.4 Pro's code suggestions.
 
 \subsection{The ``windowed'' benchmark format}
 
@@ -224,7 +224,7 @@ $N = 10, 20, 30$ vertices, including facet-count-constrained variants.
 The evaluation suggests that current training procedures produce
 characteristically different failure modes:
 \begin{itemize}
-\item \textbf{GPT-o3} appears trained to minimize type~II errors
+\item \textbf{GPT-5.4 Pro} appears trained to minimize type~II errors
       (failure to produce useful output), resulting in persistent
       numerical construction with honest uncertainty quantification.
 \item \textbf{Gemini} appears trained to minimize type~I errors
