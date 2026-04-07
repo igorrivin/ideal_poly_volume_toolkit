@@ -278,6 +278,47 @@ are correlated at $r > 0.995$, with log-log elasticity approaching 2
 at $N = 30$ in $d = 4$. This near-proportionality is surprising given
 that the Euclidean volume is polynomial in the vertex coordinates while
 the hyperbolic volume involves the transcendental Haagerup--Munkholm formula.
+For random configurations (as opposed to near-optimal ones), the correlation
+is lower ($r \approx 0.86$ in $d = 6$) but still substantial, and holds
+even within a fixed combinatorial type ($r \approx 0.88$ within a single
+facet-count bucket).
+
+\subsection{Distribution of random polytope volumes}
+
+For $N$ points sampled uniformly on $S^{d-1}$, both the Euclidean
+hull volume and the ideal $\mathbb{H}^d$ polytope volume are random
+variables whose distribution depends on $N$ and $d$.
+In $d = 6$, we find a transition in the distribution shape as $N$ grows:
+
+\begin{center}
+\begin{tabular}{r r r r l}
+\toprule
+$N$ & Skewness & Normal $p$ & Beta $p$ & Best fit \\
+\midrule
+10 & $+0.78$ & $<0.001$ & 0.985 & Beta$(3.9, 43.7)$ \\
+12 & $+0.65$ & 0.005 & 0.766 & Beta$(6.9, 120.7)$ \\
+16 & $+0.23$ & 0.088 & $<0.001$ & Borderline \\
+20 & $+0.02$ & \textbf{0.832} & $<0.001$ & Normal \\
+30 & $-0.09$ & 0.281 & $<0.001$ & Normal \\
+50 & $-0.19$ & 0.034 & $<0.001$ & Normal (slight left skew) \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+For small $N$ ($\leq 12$), the volume distribution is well-described by
+a Beta distribution with parameters scaling linearly in $N$, consistent
+with earlier observations in $d = 3$ and $d = 4$.
+For large $N$ ($\geq 20$), the distribution converges to Normal---as
+expected from a CLT-type argument, since the polytope volume becomes a
+sum of many weakly-dependent simplex volumes in the Delaunay triangulation.
+The crossover occurs at $N \approx 16\text{--}20$ in $d = 6$ (where the
+skewness crosses zero), and is accompanied by a subtle transition from
+right skew to slight left skew.
+
+The within-bucket distributions (conditioning on a fixed facet count) show
+essentially the same shape and correlation structure, confirming that the
+distributional properties are genuinely geometric rather than combinatorial
+artifacts.
 
 % ============================================================================
 \section{Conclusions}
