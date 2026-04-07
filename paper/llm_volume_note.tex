@@ -202,8 +202,10 @@ provides the strongest numerical results on most tasks but lacks the
 algebraic insight that GPT-5.4 Pro and Gemini occasionally provide. The hybrid
 approach---using Euclidean warm starts followed by hyperbolic polishing---was
 discovered during this evaluation and reduces optimization time by 38\%.
-Several code improvements (Cartesian parameterization, Powell optimizer
-for facet-constrained problems) were adopted from GPT-5.4 Pro's code suggestions.
+Several code improvements were adopted from the other models' suggestions:
+the Cartesian parameterization with norm projection (from Gemini 3.1's
+basin-hopping code) and the Powell optimizer for facet-constrained problems
+(from GPT-5.4 Pro's code).
 
 \subsection{The ``windowed'' benchmark format}
 
