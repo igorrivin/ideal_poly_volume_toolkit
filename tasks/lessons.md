@@ -14,6 +14,12 @@
 
 - **GPT's code contributions:** (a) Cartesian + normalize parameterization, (b) Gram determinant for per-facet 3-volume, (c) `count_actual_facets` via equation rounding to merge coplanar simplices, (d) Powell for facet-constrained optimization. All four are improvements over our original approach.
 
+- **Hybrid Euclidean→Hyperbolic warm start** is faster and better than pure hyperbolic for moderate restarts (200): 22.041 vs 22.006, in 38% less time. But at 500 restarts with tight polish, pure angle hyperbolic (22.262) still beats hybrid (22.172). The Euclidean warm start misses some purely-hyperbolic basins.
+
+- **Cycling E→H→E→H does NOT help at N=30.** Only 9/200 restarts improved, mean gain 0.005. The Euclidean re-optimization pushes off the hyperbolic optimum; the second hyperbolic phase just climbs back. The ridge-walking hypothesis works for N=9 (composite, product structure) but not N=30 (landscape too rugged).
+
+- **Best strategy for production:** Run BOTH pure angle hyperbolic AND hybrid E→H in parallel, take the best of each. The two approaches find different basins.
+
 ## Geometry
 
 - **In H^3, boundary area is topological**: each ideal k-gon has H^2 area (k-2)π. Surface area optimization is genuinely geometric only in d ≥ 4, where boundary facets are ideal tetrahedra with continuously varying H^3-volumes.
