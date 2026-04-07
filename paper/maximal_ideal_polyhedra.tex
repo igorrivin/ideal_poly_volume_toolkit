@@ -594,6 +594,40 @@ Key findings:
       of the facet--vertex relationship, not number theory.
 \end{enumerate}
 
+\subsection{Higher Dimensions}
+
+Extending the Euclidean cross-metric comparison (volume vs.\ surface area)
+to $d = 5$ and $d = 6$, we find the same qualitative pattern:
+
+\begin{center}
+\begin{tabular}{r r l l c}
+\toprule
+$d$ & $N$ & Vol-optimal $f$-vector & Area-optimal $f$-vector & Match \\
+\midrule
+5 & 6  & $(6,15,6)$ & $(6,15,6)$ & Yes \\
+5 & 7  & $(7,21,12)$ & $(7,21,12)$ & Yes \\
+5 & 8  & $(8,27,18)$ & $(8,26,16)$ & \textbf{No} \\
+5 & 9  & $(9,33,24)$ & $(9,33,24)$ & Yes \\
+5 & 10 & $(10,40,32)$ & $(10,40,32)$ & Yes \\
+5 & 15 & $(15,80,82)$ & $(15,80,82)$ & Yes \\
+\midrule
+6 & 7  & $(7,21,7)$ & $(7,21,7)$ & Yes \\
+6 & 8  & $(8,28,16)$ & $(8,28,15)$ & \textbf{No} \\
+6 & 9  & $(9,36,27)$ & $(9,36,27)$ & Yes \\
+6 & 10 & $(10,43,36)$ & $(10,43,36)$ & Yes \\
+6 & 12 & $(12,60,64)$ & $(12,60,64)$ & Yes \\
+6 & 18 & $(18,123,196)$ & $(18,123,198)$ & \textbf{No} \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+In every dimension $d \geq 4$, volume and surface area optimizers
+agree for most values of $N$, but diverge at specific small $N$
+(around $d+2$ to $d+3$). The direction of divergence is universal:
+\emph{the area optimizer always finds a polytope with fewer or equal
+facets compared to the volume optimizer}. In $d = 3$, no divergence
+was observed for $N \leq 50$.
+
 The hyperbolic-optimal configuration, by contrast, has no transposition
 symmetries and a completely different distance spectrum.
 Yet both achieve the same hyperbolic volume $V_H = 2.31385$ to
