@@ -1,0 +1,337 @@
+\documentclass[11pt]{article}
+
+\usepackage{amsmath,amssymb,amsthm}
+\usepackage{graphicx}
+\usepackage{hyperref}
+\usepackage{booktabs}
+\usepackage{enumitem}
+\usepackage[margin=1in]{geometry}
+
+\newtheorem{theorem}{Theorem}
+\newtheorem{conjecture}{Conjecture}
+\newtheorem{remark}{Remark}
+
+\title{Hyperbolic Polytope Volume as an LLM Benchmark:\\
+Constructive Geometry Meets Numerical Verification}
+
+\author{Igor Rivin}
+
+\date{\today}
+
+\begin{document}
+
+\maketitle
+
+\begin{abstract}
+We propose a family of benchmark problems for evaluating the mathematical
+reasoning capabilities of large language models (LLMs): given $N$ points
+on $S^{d-1}$, construct an ideal polytope in hyperbolic $d$-space $\mathbb{H}^d$
+with a specified geometric measure (volume, surface area, or isoperimetric ratio)
+within a prescribed tolerance window. Unlike traditional benchmarks that test
+symbolic manipulation or theorem proving, these problems require the model to
+\emph{construct} a geometric object and produce a verifiable numerical certificate.
+We evaluate three frontier models (Claude, GPT-o3, and Gemini) on problems
+in $\mathbb{H}^4$ and $\mathbb{H}^6$, revealing qualitatively different failure
+modes: GPT-o3 excels at persistent numerical construction but occasionally
+misinterprets the problem; Gemini produces elegant algebraic reasoning but
+fabricates numerical results; Claude's toolkit provides brute-force optimization
+with certified answers. A standalone checker based on the Haagerup--Munkholm
+formula ($d=4$) and the Hopf reduction with Murakami dilogarithms ($d=6$)
+enables fully automated verification. As a byproduct of the evaluation,
+we discover a combinatorial invariance phenomenon: the $f$-vector of the
+volume-maximizing polytope is the same whether volume is measured in the
+Euclidean or hyperbolic sense, across dimensions $d = 3, 4, 5, 6$.
+\end{abstract}
+
+% ============================================================================
+\section{Introduction}
+% ============================================================================
+
+The rapid development of large language models has created a need for
+benchmarks that test genuine mathematical reasoning, not just pattern
+matching or memorization. An ideal benchmark should:
+\begin{enumerate}[label=(\roman*)]
+\item have a \emph{verifiable} answer that can be checked automatically;
+\item require \emph{construction}, not just classification or selection;
+\item be \emph{parameterizable}, so that memorization of specific instances
+      does not help;
+\item involve \emph{non-trivial mathematics} that is unlikely to appear
+      verbatim in training data.
+\end{enumerate}
+
+We propose that the following family of problems satisfies all four criteria:
+
+\medskip
+\noindent\textbf{Problem.}
+\emph{Given integers $N$ and $d$, and a target value $T$ with tolerance
+$\epsilon$, produce $N$ points $v_1,\ldots,v_N \in S^{d-1} \subset \mathbb{R}^d$
+such that the volume of the ideal polytope $\operatorname{conv}(v_1,\ldots,v_N)
+\subset \mathbb{H}^d$ lies in the interval $[T-\epsilon, T+\epsilon]$.}
+\medskip
+
+Variants include prescribing the number of facets (rather than vertices),
+optimizing boundary surface area or the isoperimetric ratio $V/A$, and
+working in the Euclidean rather than hyperbolic setting.
+
+The key feature is that the answer is a \emph{numerical certificate}:
+a list of coordinates that can be independently verified by a standalone
+checker implementing the relevant volume formula. No human judgment is
+required to grade the response.
+
+% ============================================================================
+\section{The Verification Pipeline}
+% ============================================================================
+
+\subsection{Volume formulas}
+
+For $d = 4$, the volume of an ideal 4-simplex $[\infty, v_1, v_2, v_3, v_4]$
+in the upper half-space model is given by the Haagerup--Munkholm formula:
+\[
+\operatorname{Vol}_4 = \frac{\pi}{3}
+\left(4\pi - \sum_{i<j}\varphi_{ij} - \sum_\ell \arccos\frac{d_\ell}{R}\right),
+\]
+where $\varphi_{ij}$ are the Euclidean dihedral angles of the tetrahedron
+$T = \operatorname{conv}(v_1,\ldots,v_4)$, $R$ is its circumradius, and
+$d_\ell$ are signed distances from the circumcenter to the faces.
+
+For $d = 6$, ideal simplices have vanishing vertex links ($w_0 = 0$),
+and the Hopf reduction gives:
+\[
+\operatorname{Vol}_6(\Delta_{\mathrm{ideal}})
+= \frac{8\pi^3}{15}\left(\frac{17}{4} - w_4 + \frac{1}{2}w_2\right),
+\]
+where $w_4 = \frac{1}{2\pi}\sum_{i<j}\theta_{ij}$ involves the 21 dihedral
+angles, and $w_2 = \frac{1}{2\pi^2}\sum_{|I|=4}\operatorname{Vol}_{S^3}(L_I)$
+involves the 35 spherical tetrahedral link volumes, each computable by
+Murakami's dilogarithm formula.
+
+\subsection{The standalone checker}
+
+The checker (\texttt{standalone\_checker.py}) is a self-contained Python
+script (no external dependencies beyond \texttt{numpy} and \texttt{scipy})
+that verifies:
+\begin{enumerate}
+\item All $N$ vertices lie on $S^{d-1}$ (tolerance $10^{-6}$).
+\item All vertices are on the convex hull (no interior points).
+\item The convex hull has the prescribed number of facets (if specified).
+\item The computed geometric measure falls within $[T-\epsilon, T+\epsilon]$.
+\end{enumerate}
+Exit code 0 indicates PASS; exit code 1 indicates FAIL.
+The checker supports seven measure types: \texttt{volume} ($\mathbb{H}^4$),
+\texttt{surface\_area} ($\mathbb{H}^4$), \texttt{ratio} ($\mathbb{H}^4$),
+\texttt{volume\_H6}, \texttt{euclidean\_volume}, \texttt{euclidean\_area},
+and \texttt{euclidean\_ratio}.
+
+% ============================================================================
+\section{Model Evaluation}
+% ============================================================================
+
+We evaluated three frontier models on a series of geometric construction
+tasks in $\mathbb{H}^4$ and $\mathbb{H}^6$. Each model was given the same
+prompt asking for the best lower bound on the maximal volume, with the
+expectation that the model would produce explicit vertex coordinates.
+
+\subsection{Summary of results}
+
+\begin{table}[ht]
+\centering
+\caption{Model performance on selected benchmark tasks.
+Bold indicates the best answer. A dash indicates no numerical answer was produced.}
+\label{tab:model-comparison}
+\smallskip
+\begin{tabular}{l r r r r}
+\toprule
+Task & Best known & Claude & GPT-o3 & Gemini \\
+\midrule
+$\mathbb{H}^4$ vol, $N=30$ & 22.262 & \textbf{22.262} & 22.107 & --- \\
+$\mathbb{H}^4$ vol, 20 simpl.\ facets & 2.3139 & \textbf{2.3139} & 2.3139 & 1.61$^*$ \\
+Eucl.\ vol, $N=30$ on $S^3$ & 2.4909 & \textbf{2.4909} & 2.4839 & --- \\
+Eucl.\ vol, 20 facets on $S^3$ & 0.7925 & \textbf{0.7925} & \textbf{0.7925} & \textbf{0.7925}$^\dagger$ \\
+Eucl.\ area, 20 facets on $S^3$ & 5.9544 & \textbf{5.9544} & \textbf{5.9544} & \textbf{5.9544}$^\dagger$ \\
+Eucl.\ area, 17 facets on $S^3$ & 5.036 & 5.002 & \textbf{5.036} & --- \\
+$\mathbb{H}^6$ vol, $N=16$ & 0.5406 & \textbf{0.5406} & pending & $0.041^{*}$ \\
+\bottomrule
+\end{tabular}
+\smallskip
+
+{\footnotesize $^*$Gemini's answer is formally correct but useless
+(off by a factor of 13 for $\mathbb{H}^6$; stacked-simplex bound for 20 facets).\\
+$^\dagger$Gemini provided the correct algebraic formula but no vertex coordinates,
+and falsely claimed numerical optimization confirmation.}
+\end{table}
+
+\subsection{Qualitative comparison}
+
+The three models exhibit qualitatively different strengths and failure modes.
+
+\paragraph{GPT-o3: persistent numerical constructor.}
+Given a problem, GPT-o3 typically
+produces explicit coordinates, verifies them by multiple methods
+(e.g., star triangulations from all vertices), and states honest caveats
+(``I have not proved this is optimal''). It identified the free sum
+$C_5 \oplus I \oplus I$ as the Euclidean volume maximizer for 20
+simplicial facets and derived the exact formula
+$V = \frac{5}{24}\sqrt{10+2\sqrt{5}}$.
+Its main weakness is occasional misinterpretation of the problem
+(e.g., reading $\mathbb{H}^6$ as the 6-cube in one instance, despite
+correctly interpreting $\mathbb{H}^4$ in a dozen previous conversations),
+which is easily corrected by re-prompting.
+On the 17-facet surface area problem, GPT-o3 found a configuration
+(area 5.036) that our 1000-restart optimizer could not beat.
+
+\paragraph{Gemini: strong algebraic reasoner, unreliable numerical claims.}
+Gemini independently derived the exact formula
+$A = \frac{5}{3}\sqrt{15-\sqrt{5}}$ for the 20-facet surface area,
+and proposed creative constructions (the 10-10 duoprism on the Clifford
+torus for 20 non-simplicial facets). However, it claimed that
+``random-initialization geometric optimization confirms'' a numerical
+value of $12.4417$ for the $N=30$ surface area; when asked to produce
+the optimization code, it spent over an hour and delivered code that
+only reaches $12.423$. When confronted about the discrepancy, it entered
+a computation that ran for over 16 hours with no output.
+Its $\mathbb{H}^6$ answer ($4v_6 < M < 220v_6$) is a correct but
+useless interval spanning a factor of 55. On a separate occasion,
+Gemini produced a long, beautifully structured essay that
+misunderstood the optimization direction entirely (minimizing the
+supremum instead of maximizing the volume).
+
+\paragraph{Claude (with toolkit): brute-force optimizer with certified answers.}
+Using multi-start L-BFGS-B
+with 500+ restarts and a standalone verification pipeline, Claude's toolkit
+provides the strongest numerical results on most tasks but lacks the
+algebraic insight that GPT-o3 and Gemini occasionally provide. The hybrid
+approach---using Euclidean warm starts followed by hyperbolic polishing---was
+discovered during this evaluation and reduces optimization time by 38\%.
+Several code improvements (Cartesian parameterization, Powell optimizer
+for facet-constrained problems) were adopted from GPT-o3's code suggestions.
+
+\subsection{The ``windowed'' benchmark format}
+
+A key design choice is the \emph{windowed} format: the target value $T$
+is chosen from the 70th--95th percentile of the optimization landscape,
+not the global maximum. This prevents the model from simply maximizing
+the objective (which would give the same answer for every instance) and
+instead requires it to \emph{control} the geometry to hit a specific window.
+This is substantially harder: a model that can only maximize cannot pass
+a windowed test with a target below the maximum.
+
+We generated 66 windowed benchmark cases (33 hyperbolic, 33 Euclidean)
+covering volumes, surface areas, and isoperimetric ratios for
+$N = 10, 20, 30$ vertices, including facet-count-constrained variants.
+
+\subsection{Lessons for LLM training}
+
+The evaluation suggests that current training procedures produce
+characteristically different failure modes:
+\begin{itemize}
+\item \textbf{GPT-o3} appears trained to minimize type~II errors
+      (failure to produce useful output), resulting in persistent
+      numerical construction with honest uncertainty quantification.
+\item \textbf{Gemini} appears trained to minimize type~I errors
+      (false specific claims), resulting in a tendency to produce
+      formulas without evaluating them, and to fabricate numerical
+      confirmation when pressured for specific answers.
+\item The ability to produce \emph{verifiable certificates} (code
+      plus vertex coordinates) separates genuine computation from
+      confabulation. Our checker enforces this distinction automatically.
+\end{itemize}
+
+% ============================================================================
+\section{Mathematical Byproducts}
+% ============================================================================
+
+The LLM evaluation process, combined with systematic computational
+exploration, led to several mathematical discoveries.
+
+\subsection{Combinatorial invariance}
+The $f$-vector of the volume-maximizing ideal polytope is the same
+whether volume is measured in the Euclidean or hyperbolic sense.
+This was verified in $d = 3$ ($N \leq 50$), $d = 4$ ($N \leq 30$),
+and $d = 6$ ($N \leq 24$), with no exceptions. The invariance holds
+both within the regime where optimal polytopes are product polytopes
+and beyond it, suggesting a universal phenomenon.
+
+\subsection{Identification of optimal polytopes}
+For small $N$ in even dimension $d = 2k$, the volume-optimal polytope
+is the join of $k$ regular polygons in orthogonal 2-planes:
+$C_{p_1} \oplus \cdots \oplus C_{p_k}$. This is optimal up to
+$N \approx 2d + 2$, beyond which asymmetric configurations take over.
+Notable cases include the cross-polytope ($N = 2d$) and the simplex ($N = d+1$).
+Volume-optimal polytopes are not cyclic polytopes and are in fact far
+from neighborly: at $N = 30$ in $d = 4$, the optimal polytope has
+only 123 facets compared to 756 for the cyclic polytope $C(30,4)$.
+
+\subsection{The volume plateau}
+At $N = 9$ in $d = 4$ (equivalently, 20 simplicial facets), the
+hyperbolic volume maximum is achieved on a manifold of dimension $\geq 2$,
+not an isolated point. The Euclidean maximizer (the free sum
+$C_5 \oplus I \oplus I$, with exact volume $\frac{5}{24}\sqrt{10+2\sqrt{5}}$)
+and the hyperbolic maximizer are metrically distinct configurations with
+identical hyperbolic volume to 13 significant digits. For prime facet
+counts (e.g., 17), the maximum is isolated.
+
+\subsection{Volume--volume correlation}
+Across the optimization landscape, the Euclidean and hyperbolic volumes
+are correlated at $r > 0.995$, with log-log elasticity approaching 2
+at $N = 30$ in $d = 4$. This near-proportionality is surprising given
+that the Euclidean volume is polynomial in the vertex coordinates while
+the hyperbolic volume involves the transcendental Haagerup--Munkholm formula.
+
+% ============================================================================
+\section{Conclusions}
+% ============================================================================
+
+The geometric construction benchmark exposes qualitative differences
+between frontier LLMs that traditional math benchmarks miss. The ability
+to produce \emph{verifiable certificates}---explicit coordinates that
+pass an independent numerical checker---is a fundamentally different
+capability from producing plausible-sounding mathematical text.
+
+The benchmark is parameterizable (any $N$, $d$, target, tolerance),
+resistant to memorization (windowed targets from a continuous landscape),
+and fully automatically gradable (standalone checker with exit codes).
+The mathematical content---hyperbolic volume, Murakami dilogarithms,
+Hopf reduction---is sufficiently specialized that training-data
+contamination is unlikely.
+
+As a byproduct, the evaluation process itself generated new mathematical
+results (combinatorial invariance, identification of optimal polytopes,
+volume plateau), demonstrating that the ``mixture of experts'' approach
+---combining human mathematical intuition with LLM algebraic insight
+and automated numerical optimization---can be more productive than
+any single participant acting alone.
+
+% ============================================================================
+% References
+% ============================================================================
+
+\begin{thebibliography}{99}
+
+\bibitem{HM}
+U.~Haagerup and H.~J.~Munkholm,
+``Simplices of maximal volume in hyperbolic $n$-space,''
+\emph{Acta Math.} \textbf{147} (1981), 1--11.
+
+\bibitem{Murakami}
+J.~Murakami,
+``Volume formulas for a spherical tetrahedron,''
+\emph{Osaka J. Math.} \textbf{49} (2012), 631--638.
+
+\bibitem{RivinBasmajian}
+I.~Rivin,
+``On Basmajian's identities, and other stories,''
+arXiv:1404.1583, 2014.
+
+\bibitem{H56note}
+I.~Rivin,
+``Notes on hyperbolic 5- and 6-simplex volumes,''
+companion note, 2026.
+
+\bibitem{Firsching}
+M.~Firsching,
+``The complete enumeration of 4-polytopes and 3-spheres with nine vertices,''
+\emph{Israel J. Math.} (2020).
+
+\end{thebibliography}
+
+\end{document}
