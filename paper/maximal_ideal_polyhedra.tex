@@ -628,6 +628,49 @@ agree for most values of $N$, but diverge at specific small $N$
 facets compared to the volume optimizer}. In $d = 3$, no divergence
 was observed for $N \leq 50$.
 
+\subsection{Ideal Polytopes in $\mathbb{H}^6$}
+
+We extended the combinatorial invariance test to $d = 6$ by computing
+ideal $\mathbb{H}^6$ polytope volumes directly.  For ideal simplices,
+the vertex-link terms vanish ($w_0 = 0$), and the Hopf reduction gives
+\[
+\operatorname{Vol}_6(\Delta_{\mathrm{ideal}})
+= \frac{8\pi^3}{15}\left(\frac{17}{4} - w_4 + \frac{1}{2}w_2\right),
+\]
+where $w_4$ involves only dihedral angles and $w_2$ involves only
+$\mathbb{S}^3$-tetrahedral link volumes computable by Murakami's
+dilogarithm formula.  A float64 implementation of Murakami's formula
+achieves a 108$\times$ speedup over arbitrary-precision evaluation,
+making optimization feasible.  Full details are in the companion
+note~\cite{H56note}.
+
+\begin{table}[ht]
+\centering
+\caption{Combinatorial invariance: Euclidean vs.\ ideal $\mathbb{H}^6$
+volume maximization (points on $S^5$).  All $f$-vectors match.}
+\label{tab:comb_H6}
+\smallskip
+\begin{tabular}{r l c r r}
+\toprule
+$N$ & $f$-vector & Match & Eucl.\ vol & $\mathbb{H}^6$ vol \\
+\midrule
+7  & $(7,21,7)$       & Yes & 0.00584 & 0.01023 \\
+8  & $(8,28,16)$      & Yes & 0.01317 & 0.02504 \\
+9  & $(9,36,27)$      & Yes & 0.02436 & 0.05022 \\
+10 & $(10,43,36)$     & Yes & 0.03750 & 0.08390 \\
+12 & $(12,60,64)$     & Yes & 0.08889 & 0.23284 \\
+14 & $(14,79,100)$    & Yes & 0.12563 & 0.36922 \\
+16 & $(16,100,145)$   & Yes & 0.16588 & 0.54060 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+The combinatorial invariance conjecture (Conjecture~\ref{conj:comb_invariance})
+now holds in four settings: Euclidean vs.\ hyperbolic volume in
+$d = 3$ ($N \leq 50$), $d = 4$ ($N \leq 30$), and $d = 6$ ($N \leq 16$),
+as well as across Euclidean volume vs.\ Euclidean surface area
+in $d = 5$ and $d = 6$.
+
 The hyperbolic-optimal configuration, by contrast, has no transposition
 symmetries and a completely different distance spectrum.
 Yet both achieve the same hyperbolic volume $V_H = 2.31385$ to
@@ -723,6 +766,12 @@ I.~Rivin, ``I Built a `Djinn' That Fixes My Code While I Sleep,'' \emph{Impure T
 
 \bibitem{Milnor}
 J.~Milnor, ``Hyperbolic geometry: The first 150 years,'' \emph{Bull. Amer. Math. Soc.} \textbf{6} (1982), 9--24.
+
+\bibitem{H56note}
+I.~Rivin, ``Notes on hyperbolic 5- and 6-simplex volumes: formulas, reductions, and a practical code path,'' companion note, 2026.
+
+\bibitem{RivinBasmajian}
+I.~Rivin, ``On Basmajian's identities, and other stories,'' arXiv:1404.1583, 2014.
 
 \end{thebibliography}
 
