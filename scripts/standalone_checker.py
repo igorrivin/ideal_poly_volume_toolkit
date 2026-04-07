@@ -247,6 +247,127 @@ def compute_surface_area_4d(vertices):
     return sum(facet_vols), len(hull.simplices), facet_vols
 
 
+# ---------------------------------------------------------------------------
+# Volume of ideal 6-simplex in H^6 (Hopf reduction, w0=0 for ideal)
+# ---------------------------------------------------------------------------
+
+def _murakami_S3_fast(A4):
+    """Float64 Murakami volume for a spherical tetrahedron from 4x4 angle Gram matrix."""
+    from scipy.special import spence as _spence
+    import math as _math
+
+    def _li2(z):
+        return complex(_spence(1.0 - z))
+
+    B = np.asarray(A4, dtype=float)
+    entries = [-B[0,1], -B[0,2], -B[1,2], -B[2,3], -B[1,3], -B[0,3]]
+    alphas = [_math.acos(np.clip(e, -1, 1)) for e in entries]
+    a1, a2, a3, a4, a5, a6 = [np.exp(1j * alpha) for alpha in alphas]
+
+    cross_term = (np.log(a1)*np.log(a4) + np.log(a2)*np.log(a5) + np.log(a3)*np.log(a6))
+
+    def L(z):
+        return 0.5 * (
+            _li2(z) + _li2(z/(a1*a2*a4*a5)) + _li2(z/(a1*a3*a4*a6))
+            + _li2(z/(a2*a3*a5*a6)) - _li2(-z/(a1*a2*a3))
+            - _li2(-z/(a1*a5*a6)) - _li2(-z/(a2*a4*a6))
+            - _li2(-z/(a3*a4*a5)) + cross_term)
+
+    q0 = (a1*a4 + a2*a5 + a3*a6 + a1*a2*a6 + a1*a3*a5
+          + a2*a3*a4 + a4*a5*a6 + a1*a2*a3*a4*a5*a6)
+    q1 = (-(a1-1/a1)*(a4-1/a4) - (a2-1/a2)*(a5-1/a5) - (a3-1/a3)*(a6-1/a6))
+    q2 = (1/(a1*a4) + 1/(a2*a5) + 1/(a3*a6) + 1/(a1*a2*a6)
+          + 1/(a1*a3*a5) + 1/(a2*a3*a4) + 1/(a4*a5*a6) + 1/(a1*a2*a3*a4*a5*a6))
+
+    z0 = (-q1 + np.sqrt(q1*q1 - 4*q0*q2)) / (2*q2)
+    vol = -L(z0).real + _math.pi * (np.angle(-q2) + sum(alphas)/2) - 1.5 * _math.pi**2
+
+    two_pi_sq = 2 * _math.pi**2
+    vol = vol.real if isinstance(vol, complex) else vol
+    while vol < 0: vol += two_pi_sq
+    while vol >= two_pi_sq: vol -= two_pi_sq
+    if vol > _math.pi**2: vol = two_pi_sq - vol
+    return float(vol)
+
+
+def _ideal_6simplex_volume(verts_S5):
+    """Volume of ideal 6-simplex with 7 vertices on S^5.
+    Uses Hopf reduction with w0=0: Vol = (8pi^3/15)(17/4 - w4 + w2/2)."""
+    import math as _math
+    verts = np.asarray(verts_S5, dtype=float)
+    verts_c = verts / np.linalg.norm(verts, axis=1, keepdims=True) * 0.9999
+    Q = 1.0 - verts_c @ verts_c.T
+    try:
+        R = np.linalg.inv(Q)
+    except np.linalg.LinAlgError:
+        return 0.0
+    m = len(verts_c)
+    A = np.eye(m)
+    for i in range(m):
+        if R[i,i] >= 0: return 0.0
+        for j in range(m):
+            if i != j:
+                A[i,j] = -R[i,j] / _math.sqrt((-R[i,i]) * (-R[j,j]))
+
+    # w4: dihedral angles
+    w4 = 0.0
+    for i in range(m):
+        for j in range(i+1, m):
+            c = max(-1.0, min(1.0, -A[i,j]))
+            w4 += _math.acos(c)
+    w4 /= (2 * _math.pi)
+
+    # w2: S^3 Murakami links over all 4-subsets
+    w2_sum = 0.0
+    for subset in combinations(range(m), 4):
+        idx = list(subset)
+        A_sub = A[np.ix_(idx, idx)]
+        try:
+            w2_sum += _murakami_S3_fast(A_sub)
+        except:
+            pass
+    w2 = w2_sum / (2 * _math.pi**2)
+
+    return (8 * _math.pi**3 / 15) * (17.0/4 - w4 + 0.5 * w2)
+
+
+def compute_volume_H6(vertices):
+    """Volume of ideal H^6 polytope with vertices on S^5.
+    Uses stereographic projection + Delaunay + Hopf reduction per simplex."""
+    from scipy.spatial import Delaunay
+
+    pts = vertices / np.linalg.norm(vertices, axis=1, keepdims=True)
+    N = len(pts)
+    pole_idx = 0
+    pole = pts[pole_idx]
+
+    # Stereographic projection from pole to R^5
+    e6 = np.zeros(6); e6[5] = 1.0
+    if np.allclose(pole, e6):
+        rotated = np.delete(pts, pole_idx, axis=0)
+    elif np.allclose(pole, -e6):
+        rotated = np.delete(pts, pole_idx, axis=0).copy()
+        rotated[:, 5] = -rotated[:, 5]
+    else:
+        u = pole - e6; u /= np.linalg.norm(u)
+        others = np.delete(pts, pole_idx, axis=0)
+        rotated = others - 2 * np.outer(others @ u, u)
+
+    denom = 1.0 - rotated[:, 5]
+    denom = np.where(np.abs(denom) < 1e-15, 1e-15, denom)
+    pts_5d = rotated[:, :5] / denom[:, None]
+
+    tri = Delaunay(pts_5d)
+    finite_indices = np.delete(np.arange(N), pole_idx)
+
+    total = 0.0
+    for simplex in tri.simplices:
+        orig_idx = finite_indices[simplex]
+        simplex_verts = pts[np.concatenate([[pole_idx], orig_idx])]
+        total += _ideal_6simplex_volume(simplex_verts)
+    return total
+
+
 # ===========================================================================
 # Checker
 # ===========================================================================
@@ -270,11 +391,13 @@ def check(answer_file):
     print(f"  Expected window: [{target - epsilon:.8f}, {target + epsilon:.8f}]")
     print()
 
-    # --- Check 1: Vertices are in R^4 ---
-    if vertices.ndim != 2 or vertices.shape[1] != 4:
-        errors.append(f"Vertices must be Nx4 array, got shape {vertices.shape}")
+    # --- Check 1: Vertices are in R^d ---
+    if vertices.ndim != 2 or vertices.shape[1] < 2:
+        errors.append(f"Vertices must be Nxd array with d >= 2, got shape {vertices.shape}")
         print("FAIL: " + errors[-1])
         return False, errors
+    ambient_dim = vertices.shape[1]
+    print(f"  Ambient dimension: {ambient_dim}")
 
     # --- Check 2: Vertex count ---
     if n_expected_verts is not None and len(vertices) != n_expected_verts:
@@ -290,7 +413,7 @@ def check(answer_file):
         errors.append(f"Vertices not on S^3: max deviation {max_deviation:.2e} > 1e-6")
         print(f"FAIL: {errors[-1]}")
     else:
-        print("  PASS: All vertices on S^3")
+        print(f"  PASS: All vertices on S^{ambient_dim - 1}")
 
     # Normalize to S^3 for computation
     vertices = vertices / norms[:, None]
@@ -335,9 +458,12 @@ def check(answer_file):
         print(f"  Computed volume: {vol:.10f}")
         print(f"  Computed surface area: {area:.10f}")
         print(f"  Computed V/A ratio: {value:.10f}")
+    elif measure == 'volume_H6':
+        value = compute_volume_H6(vertices)
+        print(f"  Computed H^6 volume: {value:.10f}")
     elif measure == 'euclidean_volume':
         value = hull.volume
-        print(f"  Computed Euclidean 4-volume: {value:.10f}")
+        print(f"  Computed Euclidean volume: {value:.10f}")
     elif measure == 'euclidean_area':
         value = hull.area
         print(f"  Computed Euclidean surface area: {value:.10f}")
