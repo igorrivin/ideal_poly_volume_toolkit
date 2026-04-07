@@ -1,0 +1,392 @@
+\documentclass[11pt]{article}
+\usepackage[margin=1in]{geometry}
+\usepackage{amsmath,amssymb,amsthm,mathtools}
+\usepackage[T1]{fontenc}
+\usepackage{lmodern}
+\usepackage{microtype}
+\usepackage{hyperref}
+\usepackage{enumitem}
+\usepackage{booktabs}
+
+\hypersetup{colorlinks=true,linkcolor=blue,citecolor=blue,urlcolor=blue}
+
+\newtheorem{prop}{Proposition}
+\newtheorem{remark}{Remark}
+
+\newcommand{\Hh}{\mathbb{H}}
+\newcommand{\Ss}{\mathbb{S}}
+\newcommand{\Rr}{\mathbb{R}}
+\newcommand{\Vol}{\operatorname{Vol}}
+\newcommand{\conv}{\operatorname{conv}}
+\newcommand{\Om}{\Omega}
+\newcommand{\diag}{\operatorname{diag}}
+
+\title{Notes on hyperbolic $5$- and $6$-simplex volumes\\
+formulas, reductions, and a practical code path}
+\author{}
+\date{}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+This note records a workable extension of the earlier $\Hh^4$ discussion to compact simplices
+in $\Hh^5$ and $\Hh^6$.  In dimension $5$ the natural tool is Schlaefli's differential formula,
+which reduces the problem to hyperbolic tetrahedral $3$-faces.  In dimension $6$ the even-dimensional
+Poincare-Schlaefli-Hopf reduction gives an absolute volume formula in terms of the $21$ dihedral
+angles, the $35$ spherical tetrahedral links of the $2$-faces, and the $7$ spherical $5$-simplex
+links of the vertices.  We also explain the numerical strategy used in the companion Python module:
+QMC evaluation of Klein-model simplex integrals, intrinsic extraction of lower-dimensional Klein
+coordinates from ambient hyperboloid Gram data, and gnomonic evaluation of spherical link volumes.
+\end{abstract}
+
+\section{General simplex data from Klein vertices}
+
+Let
+\[
+\Delta=[x_0,\dots,x_n]\subset B^n=\{x\in \Rr^n:\|x\|<1\}
+\]
+be a compact hyperbolic $n$-simplex in the Klein ball.  Its hyperboloid lifts are
+\[
+ h_i=\frac{(1,x_i)}{\sqrt{1-\|x_i\|^2}}\in \Hh^n\subset \Rr^{n,1},
+ \qquad
+ \langle u,v\rangle=-u_0v_0+u_1v_1+\cdots+u_nv_n.
+\]
+The unnormalized Klein matrix is
+\[
+Q=(Q_{ij}),\qquad Q_{ij}=1-x_i\cdot x_j.
+\]
+Since the true vertex Gram matrix is
+\[
+G_{ij}=-\langle h_i,h_j\rangle=
+\frac{1-x_i\cdot x_j}{\sqrt{(1-\|x_i\|^2)(1-\|x_j\|^2)}},
+\]
+normalization cancels in the inverse, and if $R=Q^{-1}$ then the angle Gram matrix is
+\begin{equation}
+\label{eq:angle-gram-general}
+A_{ii}=1,
+\qquad
+A_{ij}=-\frac{R_{ij}}{\sqrt{(-R_{ii})(-R_{jj})}}
+\quad (i\neq j).
+\end{equation}
+Hence the dihedral angle between the facets opposite $x_i$ and $x_j$ is
+\begin{equation}
+\label{eq:dihedral-general}
+\theta_{ij}=\arccos(-A_{ij}).
+\end{equation}
+Formula \eqref{eq:angle-gram-general} is the same linear-algebra package already used in the
+$\Hh^4$ note; it is just dimension-independent.
+
+For numerical cross-checks it is useful to remember the direct Klein integral
+\begin{equation}
+\label{eq:klein-direct}
+\Vol_n(\Delta)=\int_{\Delta_E}\frac{dx}{(1-\|x\|^2)^{(n+1)/2}},
+\end{equation}
+where $\Delta_E=\conv(x_0,\dots,x_n)\subset \Rr^n$ is the ordinary Euclidean simplex in the Klein
+ball.  The companion code evaluates \eqref{eq:klein-direct} by Sobol QMC sampling on the standard
+simplex.
+
+\section{The $\Hh^5$ case}
+
+\subsection*{Schlaefli differential formula}
+
+For a smoothly varying family of compact hyperbolic $5$-polytopes,
+Schlaefli's differential formula reads
+\begin{equation}
+\label{eq:schlafli-5}
+ d\Vol_5(\Delta)
+ =-
+ \frac{1}{4}
+ \sum_{F^3}
+ \Vol_3(F^3)\,d\theta_F,
+\end{equation}
+where the sum runs over the codimension-$2$ faces, i.e. the $3$-dimensional tetrahedral faces.
+For a $5$-simplex there are $\binom{6}{2}=15$ such faces.  This is the correct replacement for the
+$\Hh^4$ ``absolute'' reduction: in odd dimension one no longer gets volume directly from the
+alternating angle sum, so one integrates Schlaefli instead \cite{Kohno,Heckman}.
+
+If the simplex is
+\[
+\Delta=[x_0,\dots,x_5]\subset B^5,
+\]
+set
+\[
+\Delta_t=[tx_0,\dots,tx_5],\qquad 0<t\le 1.
+\]
+Then $\Delta_t$ stays compact and collapses to the origin as $t\to 0$.  Choosing some small
+$t_0\in(0,1)$, one has
+\begin{equation}
+\label{eq:h5-radial}
+\Vol_5(\Delta)
+=
+\Vol_5(\Delta_{t_0})
+-
+\frac14
+\int_{t_0}^{1}
+\sum_{i<j}
+\Vol_3\bigl(F_{ij}(t)\bigr)
+\,d\theta_{ij}(t),
+\end{equation}
+where $F_{ij}(t)$ is the tetrahedral face spanned by the four vertices with indices different from
+$i,j$.
+
+\subsection*{Extracting the intrinsic $\Hh^3$ face geometry}
+
+The code does not implement the hyperbolic tetrahedron dilogarithm formula explicitly,
+although that would also be possible using Murakami--Yano/Ushijima.
+Instead it extracts intrinsic Klein coordinates for each tetrahedral face and applies the direct
+$3$-dimensional Klein integral.
+
+Suppose $u_0,\dots,u_3\in B^5$ are the four Klein vertices of a tetrahedral face.  Lift them to the
+hyperboloid as above, and form the vertex Gram matrix
+\[
+G^{\mathrm{face}}_{ab}=-\langle h_a,h_b\rangle,\qquad 0\le a,b\le 3.
+\]
+Equivalently, the Minkowski inner-product matrix of the lifted vertices is
+\[
+M_{ab}=\langle h_a,h_b\rangle.
+\]
+Because the face is intrinsically $3$-dimensional, $M$ has signature $(1,3)$.  Numerically one
+factors it as
+\[
+M=C^{T}J_{3,1}C,
+\qquad
+J_{3,1}=\diag(-1,1,1,1),
+\]
+so that the columns of $C$ are hyperboloid coordinates
+\[
+ y_a=(y_{a,0},y_{a,1},y_{a,2},y_{a,3})\in \Hh^3.
+\]
+Then the intrinsic Klein coordinates of the face are simply
+\begin{equation}
+\label{eq:intrinsic-klein-face}
+ z_a=\frac{(y_{a,1},y_{a,2},y_{a,3})}{y_{a,0}}\in B^3.
+\end{equation}
+Finally,
+\begin{equation}
+\label{eq:intrinsic-face-volume}
+\Vol_3(F)=\int_{\conv(z_0,z_1,z_2,z_3)}\frac{dz}{(1-\|z\|^2)^2}.
+\end{equation}
+Combining \eqref{eq:h5-radial} and \eqref{eq:intrinsic-face-volume} gives a completely explicit
+numerical pipeline from the original five-dimensional Klein vertices.
+
+\begin{remark}
+At the theoretical level, hyperbolic tetrahedron volumes are already dilogarithmic, and Kellerhals
+showed that in hyperbolic $5$-space the general odd-dimensional picture reaches trilogarithms,
+with doubly asymptotic $5$-orthoschemes providing a fundamental building block
+\cite{Kellerhals5,MY,Ushijima}.  The code in this note stays closer to the raw simplex data and uses
+QMC for the lower-dimensional face integrals instead.
+\end{remark}
+
+\section{The $\Hh^6$ case}
+
+\subsection*{The even-dimensional Hopf reduction}
+
+Let $w_k$ denote the sum of the normalized $(6-k)$-fold interior angles at the $k$-faces of a
+$6$-simplex.  Thus $w_6=1$; $w_4$ is built from the $21$ codimension-$2$ dihedral angles; $w_2$
+comes from the $35$ spherical tetrahedral links of the $2$-faces; and $w_0$ comes from the $7$
+spherical $5$-simplex vertex links.
+
+The Peschl relations imply
+\begin{equation}
+\label{eq:W-six}
+W(\Delta^6)=w_0-\frac12 w_2+w_4-\frac{17}{4},
+\end{equation}
+while the hyperbolic Poincare--Schlaefli--Hopf theorem gives
+\begin{equation}
+\label{eq:Hopf-six}
+W(\Delta^6)=-\frac{2}{\Om_6}\Vol_6(\Delta^6),
+\qquad
+\Om_6=\Vol(\Ss^6)=\frac{16\pi^3}{15}.
+\end{equation}
+Therefore
+\begin{equation}
+\label{eq:h6-main}
+\boxed{
+\Vol_6(\Delta)
+=
+\frac{8\pi^3}{15}
+\left(
+\frac{17}{4}-w_4+\frac12 w_2-w_0
+\right).
+}
+\end{equation}
+This is the $6$-dimensional analogue of the $\Hh^4$ formula, except that now the unresolved term is
+an $\Ss^5$-volume rather than an $\Ss^3$-volume \cite{KellerhalsZehrt,Heckman}.
+
+\subsection*{Writing the three pieces from the angle Gram matrix}
+
+Let
+\[
+\Delta=[x_0,\dots,x_6]\subset B^6,
+\]
+and let $A$ be its angle Gram matrix from \eqref{eq:angle-gram-general}.  Then:
+
+\paragraph{The $w_4$ term.}
+The codimension-$2$ faces correspond to pairs $\{i,j\}$, so
+\begin{equation}
+\label{eq:w4}
+ w_4=\frac{1}{2\pi}\sum_{0\le i<j\le 6}\theta_{ij}.
+\end{equation}
+
+\paragraph{The $w_2$ term.}
+A $2$-face is the intersection of four facets, hence corresponds to a $4$-subset
+$I\subset\{0,\dots,6\}$.  The spherical tetrahedral link at that face has angle Gram matrix equal to
+the principal submatrix $A_I$.  Therefore
+\begin{equation}
+\label{eq:w2}
+ w_2=\frac{1}{2\pi^2}\sum_{|I|=4}\Vol_{\Ss^3}(L_I),
+\qquad
+\text{with }\operatorname{Gram}(L_I)=A_I.
+\end{equation}
+Each $\Vol_{\Ss^3}(L_I)$ is computable by Murakami's explicit logarithm/dilogarithm formula.
+This is exactly the same special-function kernel that already appeared in the $\Hh^4$ vertex-link
+term \cite{MurakamiSpherical}.
+
+\paragraph{The $w_0$ term.}
+The vertex link at $x_i$ is the spherical $5$-simplex obtained by deleting row and column $i$:
+\begin{equation}
+\label{eq:w0}
+ w_0=\frac{1}{\pi^3}\sum_{i=0}^{6}\Vol_{\Ss^5}(L_i),
+ \qquad
+ \text{with }\operatorname{Gram}(L_i)=A^{(i)}.
+\end{equation}
+If one passes to generalized simplices and a vertex becomes ideal, then the corresponding term in
+$w_0$ vanishes by continuity.  In particular, for an ideal $6$-simplex one gets the simplified
+formula
+\begin{equation}
+\label{eq:h6-ideal}
+\Vol_6(\Delta_{\mathrm{ideal}})
+=
+\frac{8\pi^3}{15}
+\left(
+\frac{17}{4}-w_4+\frac12 w_2
+\right).
+\end{equation}
+
+\subsection*{How the code evaluates the $\Ss^5$ links}
+
+Let $B$ be a $6\times 6$ spherical angle Gram matrix.  The associated spherical vertex Gram matrix is
+\begin{equation}
+\label{eq:spherical-vertex-gram}
+ G_{ab}=\frac{(B^{-1})_{ab}}{\sqrt{(B^{-1})_{aa}(B^{-1})_{bb}}}.
+\end{equation}
+Choose vertices $v_0,\dots,v_5\in \Ss^5\subset \Rr^6$ with $v_a\cdot v_b=G_{ab}$.
+To put the simplex into gnomonic coordinates, solve
+\[
+G\,\alpha=\mathbf 1,
+\qquad
+c'=\sum_{a=0}^{5}\alpha_a v_a,
+\qquad
+c=\frac{c'}{\|c'\|}\in \Ss^5.
+\]
+Then $c$ lies in the interior hemisphere of the simplex.  If $e_1,\dots,e_5$ is an orthonormal
+basis of $c^{\perp}$, the gnomonic coordinates are
+\begin{equation}
+\label{eq:gnomonic-coords}
+ x_a=
+ \frac{1}{v_a\cdot c}
+ \bigl((v_a\cdot e_1),\dots,(v_a\cdot e_5)\bigr)
+ \in \Rr^5.
+\end{equation}
+Under the inverse gnomonic map
+\[
+ x\longmapsto \frac{c+\sum_{r=1}^{5}x_r e_r}{\sqrt{1+\|x\|^2}},
+\]
+the spherical volume element becomes
+\begin{equation}
+\label{eq:spherical-gnomonic-density}
+ d\Vol_{\Ss^5}=
+ \frac{dx}{(1+\|x\|^2)^3}.
+\end{equation}
+Hence the code evaluates each vertex link by
+\begin{equation}
+\label{eq:s5-qmc}
+\Vol_{\Ss^5}(L_i)
+=
+\int_{\conv(x_0,\dots,x_5)}\frac{dx}{(1+\|x\|^2)^3},
+\end{equation}
+again using Sobol QMC on the Euclidean simplex in gnomonic coordinates.
+
+\section{Practical remarks and what transfers to polytopes}
+
+\begin{enumerate}[leftmargin=2.2em]
+\item For $\Hh^5$, the code's main routine is the Schlaefli path integrator
+\eqref{eq:h5-radial}.  A direct $5$-dimensional Klein integral is included as a cross-check.
+
+\item For $\Hh^6$, the code's main routine is the absolute reduction formula
+\eqref{eq:h6-main}.  A direct $6$-dimensional Klein integral is again included as a cross-check.
+Near the Euclidean or very-small-volume regime, \eqref{eq:h6-main} subtracts several large angle-sum
+terms and can suffer noticeable cancellation.  In that regime the direct Klein integral is the more
+reliable diagnostic.
+
+\item For general polytopes one may triangulate and sum simplex volumes.  In even dimension the Hopf
+face-sum formula also extends directly to a polytope, but from the coding perspective triangulation
+is usually the simplest path.
+\end{enumerate}
+
+\section{Two numerical smoke tests}
+
+With the defaults in the companion file \texttt{hyperbolic\_5\_6\_simplex\_volume.py}, the following
+examples are useful quick checks.
+
+\begin{center}
+\begin{tabular}{@{}llll@{}}
+\toprule
+Space & simplex & main routine & direct Klein cross-check \\
+\midrule
+$\Hh^5$ & $\conv(0,0.5e_1,\dots,0.5e_5)$ & $3.14018\times 10^{-4}$ & $3.14365\times 10^{-4}$ \\
+$\Hh^6$ & $\conv(0,0.7e_1,\dots,0.7e_6)$ & $2.44670\times 10^{-4}$ & $2.44975\times 10^{-4}$ \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+The point of the second row is not that the reduction formula is ``more exact'' numerically, but
+rather that its constituent lower-dimensional pieces are now explicit enough to make an implementation
+practical.  The direct integral remains the best sanity check.
+
+\begin{thebibliography}{99}
+
+\bibitem{Heckman}
+G. J. Heckman,
+\emph{The volume of hyperbolic Coxeter polytopes of even dimension},
+available at \url{https://www.math.ru.nl/~heckman/Heck_7.pdf}.
+
+\bibitem{KellerhalsZehrt}
+R. Kellerhals and T. Zehrt,
+\emph{The Gauss-Bonnet Formula for Hyperbolic Manifolds of Finite Volume},
+Geom. Dedicata \textbf{84} (2001), 49--62;
+preprint available at \url{https://homeweb.unifr.ch/kellerha/pub/GaussBonnet.pdf}.
+
+\bibitem{Kohno}
+T. Kohno,
+\emph{The volume of a hyperbolic simplex and iterated integrals},
+available at \url{https://www.ms.u-tokyo.ac.jp/~kohno/papers/VHI01.pdf}.
+
+\bibitem{Kellerhals5}
+R. Kellerhals,
+\emph{Volumes in hyperbolic 5-space},
+Geom. Funct. Anal. \textbf{5} (1995), 640--667;
+preprint available at \url{https://homeweb.unifr.ch/kellerha/pub/gafa.pdf}.
+
+\bibitem{MurakamiSpherical}
+J. Murakami,
+\emph{Volume formulas for a spherical tetrahedron},
+Osaka J. Math. \textbf{49} (2012), 631--638;
+preprint available at \url{https://arxiv.org/pdf/1011.2584}.
+
+\bibitem{MY}
+J. Murakami and M. Yano,
+\emph{On the Volume of a Hyperbolic and Spherical Tetrahedron},
+Comm. Anal. Geom. \textbf{13} (2005), 379--400;
+preprint available at \url{https://murakami.w.waseda.jp/papers/tetrahedronrev3.pdf}.
+
+\bibitem{Ushijima}
+A. Ushijima,
+\emph{A volume formula for generalized hyperbolic tetrahedra},
+Discrete Comput. Geom. \textbf{31} (2004), 305--314;
+preprint available at \url{https://arxiv.org/abs/math/0309216}.
+
+\end{thebibliography}
+
+\end{document}
