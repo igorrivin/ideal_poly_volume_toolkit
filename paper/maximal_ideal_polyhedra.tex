@@ -671,6 +671,55 @@ $d = 3$ ($N \leq 50$), $d = 4$ ($N \leq 30$), and $d = 6$ ($N \leq 16$),
 as well as across Euclidean volume vs.\ Euclidean surface area
 in $d = 5$ and $d = 6$.
 
+\subsection{Identification of Optimal Polytopes: Joins of Regular Polygons}
+
+Searching polytope databases and comparing with known constructions,
+we find that the volume-optimal polytopes for small~$N$ are
+\emph{joins (free sums) of regular polygons in mutually orthogonal $2$-planes}.
+
+In $d = 2k$, the join $C_{p_1} \oplus C_{p_2} \oplus \cdots \oplus C_{p_k}$
+of $k$ regular polygons in $k$ orthogonal $2$-planes in $\mathbb{R}^{2k}$
+gives a simplicial polytope with $p_1 + \cdots + p_k$ vertices on
+$S^{2k-1}$ and $p_1 \cdots p_k$ tetrahedral facets. The following table
+identifies each small-$N$ optimal polytope:
+
+\begin{center}
+\begin{tabular}{r l l l}
+\toprule
+$N$ & $d=4$ optimal & $d=6$ optimal & Structure \\
+\midrule
+$d+1$ & $(5,10,10,5)$ & $(7,21,7)$ & Simplex $\Delta_d$ \\
+$d+2$ & $(6,15,18,9)$ & $(8,28,16)$ & $\Delta_{d/2} * \Delta_{d/2}$ \\
+$d+3$ & $(7,19,24,12)$ & $(9,36,27)$ & $C_3^{d/2}$ (join of $d/2$ triangles) \\
+$d+4$ & $(8,24,32,16)$ & $(10,43,36)$ & Cross-polytope at $d{=}4$; $C_3^2{\oplus}C_4$ at $d{=}6$\\
+$d+5$ & $(9,29,40,20)$ & --- & $C_4{\oplus}C_5$ \\
+$d+6$ & $(10,35,50,25)$ & $(12,60,64)$ & $C_5^2$ at $d{=}4$; $C_4^3$ (cross-polytope) at $d{=}6$ \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+For $d = 4$, the optimal polytope matches the best balanced
+free sum $C_p \oplus C_q$ for all $N \leq 10$, but not for $N \geq 12$.
+For $d = 6$, the optimal matches the best balanced triple
+$C_p \oplus C_q \oplus C_r$ for all $N \leq 14$, but not for $N = 16$.
+In both cases the threshold is approximately $N \approx 2d + 2$, beyond
+which the optimizer discovers asymmetric configurations that beat
+the rigid product structure.
+
+Notable special cases:
+\begin{itemize}
+\item $N = 2d$: the \emph{$d$-dimensional cross-polytope}
+      ($C_4 \oplus C_4$ in $d = 4$; $C_4 \oplus C_4 \oplus C_4$ in $d = 6$).
+\item $N = d + 2$: the join of two simplices of half the dimension
+      ($\Delta_2 * \Delta_2$ in $d = 4$; $\Delta_3 * \Delta_3$ in $d = 6$).
+\end{itemize}
+
+The volume-optimal polytopes are \emph{not} cyclic polytopes, and
+are in fact far from neighborly: at $N = 30$ in $d = 4$, the optimal
+polytope has only 123 facets compared to 756 for the cyclic polytope
+$C(30,4)$. Maximizing facet count and maximizing volume are almost
+opposite goals.
+
 The hyperbolic-optimal configuration, by contrast, has no transposition
 symmetries and a completely different distance spectrum.
 Yet both achieve the same hyperbolic volume $V_H = 2.31385$ to
