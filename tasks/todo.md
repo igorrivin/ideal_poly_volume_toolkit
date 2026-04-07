@@ -58,6 +58,19 @@
 - The all_on_hull rejection rate is too high (~99.6% rejection)
 - Ideas: relax hull constraint temporarily, use basin-hopping (scipy.optimize.basinhopping), or hybrid approach (anneal for combinatorial type, L-BFGS-B within each basin)
 
+### GPU/Torch migration (GH200)
+- Port Murakami S^3 volume to torch using Nelson dilogarithm (https://github.com/nelsond/dilogarithm.git) for a differentiable complex Li2
+- This gives analytical gradients via autograd, eliminating the 2N+1 finite-difference gradient evaluations that currently dominate runtime
+- Proposed three-tier pipeline:
+  - **Tier 1 (GPU, fp32)**: 10,000 parallel starts on S^{d-1}, periodic CPU Delaunay re-triangulation, 200 torch gradient steps per cycle. Minutes for N=30.
+  - **Tier 2 (GPU, fp32)**: top-100 candidates, 500 hyperbolic gradient steps each.
+  - **Tier 3 (CPU, fp64)**: L-BFGS-B polish + mpmath verification on top-50.
+- GH200 unified memory eliminates CPU↔GPU transfer bottleneck for Delaunay sync
+- H100 fp32 at ~60 TFLOPS is massive overkill; no need for fp16
+- The torch dilogarithm would be independently useful (publish as standalone package?) — nothing on PyPI currently, applications in differentiable geometry, QFT loop integrals, number theory
+- Key torch components needed: complex Li2 (differentiable), angle_gram_from_klein, dihedral_angles, Murakami formula — all smooth and autograd-friendly
+- Only non-differentiable step is Delaunay triangulation: freeze combinatorial structure, optimize within stratum, periodically re-triangulate on CPU
+
 ## Low Priority
 
 ### Code cleanup
