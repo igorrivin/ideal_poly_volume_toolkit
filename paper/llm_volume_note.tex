@@ -149,7 +149,7 @@ Eucl.\ vol, $N=30$ on $S^3$ & 2.4909 & \textbf{2.4909} & 2.4839 & --- \\
 Eucl.\ vol, 20 facets on $S^3$ & 0.7925 & \textbf{0.7925} & \textbf{0.7925} & \textbf{0.7925}$^\dagger$ \\
 Eucl.\ area, 20 facets on $S^3$ & 5.9544 & \textbf{5.9544} & \textbf{5.9544} & \textbf{5.9544}$^\dagger$ \\
 Eucl.\ area, 17 facets on $S^3$ & 5.036 & 5.002 & \textbf{5.036} & --- \\
-$\mathbb{H}^6$ vol, $N=16$ & 0.5406 & \textbf{0.5406} & pending & $0.041^{*}$ \\
+$\mathbb{H}^6$ vol, $N=16$ & 0.5406 & \textbf{0.5406} & 0.480$^\ddagger$ & $0.041^{*}$ \\
 \bottomrule
 \end{tabular}
 \smallskip
@@ -157,7 +157,10 @@ $\mathbb{H}^6$ vol, $N=16$ & 0.5406 & \textbf{0.5406} & pending & $0.041^{*}$ \\
 {\footnotesize $^*$Gemini's answer is formally correct but useless
 (off by a factor of 13 for $\mathbb{H}^6$; stacked-simplex bound for 20 facets).\\
 $^\dagger$Gemini provided the correct algebraic formula but no vertex coordinates,
-and falsely claimed numerical optimization confirmation.}
+and falsely claimed numerical optimization confirmation.\\
+$^\ddagger$GPT-5.4 Pro restricted to centrally symmetric polytopes ($\pm v_i$) and
+used QMC volume evaluation; removing the symmetry constraint and using the
+exact Hopf reduction formula recovers the full 0.5406.}
 \end{table}
 
 \subsection{Qualitative comparison}
