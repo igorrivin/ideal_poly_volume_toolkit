@@ -193,11 +193,81 @@ def ideal_6simplex_volume_torch(verts_S5):
     w4 = w4 / (2 * math.pi)
 
     # w2: sum of 35 S^3 Murakami link volumes / (2*pi^2)
-    w2_sum = torch.tensor(0.0, dtype=verts.dtype, device=verts.device)
-    for subset in combinations(range(m), 4):
-        idx = list(subset)
-        A_sub = A[idx][:, idx]
-        w2_sum = w2_sum + murakami_volume(A_sub)
-    w2 = w2_sum / (2 * math.pi**2)
+    # Batched: collect all 35 4x4 submatrices, one Li2 call
+    all_subsets = list(combinations(range(m), 4))
+    A_subs = torch.stack([A[list(s)][:, list(s)] for s in all_subsets])  # (35, 4, 4)
+    link_vols = murakami_volume_batched(A_subs)  # (35,)
+    w2 = link_vols.sum() / (2 * math.pi**2)
 
     return (8 * math.pi**3 / 15) * (17.0 / 4 - w4 + 0.5 * w2)
+
+
+def murakami_volume_batched(A):
+    """
+    Batched Murakami volume for B spherical tetrahedra at once.
+
+    Parameters
+    ----------
+    A : torch.Tensor, shape (B, 4, 4), dtype float64
+        Batch of angle Gram matrices.
+
+    Returns
+    -------
+    vols : torch.Tensor, shape (B,)
+        Volumes of the B spherical tetrahedra.
+    """
+    B = A.shape[0]
+
+    entries = torch.stack([
+        -A[:, 0, 1], -A[:, 0, 2], -A[:, 1, 2],
+        -A[:, 2, 3], -A[:, 1, 3], -A[:, 0, 3]
+    ], dim=1)  # (B, 6)
+
+    alphas = torch.acos(torch.clamp(entries, -1 + 1e-7, 1 - 1e-7))
+    a = torch.exp(1j * alphas)  # (B, 6)
+
+    log_a = torch.log(a)
+    cross = log_a[:, 0] * log_a[:, 3] + log_a[:, 1] * log_a[:, 4] + log_a[:, 2] * log_a[:, 5]
+
+    q0 = (a[:, 0] * a[:, 3] + a[:, 1] * a[:, 4] + a[:, 2] * a[:, 5]
+          + a[:, 0] * a[:, 1] * a[:, 5] + a[:, 0] * a[:, 2] * a[:, 4]
+          + a[:, 1] * a[:, 2] * a[:, 3] + a[:, 3] * a[:, 4] * a[:, 5]
+          + a[:, 0] * a[:, 1] * a[:, 2] * a[:, 3] * a[:, 4] * a[:, 5])
+
+    q1 = (-(a[:, 0] - 1 / a[:, 0]) * (a[:, 3] - 1 / a[:, 3])
+          - (a[:, 1] - 1 / a[:, 1]) * (a[:, 4] - 1 / a[:, 4])
+          - (a[:, 2] - 1 / a[:, 2]) * (a[:, 5] - 1 / a[:, 5]))
+
+    q2 = (1 / (a[:, 0] * a[:, 3]) + 1 / (a[:, 1] * a[:, 4]) + 1 / (a[:, 2] * a[:, 5])
+          + 1 / (a[:, 0] * a[:, 1] * a[:, 5]) + 1 / (a[:, 0] * a[:, 2] * a[:, 4])
+          + 1 / (a[:, 1] * a[:, 2] * a[:, 3]) + 1 / (a[:, 3] * a[:, 4] * a[:, 5])
+          + 1 / (a[:, 0] * a[:, 1] * a[:, 2] * a[:, 3] * a[:, 4] * a[:, 5]))
+
+    disc = q1 * q1 - 4 * q0 * q2
+    z0 = (-q1 + torch.sqrt(disc)) / (2 * q2)
+
+    z0c = z0.unsqueeze(1)
+    li2_args = torch.cat([
+        z0c,
+        z0c / (a[:, 0] * a[:, 1] * a[:, 3] * a[:, 4]).unsqueeze(1),
+        z0c / (a[:, 0] * a[:, 2] * a[:, 3] * a[:, 5]).unsqueeze(1),
+        z0c / (a[:, 1] * a[:, 2] * a[:, 4] * a[:, 5]).unsqueeze(1),
+        -z0c / (a[:, 0] * a[:, 1] * a[:, 2]).unsqueeze(1),
+        -z0c / (a[:, 0] * a[:, 4] * a[:, 5]).unsqueeze(1),
+        -z0c / (a[:, 1] * a[:, 3] * a[:, 5]).unsqueeze(1),
+        -z0c / (a[:, 2] * a[:, 3] * a[:, 4]).unsqueeze(1),
+    ], dim=1)  # (B, 8)
+
+    # ONE Li2 call for all B*8 arguments
+    li2_vals = Li2.apply(li2_args)
+
+    L = 0.5 * (li2_vals[:, :4].sum(dim=1) - li2_vals[:, 4:].sum(dim=1) + cross)
+
+    alpha_sum = alphas.sum(dim=1)
+    vol_raw = -L.real + math.pi * (torch.angle(-q2) + alpha_sum / 2) - 1.5 * math.pi ** 2
+
+    two_pi_sq = 2 * math.pi ** 2
+    vol = vol_raw % two_pi_sq
+    vol = torch.where(vol > math.pi ** 2, two_pi_sq - vol, vol)
+
+    return vol
