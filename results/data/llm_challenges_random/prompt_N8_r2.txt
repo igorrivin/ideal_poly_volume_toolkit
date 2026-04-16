@@ -1,0 +1,18 @@
+You are given the face lattice of a convex 4-polytope (a polytope in R^4) with 8 vertices.
+
+**Face lattice data:**
+- f-vector: [8, 26, 36, 18]  (vertices, edges, 2-faces, 3-faces)
+- Degree sequence (vertex degrees in the 1-skeleton, descending): [7, 7, 7, 7, 6, 6, 6, 6]
+- Edge list (pairs of vertex indices 0..7):
+  [[0, 1], [0, 2], [0, 3], [0, 4], [0, 5], [0, 6], [0, 7], [1, 2], [1, 3], [1, 4], [1, 5], [1, 7], [2, 3], [2, 4], [2, 5], [2, 6], [2, 7], [3, 4], [3, 5], [3, 6], [4, 5], [4, 6], [4, 7], [5, 6], [5, 7], [6, 7]]
+- Facets (3-faces, each a tetrahedron given as 4 vertex indices):
+  [[0, 1, 2, 3], [0, 1, 2, 5], [0, 1, 3, 5], [0, 2, 3, 6], [0, 2, 5, 7], [0, 2, 6, 7], [0, 3, 5, 6], [0, 4, 5, 6], [0, 4, 5, 7], [0, 4, 6, 7], [1, 2, 3, 4], [1, 2, 4, 7], [1, 2, 5, 7], [1, 3, 4, 5], [1, 4, 5, 7], [2, 3, 4, 6], [2, 4, 6, 7], [3, 4, 5, 6]]
+
+**Your task:** Produce 8 points on the unit 3-sphere S^3 (i.e., each point has unit norm in R^4) whose convex hull has exactly this combinatorial type — the same face lattice up to relabeling of vertices.
+
+**Output format:** Return ONLY a JSON object with a single key "points" containing a list of 8 points, each a list of 4 floats. Example format:
+```json
+{"points": [[1.0, 0.0, 0.0, 0.0], [0.0, 1.0, 0.0, 0.0], ...]}
+```
+
+Do not include any other text outside the JSON block. Think carefully about the combinatorial structure before choosing coordinates.

@@ -1,0 +1,18 @@
+You are given the face lattice of a convex 4-polytope (a polytope in R^4) with 13 vertices.
+
+**Face lattice data:**
+- f-vector: [13, 52, 78, 39]  (vertices, edges, 2-faces, 3-faces)
+- Degree sequence (vertex degrees in the 1-skeleton, descending): [8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8]
+- Edge list (pairs of vertex indices 0..12):
+  [[0, 1], [0, 2], [0, 3], [0, 5], [0, 6], [0, 7], [0, 9], [0, 10], [1, 2], [1, 3], [1, 4], [1, 7], [1, 9], [1, 11], [1, 12], [2, 3], [2, 4], [2, 6], [2, 8], [2, 9], [2, 12], [3, 4], [3, 5], [3, 6], [3, 7], [3, 11], [4, 5], [4, 6], [4, 8], [4, 11], [4, 12], [5, 6], [5, 7], [5, 8], [5, 10], [5, 11], [6, 8], [6, 9], [6, 10], [7, 9], [7, 10], [7, 11], [7, 12], [8, 9], [8, 10], [8, 11], [8, 12], [9, 10], [9, 12], [10, 11], [10, 12], [11, 12]]
+- Facets (3-faces, each a tetrahedron given as 4 vertex indices):
+  [[0, 1, 2, 3], [0, 1, 2, 9], [0, 1, 3, 7], [0, 1, 7, 9], [0, 2, 3, 6], [0, 2, 6, 9], [0, 3, 5, 6], [0, 3, 5, 7], [0, 5, 6, 10], [0, 5, 7, 10], [0, 6, 9, 10], [0, 7, 9, 10], [1, 2, 3, 4], [1, 2, 4, 12], [1, 2, 9, 12], [1, 3, 4, 11], [1, 3, 7, 11], [1, 4, 11, 12], [1, 7, 9, 12], [1, 7, 11, 12], [2, 3, 4, 6], [2, 4, 6, 8], [2, 4, 8, 12], [2, 6, 8, 9], [2, 8, 9, 12], [3, 4, 5, 6], [3, 4, 5, 11], [3, 5, 7, 11], [4, 5, 6, 8], [4, 5, 8, 11], [4, 8, 11, 12], [5, 6, 8, 10], [5, 7, 10, 11], [5, 8, 10, 11], [6, 8, 9, 10], [7, 9, 10, 12], [7, 10, 11, 12], [8, 9, 10, 12], [8, 10, 11, 12]]
+
+**Your task:** Produce 13 points on the unit 3-sphere S^3 (i.e., each point has unit norm in R^4) whose convex hull has exactly this combinatorial type — the same face lattice up to relabeling of vertices.
+
+**Output format:** Return ONLY a JSON object with a single key "points" containing a list of 13 points, each a list of 4 floats. Example format:
+```json
+{"points": [[1.0, 0.0, 0.0, 0.0], [0.0, 1.0, 0.0, 0.0], ...]}
+```
+
+Do not include any other text outside the JSON block. Think carefully about the combinatorial structure before choosing coordinates.
