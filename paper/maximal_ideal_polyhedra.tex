@@ -1438,6 +1438,57 @@ symmetry---the $N = 16$ optimal polytope ($|\mathrm{Aut}| = 2$,
     \item \textbf{Cross-Metric Divergence}: Characterize which functionals on $S^{d-1}$ give the same optimal combinatorial type and which do not. Our data suggests volume and isoperimetric ratio agree, while surface area can diverge.
 
     \item \textbf{Hyperbolic Isoperimetric Limit}: Does $\sup_P I(P)$ over all $N$-vertex ideal polytopes in $\mathbb{H}^4$ converge as $N \to \infty$, and if so, is the limit strictly less than $1/4$?
+
+    \item \textbf{Spectral Realizability of Volume-Optimal Polytopes}.
+    Let~$P$ be a simplicial 4-polytope inscribed in $S^3$ that
+    maximizes hyperbolic volume among all inscribed polytopes with
+    the same number of vertices, and let $L = D - A$ be the graph
+    Laplacian of the 1-skeleton of~$P$.  Let
+    $\varphi\colon i \mapsto (v_1(i), v_2(i), v_3(i), v_4(i)) / \|{\cdot}\|$
+    be the map sending each vertex to the (normalized) vector of its
+    first four nontrivial Laplacian eigenvector entries.
+
+    \emph{Empirical observation:} $\varphi$ produces a polytope on~$S^3$
+    combinatorially equivalent to~$P$, for every volume-optimal
+    polytope we tested ($N = 5$ through $N = 30$, including the
+    $N = 30$ case with trivial automorphism group).
+    This is \emph{not} true for generic inscribable polytopes:
+    random inscribable simplicial 4-polytopes consistently fail the
+    same test.
+
+    Why does volume-maximality imply spectral realizability?  One
+    possible connection: the volume functional on inscribed
+    configurations is related (via the Schl\"afli formula) to the
+    log-determinant of the Gram matrix, while the Laplacian
+    eigenvectors minimize a discrete Dirichlet energy; if these two
+    objectives have aligned critical points, the spectral embedding
+    would automatically approximate the volume-optimal realization.
+    Another thread: volume-optimal polytopes have vertices
+    ``maximally spread'' on~$S^3$ (approximate spherical designs),
+    and the spectral embedding also spreads vertices according to
+    graph distance---for configurations that are already optimally
+    spread, these two notions may coincide.
+
+    These observations connect to the circle of ideas around
+    the Lov\'asz theta function, orthogonal representations, and
+    the Colin de Verdi\`ere number, where Laplacian eigenvectors
+    encode geometric realizability of graphs.  A proof would
+    yield a fast, deterministic algorithm for inscribed realization
+    of volume-optimal polytopes in any dimension.
+
+    \item \textbf{Inscribability in Dimension 4}.
+    In $d = 3$, Rivin's linear program characterizes which
+    simplicial polytopes are inscribable in~$S^2$.  No analogue
+    is known in $d = 4$.  Our spectral realization algorithm
+    and the cone/Volkov method (optimizing dihedral angle deficits
+    around codimension-2 faces of the cone from the origin)
+    provide practical heuristics for constructing inscribed
+    realizations when they exist.  Can these be developed into
+    a complete decision procedure?  A neural-network classifier
+    trained on combinatorial features of face lattices, using
+    the realization algorithms as an oracle for generating
+    training data, might reveal patterns pointing toward a
+    combinatorial characterization.
 \end{enumerate}
 
 % ============================================================================
