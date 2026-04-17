@@ -1448,33 +1448,51 @@ symmetry---the $N = 16$ optimal polytope ($|\mathrm{Aut}| = 2$,
     be the map sending each vertex to the (normalized) vector of its
     first four nontrivial Laplacian eigenvector entries.
 
-    \emph{Empirical observation:} $\varphi$ produces a polytope on~$S^3$
-    combinatorially equivalent to~$P$, for every volume-optimal
-    polytope we tested ($N = 5$ through $N = 30$, including the
-    $N = 30$ case with trivial automorphism group).
-    This is \emph{not} true for generic inscribable polytopes:
-    random inscribable simplicial 4-polytopes consistently fail the
-    same test.
+    \emph{Empirical observation:} $\varphi$ produces a polytope on~$S^{d-1}$
+    combinatorially equivalent to~$P$ in dimensions $d = 3$ and $d = 4$,
+    but \emph{not} in $d \geq 5$.  The results are as follows:
+    \begin{center}
+    \begin{tabular}{r l l l}
+    \toprule
+    $d$ & Success range & Failure onset & Success rate \\
+    \midrule
+    3 & $N = 6$ to $30$ & $N = 5$ (degenerate) & 25/25 \\
+    4 & $N = 5$ to $30$ & never (in tested range) & 14/14 \\
+    5 & $N = 10, 11$ only & $N = 12$ & 2/15 \\
+    6 & $N = 12\text{--}15$ only & $N = 16$ & 4/18 \\
+    \bottomrule
+    \end{tabular}
+    \end{center}
+    In $d = 4$, this includes the $N = 30$ case with trivial
+    automorphism group and 124 facets.  The method also fails for
+    generic inscribable polytopes in $d = 4$: random inscribable
+    simplicial 4-polytopes consistently produce the wrong
+    combinatorial type under spectral embedding.
 
-    Why does volume-maximality imply spectral realizability?  One
-    possible connection: the volume functional on inscribed
-    configurations is related (via the Schl\"afli formula) to the
-    log-determinant of the Gram matrix, while the Laplacian
-    eigenvectors minimize a discrete Dirichlet energy; if these two
-    objectives have aligned critical points, the spectral embedding
-    would automatically approximate the volume-optimal realization.
-    Another thread: volume-optimal polytopes have vertices
-    ``maximally spread'' on~$S^3$ (approximate spherical designs),
-    and the spectral embedding also spreads vertices according to
-    graph distance---for configurations that are already optimally
-    spread, these two notions may coincide.
+    \emph{Explanation.}  The dimensional threshold $d \leq 4$
+    coincides exactly with the range of the
+    Blind--Mani--Kalai theorem~\cite{Kalai1988}: for
+    simplicial polytopes in $d \leq 4$, the 1-skeleton
+    determines the entire face lattice.  In $d \geq 5$, the
+    1-skeleton is no longer sufficient, and distinct
+    simplicial polytopes can share the same graph.  Since the
+    spectral embedding uses only the 1-skeleton (via the
+    graph Laplacian), it contains all the combinatorial
+    information needed for realization in $d \leq 4$, but
+    is provably incomplete in $d \geq 5$.
 
-    These observations connect to the circle of ideas around
-    the Lov\'asz theta function, orthogonal representations, and
-    the Colin de Verdi\`ere number, where Laplacian eigenvectors
-    encode geometric realizability of graphs.  A proof would
-    yield a fast, deterministic algorithm for inscribed realization
-    of volume-optimal polytopes in any dimension.
+    The remaining mystery is why the spectral embedding
+    succeeds for volume-\emph{optimal} inscribed polytopes
+    but fails for generic inscribable ones in the same
+    dimension.  One possible connection: volume-optimal
+    configurations have vertices ``maximally spread'' on
+    $S^{d-1}$ (approximate spherical designs), and the
+    Laplacian eigenvectors also spread vertices according to
+    graph distance.  For configurations that are already
+    optimally spread, these two notions of dispersion may
+    coincide.  A proof would yield a fast, deterministic
+    algorithm for inscribed realization of volume-optimal
+    polytopes in dimensions $d \leq 4$.
 
     \item \textbf{Inscribability in Dimension 4}.
     In $d = 3$, Rivin's linear program characterizes which
@@ -1608,6 +1626,9 @@ I.~Rivin, ``Frobenius polytopes on $S^3$,'' companion note, 2026.
 
 \bibitem{Firsching2017}
 M.~Firsching, ``Realizability and inscribability for simplicial polytopes via optimization,'' \emph{Math.\ Program.} \textbf{166} (2017), 273--295. arXiv:1710.00979.
+
+\bibitem{Kalai1988}
+G.~Kalai, ``A simple way to tell a simple polytope from its graph,'' \emph{J. Combin.\ Theory Ser.~A} \textbf{49} (1988), 381--383.
 
 \end{thebibliography}
 
