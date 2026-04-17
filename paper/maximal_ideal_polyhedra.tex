@@ -1494,6 +1494,21 @@ symmetry---the $N = 16$ optimal polytope ($|\mathrm{Aut}| = 2$,
     algorithm for inscribed realization of volume-optimal
     polytopes in dimensions $d \leq 4$.
 
+    For $d \geq 5$, a natural candidate is the Hodge
+    1-Laplacian $L_1 = B_1 B_1^T + B_2 B_2^T$ acting on
+    edges~\cite{Forman2003}, where $B_1$ and $B_2$ are the
+    boundary operators of the simplicial complex.  The
+    up-Laplacian $L_1^{\mathrm{up}} = B_2 B_2^T$ encodes
+    triangle co-incidence, carrying information beyond the
+    1-skeleton.  Preliminary experiments show that the naive
+    approach (project $L_1$ eigenvectors back to vertices
+    by averaging over incident edges) does not improve over
+    $L_0$ in $d \geq 5$; the projection step discards the
+    higher-order structure.  A more principled approach---using
+    the edge-level embedding to reconstruct the Gram matrix
+    directly, or using sheaf Laplacians that preserve the
+    fiber structure---may succeed.
+
     \item \textbf{Inscribability in Dimension 4}.
     In $d = 3$, Rivin's linear program characterizes which
     simplicial polytopes are inscribable in~$S^2$.  No analogue
@@ -1629,6 +1644,9 @@ M.~Firsching, ``Realizability and inscribability for simplicial polytopes via op
 
 \bibitem{Kalai1988}
 G.~Kalai, ``A simple way to tell a simple polytope from its graph,'' \emph{J. Combin.\ Theory Ser.~A} \textbf{49} (1988), 381--383.
+
+\bibitem{Forman2003}
+R.~Forman, ``Bochner's method for cell complexes and combinatorial Ricci curvature,'' \emph{Discrete Comput.\ Geom.} \textbf{29} (2003), 323--374.
 
 \end{thebibliography}
 
