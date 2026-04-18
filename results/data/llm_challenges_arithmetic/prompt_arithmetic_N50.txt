@@ -1,35 +1,17 @@
-Explicitly construct 25 pairwise non-isometric convex ideal polyhedra in hyperbolic 3-space H^3, each with exactly 50 ideal vertices and all triangular faces, such that every polyhedron is arithmetic --- meaning the traces of all elements of the holonomy representation
+Explicitly construct 25 pairwise non-isometric convex ideal polyhedra in hyperbolic 3-space H^3, each with exactly 50 ideal vertices and all triangular faces, whose surface is given by an arithmetic Fuchsian group.
 
-    rho: pi_1(boundary surface) -> PSL(2, C)
-
-are algebraic integers.
-
-**Why such polyhedra exist.** By a theorem of Rivin (Ann. of Math. 139 (1994), 553--580; see also Adv. Appl. Math. 31 (2003), 242--271, arXiv:math/0200122):
-
-For any combinatorial triangulation T of the 2-sphere realizable as the boundary of a convex ideal polyhedron in H^3, the hyperbolic volume functional V on the space of ideal polyhedra with combinatorial type T is strictly concave on the Rivin polytope (the convex body of valid angle assignments satisfying: angles positive, triangle angle sums = pi, interior vertex angle sums = 2*pi, dihedral angles at interior edges <= pi). Its unique global maximum is a critical point at which all dihedral angles are rational multiples of pi.
-
-When the dihedral angles are rational multiples of pi, the shape parameters z_e = exp(i * theta_e) are roots of unity, so the holonomy matrices have entries in a cyclotomic field and all their traces are algebraic integers. The surface of the polyhedron inherits a complete finite-area hyperbolic metric, making it H^2 / Gamma for a Fuchsian group Gamma < PSL(2, R) that is (conjecturally) arithmetic.
-
-**Construction method.** To produce distinct arithmetic ideal polyhedra:
-1. Choose 50 distinct points in C union {infinity} (the boundary of the upper half-space model of H^3). Different random choices of points generically yield different Delaunay triangulations and hence different combinatorial types.
-2. Compute the Delaunay triangulation of these points on S^2 (via stereographic projection).
-3. Optimize the vertex positions to maximize the hyperbolic volume V = sum over triangles T of (Lambda(alpha_T) + Lambda(beta_T) + Lambda(gamma_T)), where Lambda is the Lobachevsky function Lambda(theta) = -integral from 0 to theta of ln|2 sin t| dt.
-4. At the volume maximum, all dihedral angles are rational multiples of pi and the holonomy is arithmetic.
-
-Different initial point configurations lead to different combinatorial triangulations, giving non-isometric polyhedra after optimization.
-
-**Output format.** For each polyhedron provide:
-  1. The ideal vertices z_1, ..., z_{50} as complex numbers in C.
+For each polyhedron provide:
+  1. The ideal vertices z_1, ..., z_50 as complex numbers in C (boundary of the upper half-space model, identified with the Riemann sphere via stereographic projection).
   2. The face triangulation as a list of vertex-index triples [i, j, k] (0-indexed).
-  3. The hyperbolic volume.
+  3. The hyperbolic volume of the polyhedron.
 
 Return your answer as a JSON array of objects:
 
 [
   {
-    vertices: [[re_1, im_1], [re_2, im_2], ...],
-    triangles: [[i, j, k], ...],
-    volume: <float>
+    "vertices": [[re_1, im_1], [re_2, im_2], ...],
+    "triangles": [[i, j, k], ...],
+    "volume": <float>
   },
   ...
 ]
