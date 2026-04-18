@@ -1,0 +1,17 @@
+Explicitly construct 10 pairwise non-isometric convex ideal polyhedra in hyperbolic 3-space H^3, each with exactly 100 ideal vertices and all triangular faces, whose surface is given by an arithmetic Fuchsian group.
+
+For each polyhedron provide:
+  1. The ideal vertices z_1, ..., z_100 as complex numbers in C (boundary of the upper half-space model, identified with the Riemann sphere via stereographic projection).
+  2. The face triangulation as a list of vertex-index triples [i, j, k] (0-indexed).
+  3. The hyperbolic volume of the polyhedron.
+
+Return your answer as a JSON array of objects:
+
+[
+  {
+    "vertices": [[re_1, im_1], [re_2, im_2], ...],
+    "triangles": [[i, j, k], ...],
+    "volume": <float>
+  },
+  ...
+]
