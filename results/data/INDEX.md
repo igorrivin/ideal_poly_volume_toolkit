@@ -62,12 +62,36 @@ a narrow tolerance window.
 - `solution_guide.md` — Haagerup-Munkholm formula, parameterization,
   optimization strategy.
 
+### 5. Ideal H^d Max-Volume Lower Bound (`llm_challenges_hd_volume_lb/`)
+
+**Task**: Construct the largest-volume convex ideal polytope in H^d with
+exactly N vertices, for each given (d, N). The LLM's claimed volume is
+graded against our best optimized lower bound LB(d, N).
+
+- `benchmark.json` — prompt + list of (d, N) challenges (no LBs).
+- `ground_truth.json` — LBs; withheld from the LLM.
+- `README.md` — full LB table and grading rules.
+- Covers d = 4 (N in {5..30 subset}), d = 5 (N in {6..20}), and
+  d = 6 (N in {7..24 subset}); 35 challenges in total.
+- Generator: `scripts/generate_hd_volume_lb_benchmark.py`.
+- Checker: `scripts/check_hd_volume_lb_response.py` — pass if claimed V >=
+  0.95 * LB; "strong" if V >= LB (a genuine improvement on our bound).
+
 ## Optimal Polytope Data
 
 - `optimal_ideal_4polytopes.json` — volume-optimal inscribed 4-polytopes
   (N=5..30): coordinates, f-vectors, volumes, automorphism orders.
-- `optimal_d5_d6_symmetry_analysis.json` — symmetry groups for d=5
-  (N=6..20) and d=6 (N=7..24) optimal polytopes.
+- `optimal_d5_d6_symmetry_analysis.json` — vertex coordinates and symmetry
+  groups for d=5 (N=6..20) and d=6 (N=7..24) inscribed-optimal polytopes.
+  Note: for d=5 at N in {12, 14, 20} the stored configs are local, not
+  global, maxima — they underperform paper Table 5 by 1–4%.
+- `ideal_H5_polytope_results.json` — H^5 hyperbolic volumes recomputed
+  from the configs in `optimal_d5_d6_symmetry_analysis.json` via
+  `scripts/recompute_h5_volumes.py`. Includes per-N `best_lb` (whichever
+  is tighter: our recompute or paper Table 5) and `best_lb_source` so the
+  discrepancy is explicit.
+- `ideal_H6_{polytope_first_results,larger_N,combinatorial_invariance}.json`
+  — H^6 results, each with `hyp_vol`.
 
 ## LLM Benchmark Results
 
