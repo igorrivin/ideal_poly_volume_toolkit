@@ -32,6 +32,9 @@ wheels/
 # VS Code
 .vscode/
 
+# Gradio cache
+.gradio/
+
 # macOS
 .DS_Store
 

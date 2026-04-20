@@ -1,5 +1,9 @@
 # Lessons Learned
 
+## Environment (read first in any new session)
+
+- **`pip` and `python3` point to different environments on this machine.** `python3` is `/home/igor/miniforge3/bin/python3`; bare `pip` is `/home/igor/.local/bin/pip`, tied to a *different* Python. Always install with `python3 -m pip install ...`. A bare `pip install` will report success but the package stays invisible to `python3`, giving a confusing `ModuleNotFoundError`. This rule also applies to `pip show`, `pip list`, `pip uninstall`.
+
 ## Optimization
 
 - **Cartesian parameterization beats angles.** Use 4N Cartesian coordinates with norm projection (x / |x|) rather than 3N spherical angles. The angle parameterization has coordinate singularities at the poles; Cartesian is smooth everywhere. Confirmed: Cartesian L-BFGS-B reaches 12.4417 for N=30 area, while angles only get 12.4339.
