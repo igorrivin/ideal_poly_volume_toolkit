@@ -77,6 +77,26 @@ graded against our best optimized lower bound LB(d, N).
 - Checker: `scripts/check_hd_volume_lb_response.py` — pass if claimed V >=
   0.95 * LB; "strong" if V >= LB (a genuine improvement on our bound).
 
+### 6. Volume Lower Bound — Construct a Record Polytope (`llm_challenges_volume_lb/`)
+
+**Task**: Given a (measure, d, N) triple, provide the sharpest lower bound
+you can on the maximum volume of an N-vertex polytope, backed by explicit
+vertex coordinates.  The grader computes the volume of the submitted
+polytope and cross-checks against both the LLM's claim and our record.
+
+- Five regimes: Euclidean at d in {4, 5, 6} (inscribed in unit ball);
+  Hyperbolic at d in {4, 6} (ideal polytopes).  Hyperbolic d=5 is
+  excluded because our d=5 records at N in {12, 14, 20} are known
+  suboptimal (see Stage A).
+- 77 challenges total.
+- `benchmark.json`, `ground_truth.json`, `README.md` — same layout as
+  benchmark #5 above.
+- Anti-hallucination design: `vertices` is required.  Missing → `invalid`.
+- Generator: `scripts/generate_volume_lb_benchmark.py`.
+- Checker: `scripts/check_volume_lb_response.py`.  Grades each answer
+  on (a) claim-vs-computed consistency, (b) computed-vs-record strength
+  (≥1.00 = strong, ≥0.95 = pass).
+
 ## Optimal Polytope Data
 
 - `optimal_ideal_4polytopes.json` — volume-optimal inscribed 4-polytopes
