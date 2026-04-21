@@ -116,6 +116,36 @@ polytope-specific `EUCL` / `HYP` naming leaking into the harness. The
 polytope task sets `evaluate_surrogate` = Euclidean volume and `evaluate` =
 hyperbolic volume; inner optimizers choose which to call.
 
+### 3.2a Polytope scoring fix (correctness bug identified during C)
+
+The current `rl_optimizer.py` has a latent bug: `_do_cma` always scores by
+Euclidean volume (line 489 hardcodes `euclidean_volume` as the CMA
+objective), while `_do_lbfgs` writes whatever `LocalLBFGS.run()` returns
+into `node.best_value` — and for d ∈ {3, 4, 6} that is **hyperbolic**
+volume, while for d = 5 it is Euclidean. So `node.best_value` holds a
+different *kind* of number depending on optimizer history, and the
+`v > node.best_value` comparison is not well-defined across operations.
+
+The refactor fixes this by giving each task a **single consistent
+scoring function**, chosen per dimension by whichever hyperbolic form is
+closed and fast:
+
+| d | `task.evaluate` returns      | notes                                           |
+|---|-------------------------------|-------------------------------------------------|
+| 3 | hyperbolic (Bloch–Wigner)     | closed form, fast                                |
+| 4 | hyperbolic (`ideal_polytope_volume_4d`) | closed form, fast                    |
+| 5 | Euclidean                     | true H^5 is Schläfli MC (seconds, noisy); paper §7.7 says Eucl ≈ Hyp here |
+| 6 | hyperbolic (`ideal_h6_polytope_volume`) | closed form, fast                    |
+
+LBFGS continues to use Schläfli / hyperbolic gradients internally in all
+four dimensions (the gradient code already does that). What changes is
+that at d ∈ {3, 4, 6}, CMA-ES now also optimizes the hyperbolic objective
+(which is cheap for these dimensions), instead of silently optimizing the
+wrong function and getting overwritten later.
+
+`task.evaluate_surrogate` still exists for optimizers that want the fast
+Euclidean surrogate; for d = 5 it equals `task.evaluate`.
+
 ### 3.3 State-persistence contract (resolving B2)
 
 Every existing optimizer on both sides (`LocalCMAES`, `LocalLBFGS`, all the
@@ -290,10 +320,14 @@ Stage C is done when **all four** of the following hold:
    still work.
 2. A parity test runs 20 seeds through the pre-refactor
    `IdealPolytopeOptEnv` and the post-refactor `make_polytope_env()` with
-   identical RNG and asserts the best-value trajectory matches bit-for-bit
-   on deterministic inner optimizers (RandomRestart, L-BFGS) and to
-   relative tolerance 1e-6 on CMA-ES (which has internal seeded randomness
-   that may differ under the adapter).
+   identical RNG. Amended for the §3.2a scoring fix:
+   - **d = 5**: bit-for-bit parity on deterministic optimizers; 1e-6
+     relative tolerance on CMA-ES. (d = 5 used consistent Euclidean
+     scoring before, so behavior is preserved.)
+   - **d ∈ {3, 4, 6}**: trajectories diverge because CMA now optimizes
+     hyperbolic instead of Euclidean. Assert one-sided: the new env's
+     final best hyperbolic volume is ≥ the old env's final best volume
+     (after re-scoring the old config with `task.evaluate`).
 3. The saved `ppo_d5_*.zip` models in `results/rl_models/` load via
    `evaluate_controller` on the new env and produce best-values within
    float noise of the training-log values.
