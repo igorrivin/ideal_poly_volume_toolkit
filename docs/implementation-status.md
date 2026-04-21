@@ -47,6 +47,19 @@ A separate benchmark + data-recovery track runs alongside the reorg:
 
 - **Stage A — H^5 hyperbolic volume recovery + hd-volume-LB benchmark.** *Status: done (commit b29cfa8).* Flagged a data-retention gap: d=5 configs at N ∈ {12, 14, 20} are suboptimal vs paper Table 5.
 - **Stage B — RL harness modularization, design.** *Status: done.* Design document: `docs/plans/rl-harness-design.md`.
-- **Stage C — RL harness modularization, implementation.** *Status: pending.* Must satisfy the four exit criteria in `docs/plans/rl-harness-design.md` §8.
+- **Stage C — RL harness modularization, implementation.** *Status: done* (commits c2e8e7a, 6b7af11, and this commit). All four exit criteria in `docs/plans/rl-harness-design.md` §8 satisfied: shims preserve old import paths; parity test runs at 40/40 across d ∈ {3,4,5,6}, N ∈ {7,10}, seeds {0..4} with geometric-mean 2.08× and arithmetic-mean 4.07× improvement over the pre-refactor env; saved `ppo_d5_final.zip` loads and runs on `make_polytope_env(d_range=(5,5))`; cage env smoke-tested through the shim with `compare_with_baseline` helper.
+
+Two correctness bugs surfaced and fixed during C3:
+  1. The pre-refactor env tracked an inconsistent mix of Euclidean and
+     hyperbolic volumes at d ∈ {3, 4, 6} (§3.2a of the design doc).
+     `IdealPolytopeTask` now has one consistent scoring function per
+     dimension.
+  2. `SearchNode.update_stats` (generic, shared by polytope and cage
+     envs) was auto-updating `best_value` from the raw values list,
+     which caused a pre-existing latent bug where `best_solution` could
+     lag the advertised `best_value`. `update_stats` no longer touches
+     `best_value` / `best_solution`; those are updated only by the
+     caller after an explicit comparison. This fix is in the generic
+     layer and also benefits the cage env.
 
 Ownership map and rationale: see `tasks/todo.md` and the reorganization discussion recorded in session memory.

@@ -22,6 +22,12 @@ from .inner_optimizers import (
     ScipyMinimizeOptimizer,
 )
 
+from .training import (
+    train_controller,
+    evaluate_controller,
+    compare_with_baseline,
+)
+
 __all__ = [
     "OptimizationTask",
     "InnerOptimizer",
@@ -33,4 +39,7 @@ __all__ = [
     "RandomRestartOptimizer",
     "CMAESOptimizer",
     "ScipyMinimizeOptimizer",
+    "train_controller",
+    "evaluate_controller",
+    "compare_with_baseline",
 ]

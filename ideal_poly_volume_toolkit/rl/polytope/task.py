@@ -84,7 +84,16 @@ def _euclidean_hull_volume(pts: np.ndarray) -> float:
 # =====================================================================
 
 def _hyperbolic_volume(dim: int, sol: PolytopeSolution) -> float:
-    """Return the scoring objective for dimension `dim`."""
+    """Return the scoring objective for dimension `dim`.
+
+    For d=6 we defensively retriangulate the vertex set: inner optimizers
+    may mutate the vertex positions while carrying along stale simplex
+    indices (e.g., LBFGS returns a moved config with the entry-point
+    triangulation), and the H^6 volume formula is sensitive to mismatch
+    between simplices and vertex positions.  `_h3_volume` and `_h4_volume`
+    build their own triangulations internally; `_euclidean_hull_volume`
+    doesn't need one.
+    """
     if dim == 3:
         return _h3_volume(sol.vertices)
     if dim == 4:
@@ -95,7 +104,19 @@ def _hyperbolic_volume(dim: int, sol: PolytopeSolution) -> float:
         # precision at d = 5, so no hyperbolic signal is lost.
         return _euclidean_hull_volume(sol.vertices)
     if dim == 6:
-        return _h6_volume(sol.vertices, sol.simplices)
+        simps = sol.simplices
+        if not simps or len(simps[0]) != 7:
+            try:
+                simps = _stereographic_delaunay(sol.vertices)
+            except Exception:
+                return 0.0
+        else:
+            # Cheap triangulation refresh — matches the d=3 / d=4 paths.
+            try:
+                simps = _stereographic_delaunay(sol.vertices)
+            except Exception:
+                pass  # fall back to the stored simplices
+        return _h6_volume(sol.vertices, simps)
     raise ValueError(f"Unsupported dimension for polytope task: {dim}")
 
 
@@ -215,10 +236,15 @@ class IdealPolytopeTask(OptimizationTask):
 
     def from_vector(self, vec: np.ndarray) -> PolytopeSolution:
         verts = _normalize_rows(vec.reshape(self.N, self.d))
-        # Don't retriangulate on every CMA eval — keep the stale simplices;
-        # the gradient path (LBFGS) recomputes them at its own cadence.  The
-        # RL env retriangulates after a perturb/split via `random_solution`.
-        return PolytopeSolution(vertices=verts, simplices=[])
+        # Retriangulate every time: `evaluate` at d=6 consumes simplices
+        # (and d=3/4 build their own anyway), so returning stale or empty
+        # simplices makes task.evaluate(from_vector(v)) produce zeros at d=6.
+        # Delaunay is cheap compared to the closed-form volume call.
+        try:
+            simps = _stereographic_delaunay(verts)
+        except Exception:
+            simps = []
+        return PolytopeSolution(vertices=verts, simplices=simps)
 
     def project(self, vec: np.ndarray) -> np.ndarray:
         verts = _normalize_rows(vec.reshape(self.N, self.d))

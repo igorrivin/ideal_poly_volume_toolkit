@@ -157,15 +157,22 @@ class SearchNode:
         ], dtype=np.float32)
 
     def update_stats(self, values: List[float]):
-        old_best = self.best_value
+        """Update running statistics from new evaluations.
+
+        Does NOT touch `best_value` / `best_solution`; those are updated
+        only by the caller after it compares `task.evaluate(best_sol)`
+        against the current best.  Keeping the "advertised" best strictly
+        in sync with the stored solution avoids a latent bug where
+        `values` can claim an improvement that the best-solution storage
+        never actually captures (caller's `best_val > self.best_value`
+        check then sees the already-bumped value and fails to record the
+        real solution).
+        """
         self.values_history.extend(values)
         self.n_evals += len(values)
-        if values:
-            self.best_value = max(self.best_value, max(values))
         arr = np.array(self.values_history)
         self.mean_value = float(arr.mean())
         self.var_value = float(arr.var()) if len(arr) > 1 else 0.0
-        self.recent_improvement = float(self.best_value - old_best)
 
 
 # =====================================================================
@@ -293,15 +300,18 @@ class GenericOptEnv(gym.Env):
         if 'anneal' in opt.name and opt.default_budget == 8:
             budget = 50
         best_sol, values = opt.run(start, self.task, budget=budget, rng=self._rng)
+        old_best = node.best_value
         node.update_stats(values)
         best_val = self.task.evaluate(best_sol)
         if best_val > node.best_value:
             node.best_value = best_val
             node.best_solution = self.task.copy_solution(best_sol)
             node.center = self.task.copy_solution(best_sol)
+        node.recent_improvement = float(max(0.0, node.best_value - old_best))
         return len(values)
 
     def _do_sample(self, node: SearchNode, n: int = 4) -> int:
+        old_best = node.best_value
         values = []
         for _ in range(n):
             sol = self.task.perturb(
@@ -314,6 +324,7 @@ class GenericOptEnv(gym.Env):
                 node.best_value = v
                 node.best_solution = self.task.copy_solution(sol)
         node.update_stats(values)
+        node.recent_improvement = float(max(0.0, node.best_value - old_best))
         return n
 
     def _do_split(self, node: SearchNode):
@@ -337,6 +348,7 @@ class GenericOptEnv(gym.Env):
     def _do_perturb(self, node: SearchNode) -> int:
         if node.best_solution is None:
             return 0
+        old_best = node.best_value
         sol = self.task.perturb(node.best_solution, 0.5, self._rng)
         v = self.task.evaluate(sol)
         node.update_stats([v])
@@ -344,6 +356,7 @@ class GenericOptEnv(gym.Env):
             node.best_value = v
             node.best_solution = self.task.copy_solution(sol)
             node.center = self.task.copy_solution(sol)
+        node.recent_improvement = float(max(0.0, node.best_value - old_best))
         return 1
 
     def _do_prune(self, node: SearchNode):
