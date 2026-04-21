@@ -36,11 +36,17 @@ As of 2026-04-18 the CLAUDE.md `@`-imports referenced three docs that did not ex
 
 A staged reorganization is in progress. Stages in order:
 
-- **Stage 0 — docs scaffolding.** Write the three missing `docs/` files above. *Status: in progress.*
-- **Stage 1 — repository-root cleanup.** Move misplaced scripts, result files, and benchmark JSONs out of the root; archive `paper.zip` and `fivesix/`; add `.gradio/` to `.gitignore`. *Status: pending.*
+- **Stage 0 — docs scaffolding.** Write the three missing `docs/` files above. *Status: done (commit 5b1c45e).*
+- **Stage 1 — repository-root cleanup.** Move misplaced scripts, result files, and benchmark JSONs out of the root; archive `paper.zip` and `fivesix/`; add `.gradio/` to `.gitignore`. *Status: done (commit 5b1c45e).*
 - **Stage 2 — `results/` cleanup.** Move loose JSON / TXT / log files from `results/` root into `results/data/` or `results/logs/`. *Status: pending.*
 - **Stage 3 — `scripts/` grouping.** Partition the flat `scripts/` directory into topical subdirectories (`polytopes_4d/`, `rl/`, `euclidean_deficit/`, `llm_benchmark/`, `facet_optimization/`, `inscribability/`, `_debug/`). *Status: pending.*
 - **Stage 4 — package subdivision.** Split `ideal_poly_volume_toolkit/` into `geometry/`, `geometry_hd/`, `rivin/`, `realization/`, `combinatorics/`, `rl/`, `thresholds/`. *Status: deferred — flat package is acceptable for now.*
 - **Stage 5 — `examples/` cleanup.** Move loose examples into topical subdirectories. *Status: pending.*
+
+A separate benchmark + data-recovery track runs alongside the reorg:
+
+- **Stage A — H^5 hyperbolic volume recovery + hd-volume-LB benchmark.** *Status: done (commit b29cfa8).* Flagged a data-retention gap: d=5 configs at N ∈ {12, 14, 20} are suboptimal vs paper Table 5.
+- **Stage B — RL harness modularization, design.** *Status: done.* Design document: `docs/plans/rl-harness-design.md`.
+- **Stage C — RL harness modularization, implementation.** *Status: pending.* Must satisfy the four exit criteria in `docs/plans/rl-harness-design.md` §8.
 
 Ownership map and rationale: see `tasks/todo.md` and the reorganization discussion recorded in session memory.

@@ -82,6 +82,12 @@ Main clusters (by filename prefix / purpose):
 
 `examples/` contains both loose top-level files and subdirectories (`distributions/`, `enumeration/`, `optimization/`, `analysis/`, `visualization/`, `llm_benchmark/`). See `examples/README.md`.
 
+## Plans
+
+- `docs/plans/rl-harness-design.md` — design for the modularization of the
+  RL optimization harness (Stage B). Read before touching any of
+  `rl_generic.py`, `rl_optimizer.py`, `rl_cages.py`.
+
 ## Tests
 
 `tests/` holds the pytest-style suite. At present it contains `llm_benchmark_test.py` and `test_volume_threshold.py` (moved from repo root).
