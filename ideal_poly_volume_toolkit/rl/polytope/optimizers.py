@@ -47,6 +47,7 @@ class _LBFGSHyperbolicBase(InnerOptimizer):
     """
 
     dimension: int
+    default_budget = 3  # LBFGS steps per env action (matches old LocalLBFGS)
 
     def __init__(self, *, steps: int = 5, name: str | None = None):
         self.steps = int(steps)

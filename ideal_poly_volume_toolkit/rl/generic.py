@@ -86,6 +86,12 @@ class OptimizationTask(ABC):
 class InnerOptimizer(ABC):
     """Abstract base for a local optimizer."""
 
+    # Per-class preferred evaluation budget.  The env uses this when the RL
+    # controller dispatches an inner-optimizer action.  Override in
+    # subclasses to request more or fewer steps; the env still passes this
+    # via the `budget` argument so implementations may also cap themselves.
+    default_budget: int = 8
+
     @property
     @abstractmethod
     def name(self) -> str:
@@ -281,11 +287,11 @@ class GenericOptEnv(gym.Env):
     def _do_inner_opt(self, node: SearchNode, opt_idx: int) -> int:
         opt = self.inner_optimizers[opt_idx]
         start = node.best_solution if node.best_solution is not None else node.center
-        # Give annealing optimizers more budget per call
-        if 'anneal' in opt.name:
+        budget = getattr(opt, 'default_budget', 8)
+        # Legacy heuristic: annealing optimizers get a bigger budget even if
+        # the class forgot to override default_budget.
+        if 'anneal' in opt.name and opt.default_budget == 8:
             budget = 50
-        else:
-            budget = 8
         best_sol, values = opt.run(start, self.task, budget=budget, rng=self._rng)
         node.update_stats(values)
         best_val = self.task.evaluate(best_sol)

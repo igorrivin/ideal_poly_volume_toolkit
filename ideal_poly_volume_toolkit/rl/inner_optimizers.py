@@ -71,7 +71,13 @@ class CMAESOptimizer(InnerOptimizer):
     on the `use_surrogate` flag.  The returned values list is scored by
     whichever objective the optimizer used; the env will re-score the
     returned best solution via `task.evaluate` for its global best.
+
+    Register multiple instances with different sigmas to give the RL
+    controller a choice of exploration scales (e.g. an `explore` variant
+    with sigma=0.4 and a `refine` variant with sigma=0.1).
     """
+
+    default_budget = 12
 
     def __init__(self, *, sigma: float = 0.2, use_surrogate: bool = False,
                  name: str | None = None):
