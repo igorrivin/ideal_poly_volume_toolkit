@@ -271,7 +271,10 @@ class IdealPolytopeTaskSampler(TaskSampler):
 
     def sample(self, rng: np.random.Generator) -> IdealPolytopeTask:
         d = int(rng.integers(self.d_range[0], self.d_range[1] + 1))
-        N_hi = min(self.N_range[1], 5 * d)
+        # Soft cap at 5*d, but never below the requested N_range[0] —
+        # this lets fixed-(d,N) eval envs pass N_range=(N, N) even when
+        # N > 5*d (e.g. d=3, N=20).
+        N_hi = max(self.N_range[0], min(self.N_range[1], 5 * d))
         N = int(rng.integers(self.N_range[0], N_hi + 1))
         return IdealPolytopeTask(d=d, N=N)
 
