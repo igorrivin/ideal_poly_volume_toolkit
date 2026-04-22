@@ -1,6 +1,6 @@
 # Volume Lower Bound Benchmark
 
-77 challenges across the five (measure, dimension) regimes listed in the prompt.
+94 challenges across the five (measure, dimension) regimes listed in the prompt.
 
 ## Task given to the LLM
 
@@ -122,6 +122,28 @@ Grading per (measure, d, N):
 | 22 | 0.2821318760 | `optimal_d5_d6_symmetry_analysis.json` |
 | 23 | 0.3053167710 | `optimal_d5_d6_symmetry_analysis.json` |
 | 24 | 0.3288340815 | `optimal_d5_d6_symmetry_analysis.json` |
+
+### Hyperbolic volume in dimension 3
+
+| N | our record | source |
+|---|------------|--------|
+| 4 | 1.0149416064 | `4vertex_comprehensive_combinatorics.json` |
+| 5 | 2.0298832129 | `5vertex_comprehensive_combinatorics.json` |
+| 6 | 3.6638623767 | `6vertex_comprehensive_combinatorics.json` |
+| 7 | 4.9867734573 | `7vertex_comprehensive_combinatorics.json` |
+| 8 | 6.4884689844 | `8vertex_comprehensive_combinatorics.json` |
+| 9 | 8.1625383486 | `9vertex_comprehensive_combinatorics.json` |
+| 10 | 9.8393154814 | `10vertex_comprehensive_combinatorics.json` |
+| 11 | 11.4492900000 | `paper/maximal_ideal_polyhedra.tex (Table 1)` |
+| 12 | 13.5296280000 | `paper/maximal_ideal_polyhedra.tex (Table 1)` |
+| 20 | 27.6990000000 | `paper/maximal_ideal_polyhedra.tex (Table 1)` |
+| 30 | 46.4860000000 | `paper/maximal_ideal_polyhedra.tex (Table 1)` |
+| 50 | 84.9710000000 | `paper/maximal_ideal_polyhedra.tex (Table 1)` |
+| 70 | 123.8930000000 | `paper/maximal_ideal_polyhedra.tex (Table 1)` |
+| 100 | 182.6710000000 | `paper/maximal_ideal_polyhedra.tex (Table 1)` |
+| 150 | 279.7267340000 | `h3_large_N.txt` |
+| 200 | 377.7294740000 | `h3_large_N.txt` |
+| 300 | 573.4290090000 | `h3_large_N.txt` |
 
 ### Hyperbolic volume in dimension 4
 

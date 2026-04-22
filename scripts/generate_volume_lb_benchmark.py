@@ -78,6 +78,55 @@ def load_eucl_d5_d6() -> Tuple[Dict[int, Tuple[float, str]], Dict[int, Tuple[flo
     return d5, d6
 
 
+def load_hyp_d3() -> Dict[int, Tuple[float, str]]:
+    """H^3 records for max-volume ideal polyhedra.
+
+    Sources:
+      * N = 4..10 — `{N}vertex_comprehensive_combinatorics.json` (metadata.volume).
+        Cross-checked to match paper Table 1 to 5+ digits.
+      * N = 11, 12, 20, 30, 50, 70, 100 — paper Table 1
+        (`paper/maximal_ideal_polyhedra.tex` lines 353–367).
+      * N = 150, 200, 300 — `results/data/h3_large_N.txt`.
+    """
+    out: Dict[int, Tuple[float, str]] = {}
+
+    for N in range(4, 11):
+        fn = REPO / "results" / "data" / f"{N}vertex_comprehensive_combinatorics.json"
+        if fn.exists():
+            meta = json.loads(fn.read_text()).get("metadata", {})
+            vol = meta.get("volume")
+            if vol is not None:
+                out[N] = (float(vol), fn.name)
+
+    # Paper Table 1 values (authoritative).
+    paper_values = {
+        11: 11.449290,
+        12: 13.529628,
+        20: 27.699,
+        30: 46.486,
+        50: 84.971,
+        70: 123.893,
+        100: 182.671,
+    }
+    for N, v in paper_values.items():
+        out[N] = (float(v), "paper/maximal_ideal_polyhedra.tex (Table 1)")
+
+    # Large-N from the sep-CMA-ES log.
+    large_fn = REPO / "results" / "data" / "h3_large_N.txt"
+    if large_fn.exists():
+        import re
+        pat = re.compile(r"^N=(\d+):\s*vol=([\d.]+)")
+        for line in large_fn.read_text().splitlines():
+            m = pat.match(line)
+            if not m:
+                continue
+            N = int(m.group(1))
+            v = float(m.group(2))
+            if N not in out or v > out[N][0]:
+                out[N] = (v, large_fn.name)
+    return out
+
+
 def load_hyp_d4() -> Dict[int, Tuple[float, str]]:
     fn = REPO / "results" / "data" / "optimal_ideal_4polytopes.json"
     data = json.loads(fn.read_text())
@@ -170,7 +219,7 @@ def build_entries(sources: Dict[Tuple[str, int], Dict[int, Tuple[float, str]]]
     cid = 0
     # Deterministic emission order: measure (euclidean first), then d, then N.
     for (measure, d) in [("euclidean", 4), ("euclidean", 5), ("euclidean", 6),
-                         ("hyperbolic", 4), ("hyperbolic", 6)]:
+                         ("hyperbolic", 3), ("hyperbolic", 4), ("hyperbolic", 6)]:
         bounds = sources.get((measure, d), {})
         for N in sorted(bounds):
             lb, src = bounds[N]
@@ -208,7 +257,7 @@ def build_benchmark(challenges: List[dict]) -> dict:
             "measures_covered": ["euclidean", "hyperbolic"],
             "dimensions_covered": {
                 "euclidean": [4, 5, 6],
-                "hyperbolic": [4, 6],
+                "hyperbolic": [3, 4, 6],
             },
             "hyperbolic_d5_excluded_because": (
                 "Our d=5 hyperbolic ground truth is known suboptimal at "
@@ -283,6 +332,7 @@ def main() -> None:
 
     eucl_d4 = load_eucl_d4()
     eucl_d5, eucl_d6 = load_eucl_d5_d6()
+    hyp_d3 = load_hyp_d3()
     hyp_d4 = load_hyp_d4()
     hyp_d6 = load_hyp_d6()
 
@@ -290,6 +340,7 @@ def main() -> None:
         ("euclidean", 4): eucl_d4,
         ("euclidean", 5): eucl_d5,
         ("euclidean", 6): eucl_d6,
+        ("hyperbolic", 3): hyp_d3,
         ("hyperbolic", 4): hyp_d4,
         ("hyperbolic", 6): hyp_d6,
     }
