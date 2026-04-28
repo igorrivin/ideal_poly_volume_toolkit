@@ -553,10 +553,6 @@ The implementation includes:
           and L-BFGS on the Bloch--Wigner / Murakami differentiable
           hyperbolic objective, with dimension-specific gradient paths
           for $d \in \{3,4,5,6\}$
-    \item A modular reinforcement-learning meta-optimization harness
-          (problem-agnostic Gymnasium environment plus polytope and
-          cubic-graph specializations) with PPO training and fixed-budget
-          evaluation
     \item Fuchsian group computation via the Penner-Rivin algorithm
     \item 3D visualization in Klein, Poincaré ball, and sphere models
     \item Symmetry analysis using nauty
@@ -1308,117 +1304,6 @@ and $I_{\mathrm{ball}}(r) \sim e^{-r}/\pi \to 0$ as $r \to \infty$.
 Whether the optimal $I(P)$ converges to a definite limit as
 $N \to \infty$---and whether that limit is strictly less than
 $1/4$---remains open.
-
-% ============================================================================
-\section{Reinforcement Learning Meta-Optimization: A Mixed Result}
-\label{sec:rl_validation}
-% ============================================================================
-
-The volume-maximization problem family parameterized by $(d, N)$
-is a natural target for meta-learned optimization: each task asks
-the same question (find a high-volume polytope) with a shared
-structure (points on a sphere, a few closed-form objective and
-gradient routines, a handful of useful inner optimizers), and
-optimizer choice is clearly non-uniform across tasks---CMA-ES on
-the Euclidean surrogate dominates at small $N$, L-BFGS on the
-hyperbolic objective dominates once the configuration is close
-to optimal, and local sampling plus region splitting help
-escape basins at larger $N$.  We implemented a hierarchical
-reinforcement-learning harness to test whether a learned
-meta-controller can outperform fixed single-optimizer and
-uniform-mixing baselines at matched evaluation budget.
-
-\paragraph{Harness.}
-The harness is a Gymnasium environment wrapping a hierarchical
-search tree.  Each state holds the frontier of active regions of
-the configuration space $(S^{d-1})^N$; the agent selects a region
-and an operation (sample, split, perturb, prune, or invoke one of
-the inner optimizers).  The reward is the improvement in the
-best-so-far volume minus a small cost per function evaluation.
-A PPO policy (stable-baselines3, MLP backbone) is trained per
-dimension for $200{,}000$ environment steps, which corresponds
-to roughly $40$--$400$ hours of simulated optimization depending
-on the inner-optimizer cost.  The same harness supports problems
-orthogonal to polytope volume (we use it for cubic-graph girth
-maximization), which is the sense in which it is problem-agnostic.
-
-\paragraph{Evaluation grid.}
-We test on a $4 \times 5 \times 10$ grid: $d \in \{3, 4, 5, 6\}$,
-five $N$ values per $d$ (chosen to span small $N$ where the
-global optimum is algebraically trivial and larger $N$ where
-combinatorial variety is rich), and $10$ independent seeds per
-$(d, N)$.  Three methods are compared at matched budget (the
-evaluation count consumed by one RL episode):
-\begin{enumerate}[label=(\roman*)]
-\item \textbf{RL:} the trained PPO controller;
-\item \textbf{Round-robin:} the same budget split equally across
-      the inner optimizers available to the RL agent, ignoring
-      context;
-\item \textbf{Solo:} each single inner optimizer given the whole
-      budget; we report the best single solo per task.
-\end{enumerate}
-We grade each method by its geometric-mean ratio to the best
-solo baseline across the $50$ tasks at that dimension.
-
-\paragraph{Results.}
-The outcome splits sharply by dimension (Table~\ref{tab:rl_per_dim}).
-
-\begin{table}[ht]
-\centering
-\caption{Geometric-mean ratio to the best single solo baseline,
-per dimension, over 50 tasks ($5$ $N$'s $\times$ $10$ seeds).
-Values $> 1$ mean the method beats the strongest fixed optimizer.}
-\label{tab:rl_per_dim}
-\smallskip
-\begin{tabular}{r c c l}
-\toprule
-$d$ & RL & Round-robin & Dominant single-solo baseline \\
-\midrule
-3 & 1.057 & \textbf{1.081} & L-BFGS on Bloch--Wigner \\
-4 & 1.132 & \textbf{1.238} & CMA-ES on Euclidean surrogate \\
-5 & \textbf{1.159} & 1.049 & CMA-ES on Euclidean surrogate \\
-6 & 0.580 & 0.529 & \textbf{L-BFGS on Murakami $\mathbb{H}^6$} (ratio $0.980$) \\
-\bottomrule
-\end{tabular}
-\end{table}
-
-The RL controller wins cleanly only at $d = 5$.  At $d = 3$ and
-$d = 4$ the uninformed round-robin baseline---splitting the
-budget equally across inner optimizers---beats the trained PPO
-policy by $2$--$9\%$.  At $d = 6$ a single specialized
-inner optimizer (L-BFGS on the Murakami hyperbolic volume) is
-dominant: both RL and round-robin are far below it, with the
-RL deficit driven by catastrophic failure at the simplex
-boundary $N = d + 1 = 7$ (RL median $0.0005$ vs.\ solo median
-$0.0067$, a factor of $13$).  For $N \geq 10$ at $d = 6$ the RL
-controller ties the solo-L-BFGS baseline to three digits,
-indicating that the learned policy can identify the right
-optimizer in the large-$N$ regime but does not recognize the
-simplex-boundary special case at small $N$.
-
-\paragraph{Narrow claim.}
-The usable takeaway is more modest than ``RL beats classical
-optimization'': at dimensions where the Euclidean--hyperbolic
-equivalence of \S\ref{sec:H4} is exact ($d = 5$), no single
-inner optimizer is uniformly best and the learned controller
-captures enough of the right heuristic to outperform uninformed
-mixing.  At dimensions with a specialized dominant optimizer
-(closed-form Bloch--Wigner at $d = 3$, Murakami gradients at
-$d = 6$) or a simple surrogate that suffices ($d = 4$ Euclidean),
-a learned controller trained with the current reward and
-observation encoding does not add value beyond uninformed
-round-robin.  This is consistent with the broader meta-learning
-literature: meta-optimization pays off where classical
-heuristics are weak; where a strong specialized solver exists,
-the learned policy has to discover that solver's dominance and
-defer to it, which the current policy does only partially
-(succeeding at $d = 6$ large $N$ but failing at $d = 6$
-$N = 7$).
-
-The full training scripts, saved policies, and validation
-harness are released alongside the repository so the results
-can be reproduced and the reward/observation design can be
-iterated on.
 
 % ============================================================================
 \section{LLM Polytope Reconstruction Benchmark}
