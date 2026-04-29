@@ -329,6 +329,41 @@ used QMC volume evaluation; removing the symmetry constraint and using the
 exact Hopf reduction formula recovers the full 0.5406.}
 \end{table}
 
+\subsubsection{The full 17-challenge windowed-volume sweep}
+
+The single-task numbers above were obtained in interactive
+single-prompt sessions.  In a separate study we provided GPT-5.4
+Pro with the complete 17-challenge windowed-volume care package
+(\texttt{benchmark\_volume.json}) and asked it to produce a single
+unified construction script that would emit explicit vertex
+coordinates for every challenge.  GPT returned a single
+self-contained Python file and a JSON of $17$ point sets; the
+official standalone checker
+(\texttt{care\_package/check\_response.py}, evaluating the exact
+Haagerup-Munkholm formula) reports
+\textbf{$17 / 17$ PASS}: every submitted polytope's hyperbolic
+4-volume falls inside its target window
+$[T - \epsilon, T + \epsilon]$.  GPT's strategy, recovered from
+the construction code, is structural rather than per-challenge
+optimization: two fixed base configurations on $S^3$ (one for
+$N = 20$, one for $N = 30$) plus three parameterised families
+(\texttt{squash20}, \texttt{base30}, \texttt{two\_pentagons}),
+each of which sweeps the volume monotonically with a single
+scalar that GPT bisects to hit the requested target.  The model's
+own order-$8$ Gauss-Legendre estimate of the H$^4$ volume agrees
+with the exact closed-form value to $\sim 2 \times 10^{-3}$ on
+every challenge.  The submission is preserved in
+\texttt{results/data/llm\_responses/gpt\_volume\_band\_2026-04/}.
+
+This is the first frontier-model submission that cleanly
+solves the entire windowed-volume sweep, and it does so by
+\emph{designing parameter families} rather than running an
+optimizer per instance.  The construction is verifiable, exact
+to checker tolerance, and structurally elegant; we treat it as
+a positive result for the benchmark design (the windowed
+format admits clean structural solutions) rather than for the
+benchmark's discriminative power against GPT-5.4 specifically.
+
 \subsubsection{Qualitative comparison}
 
 The three models exhibit qualitatively different strengths and failure modes.
