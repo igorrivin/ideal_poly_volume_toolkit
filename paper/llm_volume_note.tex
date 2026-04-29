@@ -11,8 +11,8 @@
 \newtheorem{conjecture}{Conjecture}
 \newtheorem{remark}{Remark}
 
-\title{Hyperbolic Polytope Volume as an LLM Benchmark:\\
-Constructive Geometry Meets Numerical Verification}
+\title{Hyperbolic Polytope Volume as an LLM Benchmark Suite:\\
+Three Tasks of Increasing Freedom}
 
 \author{Igor Rivin}
 
@@ -23,24 +23,29 @@ Constructive Geometry Meets Numerical Verification}
 \maketitle
 
 \begin{abstract}
-We propose a family of benchmark problems for evaluating the mathematical
-reasoning capabilities of large language models (LLMs): given $N$ points
-on $S^{d-1}$, construct an ideal polytope in hyperbolic $d$-space $\mathbb{H}^d$
-with a specified geometric measure (volume, surface area, or isoperimetric ratio)
-within a prescribed tolerance window. Unlike traditional benchmarks that test
-symbolic manipulation or theorem proving, these problems require the model to
-\emph{construct} a geometric object and produce a verifiable numerical certificate.
-We evaluate three frontier models (Claude, GPT-5.4 Pro, and Gemini 3.1 Pro DeepThink) on problems
-in $\mathbb{H}^4$ and $\mathbb{H}^6$, revealing qualitatively different failure
-modes: GPT-5.4 Pro excels at persistent numerical construction but occasionally
-misinterprets the problem; Gemini produces elegant algebraic reasoning but
-fabricates numerical results; Claude's toolkit provides brute-force optimization
-with certified answers. A standalone checker based on the Haagerup--Munkholm
-formula ($d=4$) and the Hopf reduction with Murakami dilogarithms ($d=6$)
-enables fully automated verification. As a byproduct of the evaluation,
-we discover a combinatorial invariance phenomenon: the $f$-vector of the
-volume-maximizing polytope is the same whether volume is measured in the
-Euclidean or hyperbolic sense, across dimensions $d = 3, 4, 5, 6$.
+We propose three complementary benchmark families for evaluating the
+mathematical reasoning capabilities of large language models on
+constructive geometry: (i) \emph{inscribed reconstruction}, where the
+model is given the face lattice of a convex polytope and must produce
+vertex coordinates on the unit sphere realizing it; (ii) the
+\emph{windowed-volume} task, where the model must construct an ideal
+polytope whose hyperbolic volume (or surface area or isoperimetric
+ratio) lies inside a narrow tolerance band around a specified target;
+and (iii) the \emph{volume lower bound} task, where the model must
+report the sharpest lower bound it can on the maximum volume of an
+$N$-vertex polytope and back it with explicit vertex coordinates.
+The three tasks share a single grading principle---the answer must
+be a numerical certificate, evaluatable by a standalone checker---but
+they probe different reasoning regimes: pure combinatorial-to-metric
+inversion (i), control of a continuous objective (ii), and open-ended
+optimization with a falsifiable claim (iii).  We report evaluations of
+three frontier models (Claude, GPT-5.4 Pro, Gemini 3.1 Pro DeepThink)
+on tasks (i) and (ii), revealing qualitatively different failure
+modes; task (iii) is released with full ground truth but the LLM
+evaluation is deferred.  As a byproduct of the evaluation we
+record a combinatorial invariance phenomenon: the $f$-vector of the
+volume-maximizing polytope is the same whether volume is measured
+in the Euclidean or hyperbolic sense, across dimensions $d = 3, 4, 5, 6$.
 \end{abstract}
 
 % ============================================================================
@@ -59,27 +64,86 @@ matching or memorization. An ideal benchmark should:
       verbatim in training data.
 \end{enumerate}
 
-We propose that the following family of problems satisfies all four criteria:
+The maximal-volume ideal polytope problem yields three distinct
+benchmark families that all satisfy these criteria.  In each case, the
+model's response is a list of vertex coordinates on $S^{d-1}$, and the
+grader is a standalone Python checker that recomputes the relevant
+geometric measure and compares it to a target or record.
 
-\medskip
-\noindent\textbf{Problem.}
-\emph{Given integers $N$ and $d$, and a target value $T$ with tolerance
-$\epsilon$, produce $N$ points $v_1,\ldots,v_N \in S^{d-1} \subset \mathbb{R}^d$
-such that the volume of the ideal polytope $\operatorname{conv}(v_1,\ldots,v_N)
-\subset \mathbb{H}^d$ lies in the interval $[T-\epsilon, T+\epsilon]$.}
-\medskip
+% ============================================================================
+\section{Three Benchmark Tasks}
+% ============================================================================
 
-Variants include prescribing the number of facets (rather than vertices),
-optimizing boundary surface area or the isoperimetric ratio $V/A$, and
-working in the Euclidean rather than hyperbolic setting.
+We summarize the three task families here; per-family results follow
+in \S\ref{sec:reconstruction-results}, \S\ref{sec:windowed-results},
+and \S\ref{sec:volume-lb-results}.
 
-The key feature is that the answer is a \emph{numerical certificate}:
-a list of coordinates that can be independently verified by a standalone
-checker implementing the relevant volume formula. No human judgment is
-required to grade the response.
+\paragraph{Task A: inscribed reconstruction.}
+Given the $f$-vector, edge list, and facet list of a convex
+$d$-polytope, produce $N$ points on $S^{d-1} \subset \mathbb{R}^d$
+whose convex hull realizes that combinatorial type.  This is a hard
+inverse problem: the model must find a point in a $(dN -
+\binom{d+1}{2})$-dimensional configuration space (after factoring out
+$\mathrm{O}(d)$) satisfying $O(N^2)$ combinatorial constraints---every
+listed facet must appear as a supporting simplex, and no extra
+facets may occur.  Two challenge families are released: an
+\emph{optimal family} drawn from our volume-maximizing inscribed
+polytopes (high automorphism order, often joins or Frobenius
+constructions), and a \emph{random family} drawn from random points
+on $S^{d-1}$ (generically trivial automorphism group, no exploitable
+symmetry).
+
+\paragraph{Task B: windowed volume / surface area / ratio.}
+Given integers $N, d$ and a target $T$ with tolerance $\epsilon$,
+produce $N$ points $v_1, \ldots, v_N \in S^{d-1}$ such that the
+ideal polytope $\operatorname{conv}(v_i) \subset \mathbb{H}^d$ has
+the chosen geometric measure (volume, surface area, or isoperimetric
+ratio $V/A$) within $[T - \epsilon, T + \epsilon]$.  Targets are
+drawn from the $70$th--$95$th percentile of the optimization
+landscape, so simple maximization is \emph{insufficient}---the model
+must control the geometry to land in a specific window.  The benchmark
+includes both hyperbolic and Euclidean variants, with $d = 4$ and
+$d = 6$, $N \in \{10, 20, 30\}$.
+
+\paragraph{Task C: volume lower bound (anti-hallucination).}
+Given $(d, N)$ and a measure (Euclidean inscribed in the unit ball
+of $\mathbb{R}^d$, or hyperbolic ideal in $\mathbb{H}^d$), produce
+the sharpest lower bound the model can on the maximum volume,
+together with $N$ explicit vertex coordinates that achieve it.  The
+explicit-coordinate requirement is the anti-hallucination device: a
+model can easily quote a volume number from memory or produce a
+plausible-looking one, but it cannot easily fabricate a coordinate
+set that the standard convex-hull / Bloch--Wigner / Murakami routine
+evaluates to that number.  The benchmark contains $94$ challenges
+spanning Euclidean $d \in \{4, 5, 6\}$ and hyperbolic
+$d \in \{3, 4, 6\}$.  Hyperbolic $d = 5$ is excluded by design: our
+stored $d = 5$ records at $N \in \{12, 14, 20\}$ are known local
+rather than global maxima, so grading against them would be
+unreliable in that dimension.
+
+\paragraph{What the three tasks share.}
+All three answers are graded by a Python checker (see
+\S\ref{sec:verification-pipeline}) that returns exit code $0$ for
+PASS and $1$ for FAIL.  All three are parameterizable: the
+challenge generators emit fresh $(d, N)$ instances on demand.
+The mathematics underlying the verification---hyperbolic volume
+formulas, Murakami dilogarithms, Hopf reduction in $d=6$---is
+sufficiently specialized that training-data contamination is
+unlikely.
+
+\paragraph{What the three tasks probe differently.}
+Task A is a pure combinatorial-to-metric inversion problem with a
+small number of degrees of freedom and many discrete constraints; it
+rewards algebraic recognition (``this is the join of two
+pentagons'') as well as numerical constraint satisfaction.  Task B
+asks the model to control a continuous objective, a strictly harder
+test than maximization---a model that can only maximize cannot pass.
+Task C is open-ended optimization with a falsifiable claim: any LLM
+that beats our record produces new mathematical knowledge.
 
 % ============================================================================
 \section{The Verification Pipeline}
+\label{sec:verification-pipeline}
 % ============================================================================
 
 \subsection{Volume formulas}
@@ -126,12 +190,114 @@ and \texttt{euclidean\_ratio}.
 \section{Model Evaluation}
 % ============================================================================
 
-We evaluated three frontier models on a series of geometric construction
-tasks in $\mathbb{H}^4$ and $\mathbb{H}^6$. Each model was given the same
-prompt asking for the best lower bound on the maximal volume, with the
-expectation that the model would produce explicit vertex coordinates.
+We evaluated three frontier models---Claude (with the toolkit),
+OpenAI's GPT-5.4 Pro (extended reasoning, ``xhigh'' effort), and
+Google's Gemini~3.1~Pro DeepThink---on Tasks A and B.  Task C was
+designed after the bulk of this evaluation; its model results are
+deferred to future work and discussed in
+\S\ref{sec:volume-lb-results}.
 
-\subsection{Summary of results}
+\subsection{Inscribed reconstruction (Task A)}
+\label{sec:reconstruction-results}
+
+We tested GPT-5.4~Pro and Gemini~3.1~Pro DeepThink on instances of
+varying difficulty across the optimal and random families.
+
+\begin{table}[ht]
+\centering
+\caption{LLM performance on inscribed polytope reconstruction.
+$\checkmark$ = correct combinatorial type, all points on $S^3$.
+$\times$ = wrong type or timeout.}
+\label{tab:llm_results}
+\smallskip
+\begin{tabular}{r l r r c c}
+\toprule
+$N$ & Family & $|\mathrm{Aut}|$ & Facets & GPT-5.4 & Gemini 3.1 \\
+\midrule
+10 & optimal & 200  & 25  & ---          & $\checkmark$ \\
+12 & random  & 1    & 36  & $\checkmark$ & $\times$ (crash) \\
+20 & optimal & 16   & 72  & $\checkmark$ & $\checkmark$ \\
+30 & optimal & 1    & 124 & $\checkmark$ & --- \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+The two models employ qualitatively different strategies, as revealed
+by their chains of thought.
+
+\paragraph{Gemini: algebraic recognition.}
+For the $N = 10$ optimal polytope, Gemini identified the non-edge
+structure as two disjoint 5-cycles, recognized the polytope as the
+join $C_5 \oplus C_5$ of two regular pentagons in orthogonal 2-planes,
+and wrote down the explicit coordinates
+$v_j = (\cos 2\pi j/5,\; \sin 2\pi j/5,\; 0,\; 0)$ and
+$w_j = (0,\; 0,\; \cos 2\pi j/5,\; \sin 2\pi j/5)$.
+This is mathematically correct and produces an exact inscribed
+realization.  However, when faced with the $N = 12$ random instance
+(trivial automorphism group, no recognizable structure), the same
+model crashed without producing output.
+
+\paragraph{GPT: numerical constraint satisfaction.}
+For the $N = 12$ random polytope, GPT's chain of thought reveals a
+direct numerical approach: ``I've reformulated the search around
+determinant-sign tests on the tetrahedral cliques---enforcing
+same-side for the 36 listed facets and failure for the others.''
+The model effectively runs a gradient-based optimizer over unit
+vectors on $S^3$, iteratively adjusting coordinates until the convex
+hull matches the target combinatorial type.  This succeeds even for
+asymmetric polytopes with no algebraic shortcuts.
+
+\paragraph{GPT on $N = 20$ and $N = 30$.}
+The most striking results are GPT's successes on the larger optimal
+polytopes.  At $N = 20$ ($|\mathrm{Aut}| = 16$, 72 facets, $54$
+continuous DOF after symmetry reduction), GPT's chain of thought
+reveals a multi-pronged strategy: it first checked for known polytope
+types (24-cell subsets, 600-cell subsets), analyzed vertex figures,
+computed graph automorphisms, searched the
+Firsching~\cite{Firsching} archive of inscribed polytope realizations,
+and ultimately fell back on numerical constraint satisfaction via
+determinant-sign tests on facet cliques.  At $N = 30$ with trivial
+automorphism group ($|\mathrm{Aut}| = 1$, 124 facets, $80$ effective
+continuous DOF), no symmetry reduction is possible, and GPT's success
+demonstrates that its in-context numerical engine can navigate an
+$80$-dimensional landscape with $124$ nonlinear constraints with no
+algebraic shortcuts.  Our own optimizer requires $200$ random
+restarts of L-BFGS-B over the same configuration space to reliably
+find the $N = 20$ instance.
+
+\paragraph{Gemini on $N = 20$.}
+Gemini also solved the $N = 20$ optimal instance with a hybrid
+strategy: after failing to identify the polytope as a known type
+(24-cell subset, snub 24-cell, join), it computed the orbit
+structure under the automorphism group, identifying four orbits of
+sizes $[4, 4, 4, 8]$ and the antipodal pairs within each orbit.
+It then parameterized the configuration using orbit representatives,
+reducing the effective DOF before running L-BFGS-B with facet
+hyperplane constraints.  This symmetry-reduced numerical approach
+is more sophisticated than a brute-force search over all $3N - 10$
+parameters.
+
+\paragraph{Discussion.}
+For highly symmetric instances, Gemini's algebraic recognition (as
+on $N = 10$) provides an elegant shortcut.  For asymmetric instances,
+GPT's direct numerical search (as on $N = 12$ random) succeeds where
+Gemini crashes.  At intermediate difficulty ($N = 20$ optimal,
+$|\mathrm{Aut}| = 16$), both models converge via numerical methods,
+but with different parameterizations.  The inscribed constraint is
+essential: without it, the problem reduces to combinatorial
+realization (finding \emph{any} coordinates with the right
+combinatorics), which is substantially easier.  Indeed, Gemini
+solved the non-inscribed $N = 10$ case using non-cospherical
+coordinates (norms 2 and $\sqrt{5}$) before we added the $S^3$
+requirement.  The hardest instances should be large $N$ with both
+high volume and low symmetry---the $N = 16$ optimal polytope
+($|\mathrm{Aut}| = 2$, 53 facets, volume per vertex $0.49$) is a
+natural candidate.
+
+\subsection{Windowed volume / surface area / ratio (Task B)}
+\label{sec:windowed-results}
+
+\subsubsection{Summary of results}
 
 \begin{table}[ht]
 \centering
@@ -163,7 +329,7 @@ used QMC volume evaluation; removing the symmetry constraint and using the
 exact Hopf reduction formula recovers the full 0.5406.}
 \end{table}
 
-\subsection{Qualitative comparison}
+\subsubsection{Qualitative comparison}
 
 The three models exhibit qualitatively different strengths and failure modes.
 
@@ -210,7 +376,7 @@ the Cartesian parameterization with norm projection (from Gemini 3.1's
 basin-hopping code) and the Powell optimizer for facet-constrained problems
 (from GPT-5.4 Pro's code).
 
-\subsection{The ``windowed'' benchmark format}
+\subsubsection{The ``windowed'' benchmark format}
 
 A key design choice is the \emph{windowed} format: the target value $T$
 is chosen from the 70th--95th percentile of the optimization landscape,
@@ -224,7 +390,7 @@ We generated 66 windowed benchmark cases (33 hyperbolic, 33 Euclidean)
 covering volumes, surface areas, and isoperimetric ratios for
 $N = 10, 20, 30$ vertices, including facet-count-constrained variants.
 
-\subsection{Lessons for LLM training}
+\subsubsection{Lessons for LLM training}
 
 The evaluation suggests that current training procedures produce
 characteristically different failure modes:
@@ -240,6 +406,68 @@ characteristically different failure modes:
       plus vertex coordinates) separates genuine computation from
       confabulation. Our checker enforces this distinction automatically.
 \end{itemize}
+
+\subsection{Volume lower bound (Task C)}
+\label{sec:volume-lb-results}
+
+The volume-lower-bound benchmark was designed after the bulk of the
+windowed-volume evaluation above, principally as an
+anti-hallucination redesign: the windowed benchmark grades the
+submitted geometry against a target window and so a model that
+produces a plausible-looking number but no coordinates fails
+mechanically; Task C makes the requirement explicit by demanding
+the coordinates as part of the answer and grading the LLM's claim
+against what its own coordinates compute to.
+
+\paragraph{Grading.}
+The Task C grader is a single Python script that recomputes the
+volume of the submitted polytope under the appropriate measure
+(\texttt{ConvexHull} for Euclidean, the closed-form Bloch--Wigner /
+Haagerup--Munkholm / Murakami routines for hyperbolic), checks
+consistency between the LLM's claimed bound and the recomputed
+value within $10^{-3}$, and compares the recomputed value to our
+internal record:
+\begin{itemize}
+\item \textbf{strong:} computed $\geq$ record (the model has matched
+      or beaten our published bound; new mathematical claim);
+\item \textbf{pass:} computed $\geq 0.95 \times$ record;
+\item \textbf{fail:} valid polytope but $< 0.95 \times$ record;
+\item \textbf{invalid:} no coordinates, wrong dimension, or
+      non-positive volume.
+\end{itemize}
+
+\paragraph{Coverage.}
+The benchmark contains $94$ challenges across five regimes:
+
+\begin{center}
+\begin{tabular}{l c c}
+\toprule
+Measure & Dimension & $N$ values (count) \\
+\midrule
+Euclidean inscribed & $d = 4$ & $5$--$24$ ($20$) \\
+Euclidean inscribed & $d = 5$ & $6$--$20$ ($15$) \\
+Euclidean inscribed & $d = 6$ & $7$--$24$ ($18$) \\
+Hyperbolic ideal    & $d = 3$ & $4$--$300$ ($17$, sparse at large $N$) \\
+Hyperbolic ideal    & $d = 4$ & $5$--$30$ ($14$) \\
+Hyperbolic ideal    & $d = 6$ & $7$--$24$ ($10$) \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+Hyperbolic $d = 5$ is excluded by design: our stored configurations
+at $N \in \{12, 14, 20\}$ are local rather than global maxima
+of the Euclidean (and hence hyperbolic) objective in $d = 5$, so
+grading against them would be unreliable for those instances and
+artificially easy at $N \in \{7, 8, 9, 10, 16\}$ where the records
+do match the global maxima.
+
+\paragraph{Status.}
+The benchmark files (\texttt{benchmark.json},
+\texttt{ground\_truth.json}, README) and grader
+(\texttt{check\_volume\_lb\_response.py}) are released alongside
+this note.  Frontier-model evaluation on Task C is deferred to
+future work; the design and ground-truth pipeline are reported
+here so the benchmark can be used by other groups.
 
 % ============================================================================
 \section{Mathematical Byproducts}
@@ -327,18 +555,28 @@ artifacts.
 \section{Conclusions}
 % ============================================================================
 
-The geometric construction benchmark exposes qualitative differences
-between frontier LLMs that traditional math benchmarks miss. The ability
-to produce \emph{verifiable certificates}---explicit coordinates that
-pass an independent numerical checker---is a fundamentally different
-capability from producing plausible-sounding mathematical text.
+The three benchmark families above expose qualitative differences
+between frontier LLMs that traditional math benchmarks miss. The
+ability to produce \emph{verifiable certificates}---explicit
+coordinates that pass an independent numerical checker---is a
+fundamentally different capability from producing plausible-sounding
+mathematical text.  The three tasks probe different capabilities:
+inscribed reconstruction (Task A) is a constraint-satisfaction
+problem rewarding both algebraic recognition and numerical search;
+the windowed-volume task (Task B) requires controlling a continuous
+objective rather than just maximizing it; and the volume-lower-bound
+task (Task C) is anti-hallucination by design---a numerical claim
+that does not match the model's own coordinates is automatically
+rejected.
 
-The benchmark is parameterizable (any $N$, $d$, target, tolerance),
-resistant to memorization (windowed targets from a continuous landscape),
-and fully automatically gradable (standalone checker with exit codes).
-The mathematical content---hyperbolic volume, Murakami dilogarithms,
-Hopf reduction---is sufficiently specialized that training-data
-contamination is unlikely.
+All three benchmarks are parameterizable (any $N$, $d$, and either
+target window or measure), resistant to memorization (windowed
+targets from a continuous landscape; record values withheld in
+Task C), and fully automatically gradable (standalone checkers with
+exit codes).  The mathematical content---hyperbolic volume,
+Murakami dilogarithms, Hopf reduction, Bloch--Wigner---is
+sufficiently specialized that training-data contamination is
+unlikely.
 
 As a byproduct, the evaluation process itself generated new mathematical
 results (combinatorial invariance, identification of optimal polytopes,

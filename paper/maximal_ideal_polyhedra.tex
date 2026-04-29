@@ -1306,189 +1306,67 @@ $N \to \infty$---and whether that limit is strictly less than
 $1/4$---remains open.
 
 % ============================================================================
-\section{LLM Polytope Reconstruction Benchmark}
+\section{LLM Benchmarks: A Pointer}
 \label{sec:llm_benchmark}
 % ============================================================================
 
-The combinatorial data of our optimal polytopes---face lattices of
-inscribed simplicial 4-polytopes---provides a natural benchmark for
-large language models.  The task: given the $f$-vector, edge list,
-and facet list of a convex 4-polytope, produce coordinates of $N$
-points on the unit 3-sphere $S^3 \subset \mathbb{R}^4$ whose convex
-hull realizes the given combinatorial type.
+The objects studied here---volume-maximizing ideal polytopes, the
+combinatorial structures they realize, and the associated face
+lattices---turn out to provide a natural family of benchmarks for
+large language models, with the property that an answer is a list of
+vertex coordinates verifiable by a standalone checker rather than a
+prose argument.  Three distinct benchmark families have been
+designed and released alongside this paper, each probing a different
+reasoning regime: inscribed reconstruction (face lattice
+$\to$ coordinates), windowed volume (hit a target measure to within a
+tolerance), and volume lower bound (give the sharpest bound you can
+backed by explicit coordinates).  Their detailed specifications,
+grader implementations, and frontier-model evaluations are reported
+in the companion note~\cite{LLMNote}.  We restrict ourselves here to
+two observations that bear directly on the mathematical content of
+the present paper.
 
-This is a hard inverse problem.  The model must find a point in a
-$(3N - 10)$-dimensional configuration space (after factoring out
-$\mathrm{O}(4)$) satisfying $O(N^2)$ combinatorial constraints: every
-listed facet must appear as a supporting tetrahedron, and no extra
-facets may occur.  We constructed two challenge families:
+\subsection{The reconstruction problem and rigidity}
 
-\begin{enumerate}[label=(\roman*)]
-\item \textbf{Optimal family:} face lattices from our volume-maximizing
-      inscribed polytopes, which tend to have large automorphism groups
-      and algebraic structure (joins, Frobenius polytopes).
-\item \textbf{Random family:} face lattices from random points on $S^3$,
-      which generically have trivial automorphism group ($|\mathrm{Aut}| = 1$
-      for $N \geq 12$) and no exploitable symmetry.
-\end{enumerate}
+The reconstruction task asks: given the $f$-vector, edge list, and
+facet list of a convex polytope inscribed in $S^{d-1}$, produce
+$N$ explicit coordinates realizing it.  The inscribed constraint
+is essential---without it, the problem reduces to combinatorial
+realization of simplicial polytopes, a substantially easier
+question.  When LLMs were tested on instances drawn from our
+volume-optimal polytopes (large automorphism order, often joins) and
+from random sphere configurations (generically trivial automorphism
+group), GPT-5.4 Pro succeeded at instances up to $N = 30$ with
+$|\mathrm{Aut}| = 1$ via numerical constraint satisfaction;
+Gemini~3.1~Pro DeepThink succeeded on highly symmetric instances by
+algebraic recognition (e.g., identifying the $N = 10$ optimal
+polytope as $C_5 \oplus C_5$) but failed on asymmetric random
+instances.  The relevance for the present paper is that the
+\emph{rigidity} of the configuration---the dimension of the space
+of inscribed coordinate configurations realizing a given
+combinatorial type---is exactly the empirical difficulty axis the
+LLMs see.  Volume-optimal polytopes are maximally rigid in this
+sense; the hardest reconstruction instances should be large $N$
+with simultaneously high volume and low automorphism order, of
+which the $N = 16$ optimal polytope ($|\mathrm{Aut}| = 2$, $53$
+facets, volume per vertex $0.49$) is a natural candidate.
 
-\subsection{Results}
+\subsection{Volume lower bound and our records}
 
-We tested two frontier reasoning models: OpenAI's GPT-5.4~Pro
-(with extended reasoning at ``xhigh'' effort) and Google's
-Gemini~3.1~Pro DeepThink.
-
-\begin{table}[ht]
-\centering
-\caption{LLM performance on inscribed polytope reconstruction.
-$\checkmark$ = correct combinatorial type, all points on $S^3$.
-$\times$ = wrong type or timeout.}
-\label{tab:llm_results}
-\smallskip
-\begin{tabular}{r l r r c c}
-\toprule
-$N$ & Family & $|\mathrm{Aut}|$ & Facets & GPT-5.4 & Gemini 3.1 \\
-\midrule
-10 & optimal & 200  & 25 & ---   & $\checkmark$ \\
-12 & random  & 1    & 36 & $\checkmark$ & $\times$ (crash) \\
-20 & optimal & 16   & 72 & $\checkmark$ & $\checkmark$ \\
-30 & optimal & 1    & 124& $\checkmark$ & --- \\
-\bottomrule
-\end{tabular}
-\end{table}
-
-The two models employ qualitatively different strategies, as revealed
-by their chains of thought:
-
-\paragraph{Gemini: algebraic recognition.}
-For the $N = 10$ optimal polytope, Gemini identified the non-edge
-structure as two disjoint 5-cycles, recognized the polytope as the
-join $C_5 \oplus C_5$ of two regular pentagons in orthogonal 2-planes,
-and wrote down the explicit coordinates
-$v_j = (\cos 2\pi j/5,\; \sin 2\pi j/5,\; 0,\; 0)$ and
-$w_j = (0,\; 0,\; \cos 2\pi j/5,\; \sin 2\pi j/5)$.
-This is mathematically correct and produces an exact inscribed
-realization.  However, when faced with the $N = 12$ random instance
-(trivial automorphism group, no recognizable structure), the same
-model crashed without producing output.
-
-\paragraph{GPT: numerical constraint satisfaction.}
-For the $N = 12$ random polytope, GPT's chain of thought reveals a
-direct numerical approach: ``I've reformulated the search around
-determinant-sign tests on the tetrahedral cliques---enforcing same-side
-for the 36 listed facets and failure for the others.''  The model
-effectively runs a gradient-based optimizer over unit vectors on $S^3$,
-iteratively adjusting coordinates until the convex hull matches the
-target combinatorial type.  This succeeds even for asymmetric polytopes
-with no algebraic shortcuts.
-
-\paragraph{GPT on $N = 20$: a surprising success.}
-The $N = 20$ optimal polytope ($|\mathrm{Aut}| = 16$, 72~facets,
-54~continuous DOF after symmetry reduction) represents a substantially
-harder instance.  GPT's chain of thought reveals a multi-pronged
-strategy: it first checked for known polytope types (24-cell subsets,
-600-cell subsets), analyzed vertex figures, computed graph
-automorphisms, searched the Firsching
-archive~\cite{Firsching2017} of inscribed polytope realizations,
-and ultimately fell back on numerical constraint satisfaction via
-determinant-sign tests on facet cliques.  The model produced
-20~points on $S^3$ with the correct $f$-vector, degree sequence,
-and 1-skeleton isomorphism type.  The coordinates exhibit the
-$C_2 \times D_4$ symmetry of the target polytope, with only
-4~distinct coordinate magnitudes appearing.
-Our own optimizer requires 200 random restarts of L-BFGS-B
-over the same configuration space to reliably find this polytope.
-
-\paragraph{GPT on $N = 30$: trivial symmetry.}
-The most striking result is GPT's success on the $N = 30$ optimal
-polytope, which has $|\mathrm{Aut}| = 1$ (trivial automorphism group),
-124~tetrahedral facets, and $3 \times 30 - 10 = 80$ effective
-continuous DOF.  With all 30 vertices in distinct orbits, no symmetry
-reduction is possible.  The model produced 30 points on~$S^3$ with
-the correct $f$-vector $[30, 154, 248, 124]$ and isomorphic
-1-skeleton.  This demonstrates that the numerical constraint
-satisfaction engine within GPT's chain-of-thought reasoning is
-powerful enough to navigate an 80-dimensional landscape with 124
-nonlinear constraints, without any algebraic shortcuts.
-
-\paragraph{Gemini on $N = 20$: symmetry-reduced optimization.}
-Gemini also solved the $N = 20$ optimal instance.  Its chain of thought
-reveals a hybrid strategy: after failing to identify the polytope as a
-known type (24-cell subset, snub 24-cell, join), it computed the orbit
-structure under the automorphism group, identifying four orbits of
-sizes $[4, 4, 4, 8]$ and the antipodal pairs within each orbit.
-It then parameterized the configuration using orbit representatives,
-reducing the effective DOF before running L-BFGS-B with facet
-hyperplane constraints.  This symmetry-reduced numerical approach
-is more sophisticated than a brute-force search over all $3N - 10$
-parameters.
-
-\paragraph{Discussion.}
-The benchmark reveals that both models can combine structural analysis
-with numerical optimization.  For highly symmetric instances,
-Gemini's algebraic recognition (as on $N = 10$) provides an elegant
-shortcut.  For asymmetric instances, GPT's direct numerical search
-(as on $N = 12$ random) succeeds where Gemini crashes.  At
-intermediate difficulty ($N = 20$ optimal, $|\mathrm{Aut}| = 16$),
-both models converge via numerical methods, but with different
-parameterizations.
-
-The inscribed constraint is essential: without it, the problem
-reduces to combinatorial realization of simplicial 4-polytopes (finding
-\emph{any} coordinates with the right combinatorics), which is
-substantially easier.  Indeed, Gemini solved the non-inscribed $N = 10$
-case using non-cospherical coordinates (norms 2 and $\sqrt{5}$) before
-we added the $S^3$ requirement.
-
-The difficulty of the inscribed reconstruction problem scales with both
-$N$ and the \emph{rigidity} of the configuration.  Volume-optimal
-polytopes have vertices maximally spread on $S^3$, leaving little room
-for perturbation without changing the combinatorial type.  At the same
-time, high-symmetry polytopes offer algebraic footholds.  We expect
-the hardest instances to be large $N$ with both high volume and low
-symmetry---the $N = 16$ optimal polytope ($|\mathrm{Aut}| = 2$,
-53 facets, volume/vertex $= 0.49$) is a natural candidate.
-
-\subsection{Volume Lower Bound Benchmark}
-\label{sec:llm_volume_lb}
-
-The reconstruction benchmark above asks the model to recover a
-configuration given its face lattice.  A complementary benchmark
-asks a more open question: for a given $(d, N)$, what is the
-sharpest lower bound on the maximal volume of an $N$-vertex
-polytope (either Euclidean, inscribed in the unit ball of $\mathbb{R}^d$,
-or hyperbolic, ideal in $\mathbb{H}^d$) that the model can back with
-explicit vertex coordinates?
-
-The explicit-coordinate requirement is the anti-hallucination
-device.  A model can easily quote a volume number from memory or
-produce a plausible-looking one; it cannot easily fabricate a
-coordinate set that a standard convex-hull or Bloch--Wigner /
-Murakami routine evaluates to that number.  Our grader
-recomputes the volume of the submitted polytope under the
-appropriate measure, cross-checks it against the claimed lower
-bound (tolerance $10^{-3}$), and compares the computed volume
-to our internal record for that $(d, N)$: the answer is
-``strong'' if the computed volume matches or exceeds the record,
-``pass'' if it is within $95\%$ of the record, and ``fail''
-otherwise.
-
-The benchmark has $94$ challenges across five regimes:
-Euclidean inscribed in the unit ball at $d \in \{4, 5, 6\}$
-(respectively $20, 15, 18$ challenges covering $N$ in the ranges
-reported in our optimization tables) and hyperbolic ideal
-polytopes at $d \in \{3, 4, 6\}$ (respectively $17, 14, 10$
-challenges).  Hyperbolic $d = 5$ is deliberately excluded: as discussed in
-the reproducibility note accompanying Table~\ref{tab:comb_H5},
-our stored $d = 5$ configurations at $N \in \{12, 14, 20\}$ are
-known to be local rather than global maxima, so grading against
-them would be unreliable in that dimension.
-
-The benchmark files and grader are released with the repository.
-Initial LLM results are deferred to future work: the benchmark
-was designed after the LLM reconstruction study above, and our
-focus here has been on establishing the ground truth and
-validation pipeline.
+The volume-lower-bound benchmark asks the model to give the sharpest
+LB it can on $V^*(d, N)$ and back the claim with explicit vertex
+coordinates.  Our published records (Tables~\ref{tab:maximal-volumes},
+\ref{tab:comb_H5}, etc.) are the reference; an LLM submission
+classifies as \emph{strong} if it matches or beats them, \emph{pass}
+if it is within $95\%$, and \emph{fail} otherwise.  An LLM that
+beats our records produces new mathematical content; the
+benchmark's anti-hallucination design ensures that this is a
+falsifiable claim.  Hyperbolic $d = 5$ is excluded by design: as
+discussed in the reproducibility note accompanying
+Table~\ref{tab:comb_H5}, our stored $d = 5$ configurations at
+$N \in \{12, 14, 20\}$ are known local rather than global maxima
+of the Euclidean (and hence hyperbolic) objective in $d = 5$, so
+grading against them would be unreliable in that dimension.
 
 % ============================================================================
 \section{Open Questions}
@@ -1686,6 +1564,12 @@ J.~Milnor, ``Hyperbolic geometry: The first 150 years,'' \emph{Bull. Amer. Math.
 
 \bibitem{H56note}
 I.~Rivin, ``Notes on hyperbolic 5- and 6-simplex volumes: formulas, reductions, and a practical code path,'' companion note, 2026.
+
+\bibitem{LLMNote}
+I.~Rivin, ``Hyperbolic polytope volume as an LLM benchmark suite: three tasks of increasing freedom,'' companion note, 2026.
+
+\bibitem{RLNote}
+I.~Rivin, ``When meta-learned optimization fails to beat round-robin: a validation study on hyperbolic polytope volume,'' companion note, 2026.
 
 \bibitem{RivinBasmajian}
 I.~Rivin, ``On Basmajian's identities, and other stories,'' arXiv:1404.1583, 2014.
