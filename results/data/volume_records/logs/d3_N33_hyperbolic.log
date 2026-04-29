@@ -1,0 +1,18 @@
+=== d=3 N=33 measure=hyperbolic ===
+  budget: 1000 restarts, CMA maxfevals=400, polish top 100
+  [restart 0/1000, t=1s] new best 46.01167940
+  [restart 26/1000, t=9s] new best 46.78574019
+  early stop: no improvement for 474 restarts
+
+Phase 2: polishing top 100 with Powell...
+  [polish 0] 46.78574019 -> 49.35298066
+  [polish 1] 46.30540551 -> 48.97921337
+  [polish 2] 46.26060695 -> 49.06191373
+  [polish 3] 46.18389184 -> 49.11588351
+  [polish 4] 46.13205642 -> 49.07540495
+  [polish 9] 45.84346226 -> 50.37537892
+
+Wrote record to results/data/volume_records/d3_N33_hyperbolic.json
+  best volume: 50.3753789244
+  top 10:      [50.37537892443679, 49.811011441124904, 49.6725401003004, 49.644648660333075, 49.64056613173113, 49.61954170104655, 49.60159768941548, 49.5563182765884, 49.52741295364291, 49.508161149114045]
+  wall time:   209.4s

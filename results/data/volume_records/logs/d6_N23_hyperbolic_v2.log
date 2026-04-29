@@ -1,0 +1,15 @@
+=== d=6 N=23 measure=hyperbolic ===
+  budget: 1500 restarts, CMA maxfevals=600, polish top 100
+  warm-start d6_N20.json: vol = 1.095160
+  warm-start d6_N22.json: vol = 1.245347
+  warm-start d6_N24.json: vol = 1.270112
+  structural seed: vol = 0.000000
+  structural seed: vol = 0.000000
+  structural seed: vol = 0.000000
+  structural seed: vol = 0.000000
+  structural seed: vol = 0.000000
+  structural seed: vol = 0.000000
+  structural seed: vol = 0.000000
+  structural seed: vol = 0.000000
+  structural seed: vol = 0.000000
+  structural seed: vol = 0.000000

@@ -1,0 +1,33 @@
+=== d=5 N=21 measure=euclidean ===
+  budget: 1000 restarts, CMA maxfevals=400, polish top 100
+  structural seed: vol = 0.000000
+  structural seed: vol = 0.000002
+  structural seed: vol = 0.000001
+  structural seed: vol = 0.000002
+  structural seed: vol = 0.000002
+  structural seed: vol = 0.000002
+  structural seed: vol = 0.000001
+  structural seed: vol = 0.000002
+  structural seed: vol = 0.000002
+  structural seed: vol = 0.000002
+  [restart 0/1000, t=1s] new best 0.66417891
+  [restart 2/1000, t=1s] new best 0.67930030
+  [restart 18/1000, t=3s] new best 0.68576185
+  [restart 96/1000, t=13s] new best 0.69511797
+  [restart 130/1000, t=17s] new best 0.69554090
+  [restart 212/1000, t=28s] new best 0.70226910
+  early stop: no improvement for 300 restarts
+
+Phase 2: polishing top 100 with Powell...
+  [polish 0] 0.70226910 -> 0.76854348
+  [polish 1] 0.70066510 -> 0.75065721
+  [polish 2] 0.69990780 -> 0.76491283
+  [polish 3] 0.69983654 -> 0.75933635
+  [polish 4] 0.69820264 -> 0.75838659
+  [polish 8] 0.69554090 -> 0.77841995
+  [polish 9] 0.69513652 -> 0.77883585
+
+Wrote record to results/data/volume_records/d5_N21_euclidean.json
+  best volume: 0.7788358523
+  top 10:      [0.7788358523377448, 0.7785464343154045, 0.7784199500475688, 0.7756512867526092, 0.7728090581369504, 0.7707174767356711, 0.7705634608181946, 0.7700872914034581, 0.7689916101277565, 0.7685434755970773]
+  wall time:   87.4s

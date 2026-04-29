@@ -1,0 +1,32 @@
+=== d=4 N=21 measure=hyperbolic ===
+  budget: 1000 restarts, CMA maxfevals=400, polish top 100
+  structural seed: vol = 2.613038
+  structural seed: vol = 4.334261
+  structural seed: vol = 5.453452
+  structural seed: vol = 6.201706
+  structural seed: vol = 6.707673
+  structural seed: vol = 7.043123
+  structural seed: vol = 7.248677
+  structural seed: vol = 7.346526
+  structural seed: vol = 7.346526
+  structural seed: vol = 7.248677
+  [restart 0/1000, t=7s] new best 10.51072603
+  [restart 4/1000, t=30s] new best 10.84402865
+  [restart 103/1000, t=613s] new best 10.94537154
+  [restart 148/1000, t=884s] new best 10.96437359
+  [restart 461/1000, t=2765s] new best 10.96559482
+  [restart 613/1000, t=3675s] new best 11.13314200
+  early stop: no improvement for 300 restarts
+
+Phase 2: polishing top 100 with Powell...
+  [polish 0] 11.13314200 -> 12.08535237
+  [polish 1] 11.01218594 -> 11.95351656
+  [polish 2] 10.96559482 -> 11.75052474
+  [polish 3] 10.96437359 -> 11.92399697
+  [polish 4] 10.96313235 -> 11.85721867
+  [polish 6] 10.94537154 -> 12.16463926
+
+Wrote record to results/data/volume_records/d4_N21_hyperbolic.json
+  best volume: 12.1646392573
+  top 10:      [12.164639257325907, 12.091862246963236, 12.08535236899528, 12.003991499314571, 11.97400678055802, 11.967752528689944, 11.965633873774006, 11.953516560997848, 11.947128182232227, 11.923996968054903]
+  wall time:   6857.7s

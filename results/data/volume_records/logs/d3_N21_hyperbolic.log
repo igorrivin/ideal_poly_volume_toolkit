@@ -1,0 +1,20 @@
+=== d=3 N=21 measure=hyperbolic ===
+  budget: 1000 restarts, CMA maxfevals=400, polish top 100
+  [restart 0/1000, t=1s] new best 26.32247021
+  [restart 1/1000, t=1s] new best 26.79089454
+  [restart 5/1000, t=2s] new best 27.15242937
+  [restart 20/1000, t=5s] new best 27.34422554
+  [restart 46/1000, t=10s] new best 27.49748258
+  early stop: no improvement for 454 restarts
+
+Phase 2: polishing top 100 with Powell...
+  [polish 0] 27.49748258 -> 29.08783023
+  [polish 1] 27.48989713 -> 29.08366023
+  [polish 2] 27.40784342 -> 28.59499488
+  [polish 3] 27.34422554 -> 28.53682869
+  [polish 4] 27.31385173 -> 28.59188855
+
+Wrote record to results/data/volume_records/d3_N21_hyperbolic.json
+  best volume: 29.0878302288
+  top 10:      [29.087830228764503, 29.083660231672233, 29.0571794889436, 29.042184567109093, 29.027611940957637, 29.02150373142266, 29.016043855265963, 28.975962164867425, 28.953248357707825, 28.94396044568735]
+  wall time:   142.9s
