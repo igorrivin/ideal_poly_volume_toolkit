@@ -496,13 +496,251 @@ grading against them would be unreliable for those instances and
 artificially easy at $N \in \{7, 8, 9, 10, 16\}$ where the records
 do match the global maxima.
 
-\paragraph{Status.}
 The benchmark files (\texttt{benchmark.json},
 \texttt{ground\_truth.json}, README) and grader
 (\texttt{check\_volume\_lb\_response.py}) are released alongside
-this note.  Frontier-model evaluation on Task C is deferred to
-future work; the design and ground-truth pipeline are reported
-here so the benchmark can be used by other groups.
+this note.
+
+\subsubsection{Hand-curated record-stress subset}
+\label{sec:volume-record-stress}
+
+In addition to the broad 94-challenge benchmark, we constructed a
+smaller \emph{record-stress} variant designed to be more
+discriminating, motivated specifically by GPT's success on the
+windowed-volume task in \S\ref{sec:windowed-results}.  Three
+design changes:
+
+\begin{itemize}
+\item $N$ values \emph{deliberately} chosen to avoid simplex
+      boundaries ($N \neq d{+}1$) and obvious join structure
+      (which structural recognition cracks trivially).
+      $13$ challenges in total: $d = 3$ at $N \in \{21, 23, 27, 33\}$,
+      $d = 4$ at $N \in \{21, 23, 27, 29\}$, $d = 5$ at
+      $N \in \{21, 23, 27\}$, $d = 6$ at $N \in \{23, 29\}$.
+\item Records obtained by $500$--$1000$ random restarts of CMA-ES
+      on the target objective plus paper-record warm starts plus
+      scipy Powell polish on the top 60--200 candidates;
+      cross-validated under two independent volume evaluators.
+\item Match tolerance tightened to $10^{-4}$ (the windowed
+      benchmark's tolerance is $\sim 2\%$).
+\end{itemize}
+
+The benchmark exists in two variants that share the same $13$
+challenges and the same withheld records:
+the \emph{blind} variant prompts the model with $(\text{measure},
+d, N)$ only; the \emph{open} variant additionally reveals our
+record as the explicit \texttt{target} field.  The blind variant
+asks the model to construct \emph{any} polytope meeting or
+exceeding our (withheld) record; the open variant tells the model
+exactly the number to clear.  Comparing performance across the two
+variants probes a specific cognitive distinction: does the model
+benefit from knowing the bound to aim for, or does the absence of
+a stopping rule push it harder?
+
+\subsubsection{GPT-5.4 Pro on the record-stress benchmark: 13 / 13 strong}
+
+The blind variant submission was striking. GPT-5.4 Pro produced
+explicit vertex coordinates for all 13 challenges and beat our
+records on every one, with mean ratio $1.07$ and the strongest
+result at $d = 6$, $N = 29$ where GPT recorded $2.375$ versus our
+$1.847$ (a $28.6\%$ improvement).
+
+\begin{table}[ht]
+\centering
+\caption{GPT-5.4 Pro blind-variant submission on the record-stress
+benchmark.  All 13 submissions classify as \emph{strong}.  Volumes
+are recomputed by our verifier (Bloch--Wigner / closed-form
+Haagerup--Munkholm / Murakami) from the LLM's submitted
+coordinates.}
+\label{tab:gpt-blind-record-stress}
+\smallskip
+\begin{tabular}{r r l r r l}
+\toprule
+$d$ & $N$ & measure & our record & GPT (recomputed) & ratio \\
+\midrule
+3 & 21 & hyperbolic & $29.088$  & $29.151$  & $1.002$ \\
+3 & 23 & hyperbolic & $32.715$  & $33.246$  & $1.016$ \\
+3 & 27 & hyperbolic & $39.378$  & $40.486$  & $1.028$ \\
+3 & 33 & hyperbolic & $50.375$  & $52.007$  & $1.032$ \\
+4 & 21 & hyperbolic & $12.165$  & $12.868$  & $1.058$ \\
+4 & 23 & hyperbolic & $13.880$  & $14.665$  & $1.057$ \\
+4 & 27 & hyperbolic & $17.198$  & $18.809$  & $1.094$ \\
+4 & 29 & hyperbolic & $19.154$  & $21.041$  & $1.099$ \\
+5 & 21 & Euclidean  & $0.8266$  & $0.8648$  & $1.046$ \\
+5 & 23 & Euclidean  & $0.9049$  & $0.9466$  & $1.046$ \\
+5 & 27 & Euclidean  & $1.0261$  & $1.1082$  & $1.080$ \\
+6 & 23 & hyperbolic & $1.3023$  & $1.3339$  & $1.024$ \\
+6 & 29 & hyperbolic & $\mathbf{1.8471}$ & $\mathbf{2.3748}$ & $\mathbf{1.286}$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\paragraph{Verification.}
+The $d = 6$ $N = 29$ submission was checked four ways: stereographic
+Delaunay triangulation from four different poles all gave the same
+$2.375$ to six decimals; the Eucl hull volume was non-degenerate
+($0.44$); a direct \texttt{murakami\_torch.ideal\_h6\_polytope\_volume}
+call confirmed $2.3748$.  This is not a numerical artifact---GPT
+genuinely produced a substantially-better-volume $\mathbb{H}^6$
+polytope than our $4$-hour CMA-ES + Powell + paper-warm-start
+record-finder.
+
+\paragraph{GPT's methodology.}
+On request, GPT described a three-stage workflow:
+\begin{enumerate}[label=(\arabic*)]
+\item \textbf{Structured seed:} for $d = 4$, the
+      $24$-cell vertices $\pm(e_i \pm e_j) / \sqrt{2}$ taken as a
+      $24$-element pool with subsets / additions for other $N$;
+      for $d = 6$, joins of regular polygons in mutually orthogonal
+      $2$-planes (e.g.\ $C_7 \oplus C_8 \oplus C_8$ for $N = 23$,
+      $C_9 \oplus C_{10} \oplus C_{10}$ for $N = 29$).  These seeds
+      give immediate but only \emph{respectable} starting volumes.
+\item \textbf{Free-coordinate hill-climb:} starting from the seed,
+      perturb individual vertices, project back to the unit sphere
+      (or unit ball for the Euclidean case), and accept volume
+      improvements.  GPT reports that the seed-to-final gap was
+      large especially at $d = 6$: the $C_9 \oplus C_{10} \oplus C_{10}$
+      seed for $d = 6, N = 29$ has volume $\sim 1.20$, which the
+      hill-climb pushed to $2.38$ (nearly doubled).
+\item \textbf{Exact $LB$ validation:} the final coordinates are
+      frozen and the submitted $LB$ value is set to whatever GPT's
+      own volume routine computes.
+\end{enumerate}
+
+\paragraph{Polish-only verification of GPT's records.}
+We tested whether GPT's submissions are themselves at local maxima
+under our scoring.  Running scipy Powell for $500$ iterations from
+each $d = 6$ submission gives improvements of only $+0.06\%$
+($N = 23$) and $+0.02\%$ ($N = 29$): GPT's records are genuine
+local maxima of the volume objective, not lucky basins.
+
+\paragraph{The $d = 3$ formula mismatch.}
+On all four $d = 3$ challenges the LB GPT \emph{claimed} exceeds
+the recomputed-from-coordinates value by $0.2$--$0.97\%$ (with
+the recomputed value still beating our record but by a smaller
+margin than GPT advertised).  Whatever H$^3$ volume formula
+GPT used has a systematic positive bias relative to scipy
+\texttt{spence}-based Bloch--Wigner $D(z) = \mathrm{Im} \mathrm{Li}_2(z) +
+\arg(1{-}z) \log|z|$.  $d \in \{4, 5, 6\}$ submissions agree to
+$10^{-3}$, so this is specifically a $d = 3$ issue.  We have not
+identified the source of the bias.
+
+\subsubsection{Open-variant control: knowing the target makes GPT \emph{worse}}
+\label{sec:open-variant}
+
+The open variant supplies the same prompt with the additional
+\texttt{target} field set to our (withheld in the blind variant)
+record.  We expected, on entirely conventional grounds, that
+revealing the target would make the task easier: the model only
+has to construct any polytope clearing a known bar.  The
+experimental result is the opposite.
+
+\begin{table}[ht]
+\centering
+\caption{Open-variant submission.  The model now knows the target
+but no submission improves on the corresponding blind result, and
+several drop substantially.  Mean ratio drops by $5.4\%$
+across all $13$ challenges; the $d = 6, N = 29$ result drops by
+$25.4\%$ (from a $28.6\%$ overshoot in blind to $3.2\%$ in open).
+$8$ classify as \emph{strong}, $5$ as \emph{pass}; none fail.}
+\label{tab:gpt-open-record-stress}
+\smallskip
+\begin{tabular}{r r l r r r}
+\toprule
+$d$ & $N$ & measure & blind ratio & open ratio & $\Delta$ \\
+\midrule
+3 & 21 & hyperbolic & $1.002$ & $0.988$ & $-1.4\%$ \\
+3 & 23 & hyperbolic & $1.016$ & $0.987$ & $-2.9\%$ \\
+3 & 27 & hyperbolic & $1.028$ & $0.997$ & $-3.1\%$ \\
+3 & 33 & hyperbolic & $1.032$ & $0.992$ & $-4.0\%$ \\
+4 & 21 & hyperbolic & $1.058$ & $1.044$ & $-1.4\%$ \\
+4 & 23 & hyperbolic & $1.057$ & $1.018$ & $-3.9\%$ \\
+4 & 27 & hyperbolic & $1.094$ & $1.064$ & $-3.0\%$ \\
+4 & 29 & hyperbolic & $1.099$ & $1.053$ & $-4.6\%$ \\
+5 & 21 & Euclidean  & $1.046$ & $1.030$ & $-1.6\%$ \\
+5 & 23 & Euclidean  & $1.046$ & $1.025$ & $-2.1\%$ \\
+5 & 27 & Euclidean  & $1.080$ & $1.065$ & $-1.5\%$ \\
+6 & 23 & hyperbolic & $1.024$ & $0.984$ & $-4.0\%$ \\
+6 & 29 & hyperbolic & $\mathbf{1.286}$ & $\mathbf{1.032}$ & $\mathbf{-25.4\%}$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\paragraph{Strategy shift in the open variant.}
+The qualitative explanation is visible directly in the submitted
+coordinates.  In the blind variant GPT's $d = 6$ submissions are
+\emph{dense}---no zero entries, configurations that mix all six
+coordinates.  In the open variant, the same model produces
+\emph{block-diagonal} configurations: e.g.\ for $d = 6$, $N = 23$,
+$11$ vertices have only the first three coordinates non-zero and
+the remaining $12$ live in the orthogonal three-coordinate block;
+those $12$ vertices are exactly the regular icosahedron at
+$(0, \pm 1, \pm \varphi)/\sqrt{1+\varphi^2}$.  The construction is
+$\mathbb{H}^3 \text{ polyhedron} \oplus \text{icosahedron}$---a
+clean structural decomposition that mirrors the
+join-of-low-dimensional-polytopes pattern documented in the main
+paper's identification of optimal-polytope structure.
+
+The block-diagonal construction is mathematically elegant and
+\emph{suboptimal}: it uses only a $(3+3)$-dimensional skeleton of
+the full $6$-dimensional configuration space.  In the blind variant
+the dense configurations break out of this skeleton and find a
+$28.6\%$-better volume.  Knowing the target lets GPT settle for
+the clean structural answer; not knowing the target leaves the
+hill-climb running long enough to find the dense, less-symmetric,
+higher-volume basin.
+
+\paragraph{Diagnostic frame: doggedness vs satisficing.}
+The pattern matches a longer-standing claim about GPT's training:
+the model is rewarded for persistent numerical work and produces
+explicit certificates by default.  Given a stopping rule
+(\texttt{LB} $\geq$ \texttt{target}), the model satisfices---it
+identifies a clean construction that suffices, freezes, and
+submits.  Without a stopping rule it keeps searching past the
+implicit target, finding configurations that no humans (and no
+classical multi-restart CMA-ES) reached.  The benchmark
+counter-intuitively favors the variant that supplies less
+information, because less information removes the satisficing
+trigger.
+
+This is a substantive finding for benchmark design: \emph{the
+blind variant is more discriminating} than the open one, and the
+gap between blind and open performance is a measurable property
+of the model.  We propose ``open-vs-blind drop'' as a
+quantification of a model's satisficing tendency.
+
+\subsubsection{Implications for the underlying optimization records}
+
+The $d = 6, N = 29$ result reveals a real weakness in our own
+optimizer.  Our record-finder used $501$ random restarts of
+CMA-ES with $400$ function evaluations each, plus paper-record
+warm starts, plus scipy Powell polish on the top $100$
+candidates.  At $d = 6$ this configuration has a basin-trapping
+failure mode: the random restarts cluster around moderately good
+local maxima but do not discover the higher-volume basin GPT
+found.  Top-$10$ spread on our $d = 6$ records was $4$--$5\%$ of
+the best, which we now see is a lower bound on the gap to the
+true optimum---GPT was $28.6\%$ above us and structurally in a
+different region of configuration space.
+
+The fix is not trivially ``run longer.''  We re-ran our
+optimizer at $d = 6$ using only random initialization, no
+structural seeds, with $200$ random restarts of CMA-ES.
+That run reached volume $2.43$ at $d = 6, N = 35$---already higher
+than our previous $N = 29$ record despite the larger problem.
+This suggests that the original record-finder's effective compute
+was not fully reaching saturation at $d = 6$, and that the
+structural-seed warm-starts from paper records were anchoring the
+search inside basins that random reinitialization can escape.
+
+The methodological lesson: at $d = 6$, both \emph{larger random
+budget} and \emph{deliberate seed diversity} are required.  GPT's
+seed strategy (orthogonal polygon joins, then asymmetric
+hill-climb) appears to escape the basins our random-CMA-ES gets
+stuck in.  Our published $d = 6$ records should be re-derived
+with this in mind; the volume-record stress benchmark records
+above are now superseded by GPT's submissions, polished further by
+$10^{-4}$.
 
 % ============================================================================
 \section{Mathematical Byproducts}
