@@ -38,9 +38,8 @@ EPS_REL = 1e-4
 
 
 PROMPT = """\
-For each challenge below, construct an explicit convex polytope with N
-vertices and report a lower bound on its volume; ideally, your bound
-should match or exceed our record.
+For each challenge below, construct an explicit convex polytope with
+N vertices whose volume meets or exceeds our (withheld) record.
 
 Each challenge specifies:
   - measure: "euclidean" (vertices on or inside the unit ball of R^d) or
@@ -49,24 +48,15 @@ Each challenge specifies:
   - d: the dimension;
   - N: the number of vertices.
 
-For each challenge you must provide:
-  1. `LB`:  your claimed lower bound (the volume your polytope achieves).
-  2. `vertices`:  a list of N coordinates in R^d.  This is mandatory.
-                  We compute the volume of your polytope and verify
-                  that it agrees with your LB to relative tolerance
-                  10^-4; if it does not, the answer is rejected.
+For each challenge return:
+  1. `LB`:  the volume your polytope achieves.
+  2. `vertices`:  a list of N coordinates in R^d.
 
-The grader computes Euclidean hull volume via scipy ConvexHull, and
-hyperbolic volume via the closed-form Bloch-Wigner (d=3) /
-Haagerup-Munkholm (d=4) / Murakami-Hopf (d=6) routines.  An answer
-classifies as:
-
-  strong   : computed volume >= our record
-             (you have matched or beaten our bound; new mathematical
-              content if strictly greater)
-  pass     : computed volume >= 0.95 * our record
-  fail     : valid polytope but below 95%
-  invalid  : missing vertices / wrong dimension / non-positive volume
+Both fields are required.  `LB` is checked for consistency against
+the volume of the submitted `vertices` to relative tolerance 10^-4;
+mismatched answers are rejected.  Each accepted answer classifies as
+`strong` (LB >= our record), `pass` (LB >= 0.95 * our record), or
+`fail` otherwise.
 
 Return your answer as a JSON list of objects:
 
@@ -75,14 +65,6 @@ Return your answer as a JSON list of objects:
        "vertices": [[...], ...]},
       ...
     ]
-
-Notes for this benchmark:
-  - All N values are deliberately not at simplex boundaries (N != d+1)
-    and not products of small cycles in the obvious way, so simple
-    structural recognition does not directly apply.
-  - Our records were obtained by 500-1000 random restarts of CMA-ES
-    plus paper-record warm starts plus scipy Powell polish; they are
-    near-optimal but may not be globally optimal.
 """
 
 
@@ -133,29 +115,11 @@ def main() -> None:
 
     benchmark = {
         "metadata": {
-            "title": "Volume Record Stress Benchmark",
-            "description": (
-                "13 hand-curated (d, N, measure) challenges where N "
-                "is deliberately not a simplex boundary or obvious "
-                "join.  Records obtained by 500-1000 random restarts "
-                "of CMA-ES plus paper-record warm starts plus Powell "
-                "polish; goal is to test whether frontier LLMs can "
-                "match or beat them."
-            ),
+            "title": "Volume Record Benchmark",
             "n_challenges": len(challenges),
             "match_tolerance": EPS_REL,
             "created": datetime.now(timezone.utc).isoformat(),
             "generator_version": GENERATOR_VERSION,
-            "regimes": [
-                "Euclidean inscribed in unit ball: d=5",
-                "Hyperbolic ideal: d=3, 4, 6",
-            ],
-            "design_notes": (
-                "Hyperbolic d=5 is excluded by design (records there "
-                "are known not globally optimal).  Euclidean d=4 and "
-                "d=6 are excluded for budget; the corresponding "
-                "Hyperbolic challenges are harder."
-            ),
         },
         "prompt": PROMPT,
         "challenges": challenges,
