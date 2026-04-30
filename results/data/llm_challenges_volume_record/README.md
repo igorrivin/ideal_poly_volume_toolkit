@@ -1,4 +1,4 @@
-# Volume Record Stress Benchmark
+# Volume Record Benchmark
 
 13 challenges, designed to be tighter than the broader `llm_challenges_volume_lb/` benchmark by:
 
@@ -6,7 +6,9 @@
 - Investing 500-1000 CMA-ES random restarts + Powell polish + paper-record warm starts per challenge, so the records are near-optimal rather than just "the best we have on disk".
 - Demanding `LB <= computed_volume` to within `1e-04` relative tolerance (the windowed benchmark uses `~2%`).
 
-## Records (withheld from the LLM)
+**Variant: target hidden.**  The model is asked to produce a polytope whose volume meets or exceeds our (withheld) record, without being told what the record is.  See `llm_challenges_volume_record_open/` for the corresponding *control* variant where the target is revealed.
+
+## Records (withheld in the blind variant; visible to the LLM in the open variant)
 
 | d | N | measure | record | top-10 spread | restarts | wall (s) |
 |---|---|---------|--------|---------------|----------|---------:|

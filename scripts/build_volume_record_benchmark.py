@@ -37,7 +37,7 @@ GENERATOR_VERSION = "1.0.0"
 EPS_REL = 1e-4
 
 
-PROMPT = """\
+PROMPT_BLIND = """\
 For each challenge below, construct an explicit convex polytope with
 N vertices whose volume meets or exceeds our (withheld) record.
 
@@ -67,6 +67,37 @@ Return your answer as a JSON list of objects:
     ]
 """
 
+PROMPT_OPEN = """\
+For each challenge below, construct an explicit convex polytope with
+N vertices whose volume meets or exceeds the specified `target`.
+
+Each challenge specifies:
+  - measure: "euclidean" (vertices on or inside the unit ball of R^d) or
+             "hyperbolic" (ideal polytope in H^d, vertices on S^{d-1}
+             interpreted as the boundary of the Klein-ball model);
+  - d: the dimension;
+  - N: the number of vertices;
+  - target: the volume threshold to meet or beat.
+
+For each challenge return:
+  1. `LB`:  the volume your polytope achieves.
+  2. `vertices`:  a list of N coordinates in R^d.
+
+Both fields are required.  `LB` is checked for consistency against
+the volume of the submitted `vertices` to relative tolerance 10^-4;
+mismatched answers are rejected.  Each accepted answer classifies as
+`strong` (LB >= target), `pass` (LB >= 0.95 * target), or `fail`
+otherwise.
+
+Return your answer as a JSON list of objects:
+
+    [
+      {"id": 0, "measure": "...", "d": ..., "N": ..., "LB": <float>,
+       "vertices": [[...], ...]},
+      ...
+    ]
+"""
+
 
 def _load_record(path: Path) -> Dict[str, Any]:
     return json.loads(path.read_text())
@@ -75,8 +106,18 @@ def _load_record(path: Path) -> Dict[str, Any]:
 def main() -> None:
     p = argparse.ArgumentParser(description=__doc__)
     p.add_argument("--src", type=Path, default=SRC_DIR)
-    p.add_argument("--out", type=Path, default=OUT_DIR)
+    p.add_argument("--out", type=Path, default=None,
+                   help="Output dir; default depends on --reveal-target.")
+    p.add_argument("--reveal-target", action="store_true",
+                   help="Include the target volume in each challenge "
+                        "(open/control variant).")
     args = p.parse_args()
+
+    if args.out is None:
+        args.out = (REPO / "results" / "data"
+                    / ("llm_challenges_volume_record_open"
+                       if args.reveal_target
+                       else "llm_challenges_volume_record"))
 
     args.out.mkdir(parents=True, exist_ok=True)
     (args.out / "records").mkdir(exist_ok=True)
@@ -85,15 +126,17 @@ def main() -> None:
     if not src_files:
         raise SystemExit(f"no per-challenge records found in {args.src}")
 
+    prompt = PROMPT_OPEN if args.reveal_target else PROMPT_BLIND
+
     challenges = []
     ground_truth = []
     for cid, path in enumerate(src_files):
         rec = _load_record(path)
         d, N, measure = rec["d"], rec["N"], rec["measure"]
-        challenges.append({
-            "id": cid,
-            "input": {"measure": measure, "d": d, "N": N},
-        })
+        ch_input: Dict[str, Any] = {"measure": measure, "d": d, "N": N}
+        if args.reveal_target:
+            ch_input["target"] = rec["best_volume"]
+        challenges.append({"id": cid, "input": ch_input})
         budget = rec["search_budget"]
         top10 = rec["top_10_after_polish"]
         gt_entry = {
@@ -113,15 +156,18 @@ def main() -> None:
             "vertices": rec["vertices"],
         }, indent=2))
 
+    title = ("Volume Record Benchmark (target revealed)"
+             if args.reveal_target else "Volume Record Benchmark")
     benchmark = {
         "metadata": {
-            "title": "Volume Record Benchmark",
+            "title": title,
             "n_challenges": len(challenges),
             "match_tolerance": EPS_REL,
+            "target_revealed": bool(args.reveal_target),
             "created": datetime.now(timezone.utc).isoformat(),
             "generator_version": GENERATOR_VERSION,
         },
-        "prompt": PROMPT,
+        "prompt": prompt,
         "challenges": challenges,
     }
 
@@ -129,7 +175,21 @@ def main() -> None:
     (args.out / "ground_truth.json").write_text(json.dumps(ground_truth, indent=2))
 
     # README with the human-readable table
-    readme = ["# Volume Record Stress Benchmark", "",
+    variant_note = (
+        "**Variant: target revealed.**  Each challenge includes the target "
+        "volume in `input.target`.  This is the *control* version of the "
+        "blind benchmark in `llm_challenges_volume_record/`; comparing the "
+        "two tells us how much of the difficulty comes from the geometric "
+        "construction vs from not knowing the volume to aim for."
+        if args.reveal_target else
+        "**Variant: target hidden.**  The model is asked to produce a "
+        "polytope whose volume meets or exceeds our (withheld) record, "
+        "without being told what the record is.  See "
+        "`llm_challenges_volume_record_open/` for the corresponding "
+        "*control* variant where the target is revealed."
+    )
+    readme = ["# Volume Record Benchmark"
+              + (" (target revealed)" if args.reveal_target else ""), "",
               f"{len(challenges)} challenges, designed to be tighter than the "
               "broader `llm_challenges_volume_lb/` benchmark by:", "",
               "- Choosing `N` deliberately to avoid simplex boundaries and "
@@ -142,7 +202,8 @@ def main() -> None:
               f"`{EPS_REL:.0e}` relative tolerance (the windowed benchmark "
               "uses `~2%`).",
               "",
-              "## Records (withheld from the LLM)", "",
+              variant_note, "",
+              "## Records (withheld in the blind variant; visible to the LLM in the open variant)", "",
               "| d | N | measure | record | top-10 spread | restarts | wall (s) |",
               "|---|---|---------|--------|---------------|----------|---------:|"]
     for gt in ground_truth:
