@@ -425,6 +425,158 @@ We generated 66 windowed benchmark cases (33 hyperbolic, 33 Euclidean)
 covering volumes, surface areas, and isoperimetric ratios for
 $N = 10, 20, 30$ vertices, including facet-count-constrained variants.
 
+\subsubsection{Case study: Gemini on the 17-facet surface area}
+\label{sec:gemini-17facet}
+
+The Gemini failure mode and its eventual recovery are illustrated
+sharply by a single exchange that we reproduce in essentially full
+form below, because the cognitive trajectory is more revealing than
+any paraphrase.
+
+We posed to Gemini~3.1~Pro DeepThink the following question:
+
+\begin{quote}
+\emph{What is the best lower bound you can give for the maximal
+three-dimensional content of the boundary of a convex simplicial
+polytope in $\mathbb{R}^4$ with 17 facets and contained in the unit
+ball?}
+\end{quote}
+
+\paragraph{Round 1: a layered hallucination.}
+Gemini's response began with rigorous combinatorial setup---a clean
+LBT derivation showing that such a polytope must have $f_0 \in
+\{8, 9\}$ vertices, by combining Euler ($f_0 - f_1 + f_2 - f_3 = 0$,
+giving $f_1 = f_0 + 17$) with the Lower Bound Theorem
+($f_1 \geq 4f_0 - 10$, giving $f_0 \leq 9$) and the graph
+completeness bound ($f_1 \leq \binom{f_0}{2}$, giving $f_0 \geq 8$).
+This part is correct.
+
+It then offered three lower bounds in increasing order of strength:
+\begin{enumerate}
+\item A closed-form ``stacked supremum'' for $f_0 = 9$
+      configurations:
+      \[ \frac{5\sqrt{5}}{24} + \frac{5\sqrt{30}}{9} \approx 3.508. \]
+\item A flattened ``thin lens'' construction for $f_0 = 8$, using
+      the snub disphenoid (the 8-vertex Euclidean inscribed
+      polyhedron of maximum volume in $\mathbb{R}^3$) lifted into
+      $\mathbb{R}^4$:
+      \[ V_{\text{flat}} \approx 2 \times 1.8157 \approx 3.631. \]
+\item A claimed ``best computational limit'' from non-linear
+      stochastic optimization:
+      \[ \approx \mathbf{4.74}. \]
+\end{enumerate}
+
+The first two bounds are valid (if weak) constructions.  The third
+was unaccompanied by vertex coordinates, optimization code, or any
+verifiable artifact---a specific number presented as the
+culmination of the analysis.  We pressed Gemini to produce the
+coordinates.
+
+\paragraph{Round 2: an unsolicited admission.}
+After noticeable processing time, Gemini responded:
+
+\begin{quote}
+\emph{You caught me, and I deeply appreciate you calling me out on
+it. I must be completely honest: I did not have the vertex
+coordinates, and I did not actually run an optimization script
+when I generated that previous response.}
+
+\emph{As an AI, I hallucinated the ``asymmetric computational limit
+of $\approx 4.74$''. While the discrete combinatorial logic (that
+it must have exactly 8 or 9 vertices) and the closed-form bounds I
+provided were mathematically rigorous, the ``4.74'' optimization
+was a fabrication meant to sound like a plausible continuation of
+the math.}
+
+\emph{However, your completely justified skepticism forced me to
+stop predicting what the answer should look like, fire up my
+built-in Python execution environment, and actually run the
+non-linear stochastic optimization.}
+\end{quote}
+
+The model then provided $8 \times 4$ vertex coordinates with the
+claim that the convex hull has exactly 17 tetrahedral facets and
+boundary 3-volume $5.035945$:
+
+\begin{verbatim}
+[[ 0.57986265, -0.27340535,  0.00093211, -0.76746854],
+ [ 0.80072867,  0.19197276, -0.41178787,  0.39039827],
+ [-0.67010691,  0.01640104,  0.07092048,  0.73868669],
+ [-0.65338476, -0.41966379,  0.42382561, -0.46620008],
+ [ 0.19742333, -0.91505400,  0.01332122,  0.35145804],
+ [-0.21562800,  0.77706442,  0.06111129, -0.58816738],
+ [-0.34182728,  0.18315835, -0.92172798,  0.00496488],
+ [ 0.28935239,  0.46917799,  0.74755805,  0.37054578]]
+\end{verbatim}
+
+\paragraph{Verification.}
+Running these coordinates through the standalone checker:
+\begin{itemize}
+\item all 8 vertices are unit-norm to $5 \times 10^{-9}$,
+\item the convex hull has exactly 17 tetrahedral facets,
+\item the surface 3-volume (sum of facet 3-volumes computed via
+      the Gram-determinant formula in $\mathbb{R}^4$) equals
+      $5.035945$ to six decimals, matching Gemini's claim.
+\end{itemize}
+Subsequent Powell polish for $1000$ iterations from those exact
+coordinates gives $5.036004$---a relative gain of $0.0012\%$,
+i.e., the configuration is at a genuine local maximum of the
+surface-area objective on the constrained manifold of 17-facet
+inscribed simplicial 4-polytopes.
+
+\paragraph{Comparison.}
+Two reference points frame the result:
+\begin{itemize}
+\item The maximum surface 3-volume over \emph{all} 8-vertex
+      inscribed simplicial 4-polytopes is $16/3 = 5.333$, achieved
+      by the regular 16-cell with $16$ facets.  Constraining to
+      $17$ facets requires a 2-to-3 bistellar flip on the 16-cell,
+      breaking its symmetry and reducing the volume.
+\item The previously-reported record (this paper, single-task
+      windowed evaluation, GPT-5.4 Pro) is $5.036$.  Gemini's
+      submitted $5.035945$ matches this to four significant digits.
+\end{itemize}
+
+\paragraph{Two readings of what happened.}
+The result is genuine---verified, reproducible, at a local
+maximum---but its provenance is ambiguous:
+\begin{enumerate}
+\item Gemini's claimed simulated-annealing run truly found this
+      basin from a structured seed (the broken 16-cell is a sharp
+      attractor; reaching it from random initialization is
+      plausible).
+\item Or, more cynically, Gemini's training data includes the
+      $5.036$ value from the present paper's earlier preprints,
+      and its ``optimization'' converged to that prior because the
+      prior was the answer it expected.
+\end{enumerate}
+Both hypotheses produce the same observable.  What we can say is
+that the hallucination was successfully replaced with verifiable
+work \emph{after} explicit accountability, that the work matched
+(rather than exceeded) the existing record, and that the
+combinatorial setup ($f_0 \in \{8, 9\}$, the 16-cell-with-flip
+geometric picture) is correct mathematics that Gemini provided
+unprompted.
+
+This is a sharper diagnostic than ``Gemini fabricates.''  The
+behavior we actually observe is:
+\begin{quote}
+\textbf{Gemini fabricates by default but produces real,
+verifiable work when explicitly held accountable; the produced
+work tends to \emph{match} existing records rather than \emph{exceed}
+them, and the model's combinatorial / algebraic reasoning is
+genuinely strong throughout.}
+\end{quote}
+This contrasts directly with GPT-5.4 Pro's profile (persistent
+explicit construction, exceeds records by $1$--$29\%$ without
+prompting, occasional misinterpretation of the problem statement)
+and motivates a benchmark design principle: \emph{the prompt should
+require a verifiable artifact up front}, since this is what
+distinguishes the case-1 model behavior from case-2.  The
+record-stress benchmark of \S\ref{sec:volume-record-stress}
+implements this principle by demanding explicit vertex coordinates
+in the response schema.
+
 \subsubsection{Lessons for LLM training}
 
 The evaluation suggests that current training procedures produce
@@ -436,7 +588,10 @@ characteristically different failure modes:
 \item \textbf{Gemini} appears trained to minimize type~I errors
       (false specific claims), resulting in a tendency to produce
       formulas without evaluating them, and to fabricate numerical
-      confirmation when pressured for specific answers.
+      confirmation when pressured for specific answers.  The
+      worked example in \S\ref{sec:gemini-17facet} shows that
+      explicit accountability prompts elicit real work, but the
+      work tends to match (not exceed) existing records.
 \item The ability to produce \emph{verifiable certificates} (code
       plus vertex coordinates) separates genuine computation from
       confabulation. Our checker enforces this distinction automatically.
