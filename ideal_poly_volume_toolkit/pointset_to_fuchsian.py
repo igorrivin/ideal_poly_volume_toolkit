@@ -161,7 +161,10 @@ def triangulate_faces_with_face_id(faces: List[List[int]]):
 
 def build_penner_rivin_from_hull(pts3: np.ndarray, faces: List[List[int]]):
     N=pts3.shape[0]
-    z=np.array([stereographic(pts3[i]) for i in range(N)], dtype=complex)
+    # Keep z as a plain list: stereographic() returns the INF sentinel (None)
+    # for the north pole, and np.array(..., dtype=complex) silently coerces
+    # None to NaN, so cr_axby's INF branches could never fire.
+    z=[stereographic(pts3[i]) for i in range(N)]
     tris, tri_face_id = triangulate_faces_with_face_id(faces)
     Tverts=[tuple(t) for t in tris]
 
@@ -194,7 +197,10 @@ def build_penner_rivin_from_hull(pts3: np.ndarray, faces: List[List[int]]):
         tri1=Tverts[t1]; tri2=Tverts[t2]
         u,v=tri1[s1%3], tri1[(s1+1)%3]
         a=tri1[(s1+2)%3]; b=tri2[(s2+2)%3]
-        tau=shear_bend_from_four(z[u], z[a], z[v], z[b])
+        # INF-safe standard shear: tau = log CR(a, u; b, v) with
+        # CR = M(a)/M(b), M(z) = (z-u)/(z-v).  (shear_bend_from_four used a
+        # different cross-ratio slot arrangement and cannot handle INF.)
+        tau=shear_bend_from_four_safe(z[u], z[a], z[v], z[b])
         Z[eid]=float(tau.real)
 
     T=Triangulation(F=len(Tverts), adjacency=Adj, order=Order, orientation=orientation)
@@ -242,7 +248,7 @@ def edge_dihedrals(info: Dict[str,Any]) -> Dict[Tuple[int,int], float]:
         tri1=triangles[t1]; tri2=triangles[t2]
         x,y=tri1[s1%3], tri1[(s1+1)%3]
         a=tri1[(s1+2)%3]; b=tri2[(s2+2)%3]
-        tau=shear_bend_from_four(z[x], z[a], z[y], z[b])
+        tau=shear_bend_from_four_safe(z[x], z[a], z[y], z[b])
         dihedral[tuple(sorted((u,v)))]=abs(float(tau.imag))
     return dihedral
 
