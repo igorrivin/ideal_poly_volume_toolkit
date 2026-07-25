@@ -234,17 +234,41 @@ def triangulation_from_faces(triangles: List[Tuple[int, int, int]]) -> Tuple[Tri
 
 
 def check_arithmeticity(triangles: List[Tuple[int, int, int]],
+                        shears: Optional[Dict[int, float]] = None,
+                        vertices_complex=None,
                         tolerance: float = 0.01,
                         verbose: bool = False) -> Dict[str, Any]:
     """
-    Check if a triangulation has arithmetic holonomy (all traces are integers).
+    Certify arithmeticity via the zero-shear / PSL(2,Z) criterion.
 
-    A triangulation is arithmetic if all holonomy generator traces lie in Z.
-    This is a necessary condition for the ideal polyhedron to be arithmetic
-    (i.e., commensurable with PSL(2, O_K) for some number field K).
+    The check passes when every Penner-Rivin holonomy generator trace is an
+    integer.  At the zero-shear configuration all generator matrices are
+    integral (products of L, R, X(0)), so the holonomy group lies in
+    PSL(2,Z) and is arithmetic; integer traces of a cofinite Fuchsian
+    group likewise certify arithmeticity (Takeuchi's trace criterion).
+    The certificate is SUFFICIENT, not necessary, for group-theoretic
+    arithmeticity: an arithmetic group can fail it (e.g. traces that are
+    algebraic integers of a larger trace field).
+
+    The certificate REQUIRES the actual geometry: pass either the shear
+    parameters (`shears`, keyed by edge id as assigned by
+    triangulation_from_faces) or the complex vertex coordinates
+    (`vertices_complex`, entries may be None for the ideal vertex at
+    infinity), from which shears are computed via
+    compute_shears_from_vertices.
+
+    Earlier versions silently defaulted to the zero-shear structure
+    (Z = 0), for which every holonomy matrix is integral, making the
+    certificate vacuously true regardless of the coordinates.  That
+    default is deliberately gone: calling this without geometry raises
+    ValueError.  (To interrogate the idealized zero-shear structure
+    explicitly, pass `shears={eid: 0.0 for eid in range(n_edges)}`.)
 
     Args:
         triangles: List of triangles as (v0, v1, v2) tuples
+        shears: Dict edge_id -> shear value (mutually optional with
+            vertices_complex; at least one is required)
+        vertices_complex: sequence of complex vertex coordinates
         tolerance: Maximum distance from nearest integer to count as integral
         verbose: If True, print detailed trace information
 
@@ -255,9 +279,19 @@ def check_arithmeticity(triangles: List[Tuple[int, int, int]],
         - 'n_integral': int, number of generators with integral traces
         - 'traces': list of trace values
         - 'trace_details': list of dicts with trace analysis for each generator
+        - 'shears': the shear dict actually used
     """
-    T, Z = triangulation_from_faces(triangles)
-    gens = generators_from_triangulation(T, Z, root=0)
+    if shears is None and vertices_complex is None:
+        raise ValueError(
+            "check_arithmeticity requires the actual geometry: pass "
+            "`shears` or `vertices_complex`. (A geometry-free call would "
+            "silently certify the idealized zero-shear structure, which is "
+            "integral for ANY triangulation — a vacuous certificate.)")
+
+    T, _Z_zero = triangulation_from_faces(triangles)
+    if shears is None:
+        shears = compute_shears_from_vertices(triangles, vertices_complex)
+    gens = generators_from_triangulation(T, shears, root=0)
 
     trace_details = []
     integral_count = 0
@@ -292,7 +326,8 @@ def check_arithmeticity(triangles: List[Tuple[int, int, int]],
         'n_generators': len(gens),
         'n_integral': integral_count,
         'traces': [d['trace'] for d in trace_details],
-        'trace_details': trace_details
+        'trace_details': trace_details,
+        'shears': shears
     }
 
 
@@ -301,22 +336,51 @@ def compute_shears_from_vertices(triangles: List[Tuple[int, int, int]],
     """
     Compute shear parameters from actual vertex positions.
 
-    For each interior edge shared by two triangles, the shear is computed
-    from the cross-ratio of the four vertices involved.
+    For each interior edge shared by two triangles, the shear is the log
+    modulus of the STANDARD cross-ratio of the four vertices involved:
+    on edge (x, y) shared by triangles (x, y, a) and (x, y, b),
 
-    The shear z on edge (v2, v3) shared by triangles (v1, v2, v3) and (v2, v4, v3) is:
-        z = log|cross_ratio(v1, v2, v4, v3)|
+        shear = log |CR(a, x; b, y)|,   CR = M(a)/M(b),  M(z) = (z-x)/(z-y)
+              = log |(a-x)(b-y) / ((a-y)(b-x))|.
 
-    where cross_ratio(a, b, c, d) = (a-c)(b-d) / ((a-d)(b-c))
+    This vanishes exactly on Rivin/Delaunay-balanced (zero-shear)
+    configurations — e.g. the regular ideal octahedron {0, +-1, +-i, INF}
+    and any Moebius image of it.  (An earlier version used a different
+    cross-ratio slot arrangement, which is a nonzero Klein-four translate
+    of the standard one and reported |shear| ~ 0.35 on provably zero-shear
+    configurations.)
+
+    A vertex may be None, denoting the point at infinity of the upper
+    half-space model; the cross-ratio is then evaluated by its Moebius
+    limit (the two factors containing that vertex cancel).
 
     Args:
         triangles: List of triangles as (v0, v1, v2) tuples
-        vertices_complex: Array of complex vertex coordinates
+        vertices_complex: sequence of complex vertex coordinates
+            (entries may be None for the ideal vertex at infinity)
 
     Returns:
-        Dict mapping edge_id -> shear value
+        Dict mapping edge_id -> shear value (edge ids consistent with
+        triangulation_from_faces: first-occurrence order over interior
+        edges)
     """
     import numpy as np
+
+    def _std_cross_ratio(a, x, b, y):
+        """CR(a, x; b, y) = (a-x)(b-y)/((a-y)(b-x)) with None = infinity."""
+        if x is None and y is None:
+            raise ValueError("Degenerate edge: both endpoints at infinity")
+        if x is None:
+            return (b - y) / (a - y)
+        if y is None:
+            return (a - x) / (b - x)
+        if a is None and b is None:
+            return complex(1.0)
+        if a is None:
+            return (b - y) / (b - x)
+        if b is None:
+            return (a - x) / (a - y)
+        return ((a - x) * (b - y)) / ((a - y) * (b - x))
 
     # Build edge adjacency structure
     edge_triangles = {}  # edge -> list of (tri_idx, opposite_vertex)
@@ -335,28 +399,23 @@ def compute_shears_from_vertices(triangles: List[Tuple[int, int, int]],
     shears = {}
     edge_id = 0
 
+    def _coord(idx):
+        v = vertices_complex[idx]
+        return None if v is None else complex(v)
+
     for edge, tri_list in edge_triangles.items():
         if len(tri_list) == 2:  # Interior edge
-            # Get the four vertices: two on the edge, two opposite
+            # Edge endpoints (x, y) and the two opposite vertices (a, b)
             _, opp1, e1, e2 = tri_list[0]
             _, opp2, _, _ = tri_list[1]
 
-            # Get complex coordinates
-            z1 = complex(vertices_complex[opp1])  # opposite vertex 1
-            z2 = complex(vertices_complex[e1])     # edge vertex 1
-            z3 = complex(vertices_complex[e2])     # edge vertex 2
-            z4 = complex(vertices_complex[opp2])  # opposite vertex 2
+            a = _coord(opp1)
+            x = _coord(e1)
+            y = _coord(e2)
+            b = _coord(opp2)
 
-            # Compute cross-ratio: (z1-z3)(z2-z4) / ((z1-z4)(z2-z3))
-            num = (z1 - z3) * (z2 - z4)
-            den = (z1 - z4) * (z2 - z3)
-
-            if abs(den) > 1e-10:
-                cr = num / den
-                # Shear is log of absolute value of cross-ratio
-                shear = math.log(abs(cr)) if abs(cr) > 1e-10 else 0.0
-            else:
-                shear = 0.0
+            cr = _std_cross_ratio(a, x, b, y)
+            shear = math.log(abs(cr)) if abs(cr) > 1e-10 else 0.0
 
             shears[edge_id] = shear
             edge_id += 1
@@ -367,16 +426,21 @@ def compute_shears_from_vertices(triangles: List[Tuple[int, int, int]],
 def check_arithmeticity_from_vertices(vertices_complex, tolerance: float = 0.01,
                                       verbose: bool = False) -> Dict[str, Any]:
     """
-    Check arithmeticity given complex vertex coordinates.
+    Certify arithmeticity (zero-shear / PSL(2,Z) criterion) from complex
+    vertex coordinates.
 
-    Computes Delaunay triangulation and checks holonomy traces using
-    the actual shear parameters derived from the geometry.
+    Computes the Delaunay triangulation and checks holonomy traces using
+    the actual shear parameters derived from the geometry.  The
+    certificate is sufficient, not necessary, for group-theoretic
+    arithmeticity (see check_arithmeticity).
 
-    For random vertex positions, shears are non-zero and traces are
-    typically non-integral (non-arithmetic).
+    For random vertex positions, shears are non-zero and traces
+    typically fail the certificate.
 
-    For Rivin-Delaunay optimized positions, shears are zero and traces
-    are integers (arithmetic).
+    For Rivin volume-maximized positions whose maximum is INTERIOR to
+    the admissible angle polytope (no cocircular ties), shears are zero
+    and traces are integers; at boundary maxima the certificate
+    genuinely fails.
 
     Args:
         vertices_complex: Array of complex numbers (vertex positions)
@@ -495,10 +559,19 @@ Output:
     with open(args.input, 'r') as f:
         config = json.load(f)
 
-    # Check if we have vertices or triangles
-    if 'triangles' in config:
+    # Check if we have vertices or triangles.  Triangles alone are no longer
+    # sufficient: the certificate requires the actual geometry (coordinates
+    # or shears) — see check_arithmeticity.
+    if 'triangles' in config and ('vertices_real' in config and 'vertices_imag' in config):
+        import numpy as np
         triangles = [tuple(t) for t in config['triangles']]
-        result = check_arithmeticity(triangles, args.tolerance, args.verbose)
+        vertices = np.array(config['vertices_real']) + 1j * np.array(config['vertices_imag'])
+        result = check_arithmeticity(triangles, vertices_complex=vertices,
+                                     tolerance=args.tolerance, verbose=args.verbose)
+    elif 'triangles' in config:
+        print("Error: 'triangles' alone cannot certify arithmeticity — the "
+              "zero-shear default is vacuous. Provide 'vertices_real'/'vertices_imag' as well.")
+        sys.exit(2)
     elif 'vertices_real' in config and 'vertices_imag' in config:
         import numpy as np
         vertices = np.array(config['vertices_real']) + 1j * np.array(config['vertices_imag'])
