@@ -90,7 +90,7 @@ Main clusters (by filename prefix / purpose):
 
 ## Tests
 
-`tests/` holds the pytest-style suite. At present it contains `llm_benchmark_test.py` and `test_volume_threshold.py` (moved from repo root).
+`tests/` holds the pytest-style suite. At present it contains `llm_benchmark_test.py`, `test_volume_threshold.py` (moved from repo root), and `test_penner_rivin_regression.py` (2026-07: INF-sentinel cross-ratios, standard shear convention, geometry-required arithmeticity certificate, developing-map realization of Rivin-optimal angle structures).
 
 ## Paper sources
 

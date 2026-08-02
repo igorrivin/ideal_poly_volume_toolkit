@@ -1,0 +1,5 @@
+# H^3 ideal polyhedron volumes — sep-CMA-ES
+N=100: vol=181.601620 [495s, 10 restarts]
+N=150: vol=279.726734 [1232s, 10 restarts]
+N=200: vol=377.729474 [1181s, 5 restarts]
+N=300: vol=573.429009 [2560s, 5 restarts]

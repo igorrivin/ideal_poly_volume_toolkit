@@ -287,6 +287,52 @@ LBFGS optimization (every 5 steps) to accommodate changes in
 the combinatorial type; the cost of a full Delaunay recomputation
 (via Qhull) is negligible compared to the volume evaluation.
 
+\subsubsection{Structured initialization: a small-$N$ phenomenon}
+\label{sec:structured-seeds}
+
+In addition to the random Stage~1 starts, we maintain a library
+of \emph{structured} initial configurations---free sums of regular
+polygons in mutually orthogonal $2$-planes
+(\S\ref{sec:joins}), the cross-polytope, the regular simplex and
+its joins, and (for $d = 4$) the $24$-cell.  Each natural object
+has a fixed vertex count; at $N$ slightly above that count we
+augment with a few random points, but only up to the next natural
+object's size.  We run the hyperbolic polish from each member of
+this library and take the best.
+
+Empirically, structured seeds matter substantially at small $N$
+and fade---then invert---as $N$ grows.  At $N \leq 2d + 2$ the
+volume-optimal polytope is one of the structured library members
+verbatim (see Table in \S\ref{sec:joins}: $N = d{+}2$ is
+$\Delta_{d/2}{*}\Delta_{d/2}$, $N = 2d$ is the cross-polytope, etc.),
+and structured warm starts converge to the optimum on the first
+polish, where random restarts often miss it entirely.  Past the
+library-exhaustion point---empirically near $N \approx 2d^2$,
+where the largest natural object in our library
+($24$-cell at $d = 4$, $C_4^3$ cross-polytope at $d = 6$) has
+been outgrown---the relationship inverts.  In a controlled
+$1{,}000$-restart comparison at $d = 4$, the best structured-seed
+final volume is $97\%$ of the best random-restart final volume at
+$N = 30$, $94\%$ at $N = 50$, and $90\%$ at $N = 80$; at
+$d = 6, N = 35$ the ratio drops to $77\%$.  The structured-seed
+advantage is genuinely a small-$N$, low-dimensional artefact.
+
+The clean interpretation is Erd\H{o}s--R\'enyi-style.  At small $N$
+the moduli space of inscribed simplicial polytopes is small enough
+that the volume-optimal stratum is forced to contain an
+algebraically distinguished configuration; structured seeds find
+this stratum by construction, while random restarts have to hit it
+by chance.  As $N$ grows, the number of combinatorial types grows
+at least at Catalan rate, the global optimum's automorphism group
+collapses to triviality (Tables~\ref{tab:comb_d4}
+and~\ref{tab:comb_H6}), and the volume-optimal stratum is no
+longer algebraically distinguished---random restarts now sample
+relevant strata at a rate proportional to their parameter-space
+measure, which is the right rate for high-$N$.  The structured-seed
+advantage tracks the ``law of small numbers'': there are only
+finitely many natural algebraic objects, and once $N$ exceeds them
+the optimization landscape ceases to know about them.
+
 \subsection{Symmetry Analysis}
 
 The geometric automorphism group of an optimal polytope is computed
@@ -1004,6 +1050,7 @@ and~\ref{tab:comb_H6}), consistent with the weak form
 (Conjecture~\ref{conj:comb_weak}).
 
 \subsection{Identification of Optimal Polytopes: Joins of Regular Polygons}
+\label{sec:joins}
 
 Searching polytope databases and comparing with known constructions,
 we find that the volume-optimal polytopes for small~$N$ are

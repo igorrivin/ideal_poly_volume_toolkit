@@ -597,6 +597,105 @@ characteristically different failure modes:
       confabulation. Our checker enforces this distinction automatically.
 \end{itemize}
 
+\subsubsection{Case study: GPT on the ideal 17-facet surface area}
+\label{sec:gpt-17facet-ideal}
+
+A single-character change to the 17-facet prompt
+(\S\ref{sec:gemini-17facet})---replacing ``three-dimensional content
+of the boundary'' (Euclidean) with ``hyperbolic three-volume of
+the boundary, treating the polytope as ideal in
+$\mathbb{H}^4$''---turns it into a genuinely different problem.
+Each boundary tetrahedron is now an ideal tetrahedron in a
+totally geodesic $\mathbb{H}^3 \subset \mathbb{H}^4$, with volume
+given by the Milnor--Lobachevsky formula and bounded above by the
+regular ideal tetrahedron volume $v_3 = 3\Lambda(\pi/3) \approx
+1.014942$.  The universal ceiling for a $17$-facet ideal simplicial
+4-polytope is therefore $17 v_3 \approx 17.254$, not $16/3$.
+
+Gemini~3.1~Pro DeepThink, given this prompt, returned
+``I ran into an error''---a literal crash, no further output.
+We then posed the same prompt to GPT-5.4~Pro.
+
+\paragraph{The strategically correct combinatorial choice.}
+GPT immediately selected $f_0 = 9$ (rather than $f_0 = 8$, which
+the original Gemini exchange had naturally adopted because of the
+broken-16-cell intuition).  Both vertex counts are LBT-permissible,
+but they correspond to qualitatively different optimization regimes:
+\begin{itemize}
+\item At $f_0 = 8$, the lower bound theorem forces $f_1 = 25$ edges
+      out of $\binom{8}{2} = 28$ possible---the 17-facet polytope
+      is only 3 edges short of the complete graph $K_8$, and
+      essentially has to be a perturbation of the regular 16-cell.
+      Constraining to $17$ facets requires a 2-to-3 bistellar flip
+      that breaks the 16-cell symmetry; the resulting volume is
+      bounded above by the broken-16-cell, well below the universal
+      ceiling.
+\item At $f_0 = 9$, the lower bound theorem gives $f_1 = 26$ edges
+      out of $\binom{9}{2} = 36$ possible---10 missing edges and
+      genuine shape freedom.  This is the LBT-tight regime where
+      no fixed algebraic configuration dominates and the volume
+      can approach the universal $17 v_3$ ceiling more closely.
+\end{itemize}
+The choice of $f_0 = 9$ over $f_0 = 8$ is a discrete combinatorial
+decision made before any continuous optimization, and it is
+mathematically the right one---this is exactly the kind of
+``pick the right stratum first, optimize within it second''
+strategy of the structured-initialization discussion in the
+methods section of the main paper.  Gemini's exchange in \S\ref{sec:gemini-17facet} converged
+to the locally-better 8-vertex regime by following the symmetry
+intuition; GPT's choice of the 9-vertex regime breaks out of that
+intuition.
+
+\paragraph{The submitted polytope.}
+GPT provided $9 \times 4$ explicit ideal vertex coordinates,
+the full 17-element list of tetrahedral facet vertex-index tuples,
+and the claim
+\[
+  \mathrm{Vol}_3(\partial P) \;=\; 16.94107529549962248\ldots,
+\]
+explicitly noting this reaches $98.19\%$ of the $17 v_3 \approx
+17.254$ universal ceiling and that the claim was a lower bound
+rather than the exact optimum.
+
+\paragraph{Verification.}
+Running the submitted coordinates through our standalone checker:
+\begin{itemize}
+\item all 9 vertices are unit-norm to machine precision;
+\item the SciPy/Qhull convex hull yields exactly $17$ tetrahedral
+      facets, and the facet-vertex-index list matches GPT's
+      submitted list verbatim (no missing or extra facets);
+\item the surface 3-volume, computed as the sum of
+      $\Lambda$-formula ideal-tetrahedron volumes over the
+      $17$ facets, is $16.941148862635$, agreeing with GPT's
+      claimed $16.94107529549962$ to within $7 \times 10^{-5}$
+      (a few ULPs of double precision).
+\end{itemize}
+The discrepancy is at the level of rounding in GPT's vertex
+coordinates rather than methodological error, and is entirely
+within the $10^{-3}$ consistency tolerance of our grader
+(\S\ref{sec:volume-lb-results}).
+
+\paragraph{Reading.}
+Both case studies---the Euclidean Gemini exchange and the ideal
+GPT exchange---used the same parameter ($17$ facets) but produced
+qualitatively different LLM behaviors.  Gemini, asked the
+Euclidean question, fabricated a number, was caught, then
+recovered to a verifiable $5.036$ that matched (rather than
+exceeded) the existing $f_0 = 8$ broken-16-cell record.  GPT,
+asked the ideal question, picked the correct LBT regime
+($f_0 = 9$), produced a verifiable $16.94$ inside that regime,
+and explicitly framed the result as a lower bound rather than as
+the optimum.  The contrast is consistent with the broader pattern
+identified in the failure-modes discussion above: GPT defaults to
+verifiable
+construction with explicit uncertainty quantification; Gemini
+defaults to plausible-sounding numerics, with the verifiable
+fallback only emerging under explicit accountability pressure.
+A genuinely cynical reading---training-data leakage of the
+$5.036$ value---is consistent with the Gemini observation but
+not with the GPT one, since $16.94$ has no prior textual presence
+in our preprints or anywhere we are aware of.
+
 \subsection{Volume lower bound (Task C)}
 \label{sec:volume-lb-results}
 

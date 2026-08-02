@@ -85,4 +85,12 @@ coverage.xml
 
 # Results data (keep structure, ignore large generated files)
 results/data/*.json
-bin/results/
+bin/results/*.aux
+*.out
+*.toc
+*.synctex.gz
+*.fls
+*.fdb_latexmk
+*.bbl
+*.blg
+*.pyc

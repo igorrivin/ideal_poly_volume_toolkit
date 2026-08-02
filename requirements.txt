@@ -1,11 +1,19 @@
-numpy>=1.20
-scipy>=1.7
-mpmath>=1.3
+# Core scientific stack
+numpy
+scipy
+mpmath
 torch>=2.0
-matplotlib>=3.5
-trimesh>=3.15
-plotly>=5.0
-Pillow>=9.0
-pynauty>=2.0
-gradio>=5.0.0
-huggingface_hub>=0.25.0
+matplotlib
+
+# Optimization
+cma
+
+# Polytope symmetry
+pynauty
+
+# RL (optional, for rl_optimizer.py)
+gymnasium
+stable-baselines3
+
+# Utilities
+tqdm

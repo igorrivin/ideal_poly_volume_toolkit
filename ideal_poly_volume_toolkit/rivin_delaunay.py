@@ -369,12 +369,14 @@ def check_delaunay_realizability(triangles: List[Tuple[int, int, int]],
         A_ub_list.append(row)
         b_ub_list.append(0.0)
 
-    # (d) sum of angles at boundary vertex <= boundary_bound
+    # (d) sum of angles at boundary vertex <= boundary_bound (< boundary_bound if strict)
     for vertex in boundary_vertices:
         row = np.zeros(n_vars)
         for tri_id, corner_id in vertex_angles[vertex]:
             angle_idx = 3 * tri_id + corner_id
             row[angle_idx] = 1.0
+        if strict:
+            row[eps_idx] = 1.0  # +ε (so constraint is: sum + ε <= boundary_bound)
         A_ub_list.append(row)
         b_ub_list.append(boundary_bound)
 
@@ -609,54 +611,135 @@ def lobachevsky_hessian(theta: float) -> float:
     return -1.0 / np.tan(theta)
 
 
+def _newton_in_nullspace(x, N, verbose=False, tol=1e-12, max_iter=50, label=""):
+    """Run Newton's method for maximizing V(θ) = Σ Λ(θᵢ) projected
+    onto the column space of N (null space of equality constraints).
+
+    Only uses Λ'(θ) = -log(2 sin θ) and Λ''(θ) = -cot θ.
+    No Lobachevsky function evaluations.
+
+    Returns (x, n_iter, converged).
+    """
+    EPS = 1e-6
+
+    converged = False
+    for it in range(max_iter):
+        x = np.clip(x, EPS, np.pi - EPS)
+        sin_x = np.sin(x)
+        cos_x = np.cos(x)
+
+        grad = -np.log(2.0 * sin_x)
+        g_red = N.T @ grad
+        grad_norm = np.linalg.norm(g_red)
+
+        if verbose and (it < 3 or it % 10 == 0 or grad_norm < tol):
+            print(f"  {label}iter {it:3d}:  |∇V|_red = {grad_norm:.3e}")
+
+        if grad_norm < tol:
+            converged = True
+            if verbose:
+                print(f"  {label}Converged at iteration {it}")
+            break
+
+        H_diag = -cos_x / sin_x
+        H_red = (N * H_diag[:, None]).T @ N
+
+        try:
+            delta_y = np.linalg.solve(H_red, -g_red)
+        except np.linalg.LinAlgError:
+            if verbose:
+                print(f"  {label}Singular Hessian at iteration {it}")
+            break
+
+        delta_x = N @ delta_y
+
+        # Backtracking line search: keep angles in (0, π)
+        alpha = 1.0
+        for _ in range(20):
+            x_new = x + alpha * delta_x
+            if np.all(x_new > EPS) and np.all(x_new < np.pi - EPS):
+                break
+            alpha *= 0.5
+        x = x + alpha * delta_x
+
+    return x, it + 1, converged
+
+
 def optimize_hyperbolic_volume(triangles: List[Tuple[int, int, int]],
                                initial_angles: Optional[np.ndarray] = None,
                                boundary_vertices: Optional[Set[int]] = None,
-                               verbose: bool = False) -> Dict:
+                               verbose: bool = False,
+                               require_interior: bool = False) -> Dict:
     """
-    Optimize the hyperbolic volume of a Delaunay realizable triangulation.
+    Find the volume-maximizing angle assignment for a Delaunay realizable
+    triangulation via active-set Newton's method.
 
-    Given a realizable triangulation, find the angle assignment that maximizes
-    the hyperbolic volume, which is the sum of Lobachevsky functions of the angles.
+    Since V(θ) = Σ Λ(θᵢ) is strictly concave on the Rivin polytope, the
+    unique maximum is found by:
 
-    By Rivin's theorem, this function is concave on the Rivin polytope, so
-    there is a unique maximum.
+      1. Newton in the null space of the equality constraints
+         (triangle angle sums = π, interior vertex sums = 2π).
+      2. Check inequality constraints (dihedral ≤ π, boundary sums ≤ π).
+      3. If violated, pin the most-violated constraint at equality and
+         repeat with the augmented constraint set.
+
+    Only uses Λ'(θ) = -log(2 sin θ) and Λ''(θ) = -cot θ — no
+    Lobachevsky function evaluations.  Each Newton solve converges
+    quadratically in ~7 iterations.
+
+    Note: when the optimum is in the interior of the Rivin polytope
+    (no active inequality constraints), it is arithmetic.  When the
+    optimum lies on the boundary (some dihedrals pinned at π), the
+    extra Lagrange multipliers generically break arithmeticity.
 
     Args:
         triangles: List of triangles as (v0, v1, v2) tuples
-        initial_angles: Initial angle assignment (n_triangles, 3). If None, solves LP for feasible start.
+        initial_angles: Initial angle assignment (n_triangles, 3) in radians.
+            If None, solves LP for a feasible start.
         boundary_vertices: Set of boundary vertex indices (if None, auto-detect)
         verbose: If True, print optimization progress
+        require_interior: If True, abort as soon as a DIHEDRAL (cocircular
+            tie) constraint becomes active — i.e. the maximum lies on the
+            boundary of the Rivin polytope.  Boundary maxima are perfectly
+            legitimate volume answers, but they can never be zero-shear
+            certified (the tie multipliers break the log-sin cancellation),
+            so witness generation for the arithmeticity benchmark should
+            reject them immediately and try another combinatorial type
+            instead of paying for full convergence.  Boundary-VERTEX
+            constraints becoming active are fine either way: their
+            multipliers cancel in every shear expression.
 
     Returns:
         Dict with keys:
-        - 'success': bool, whether optimization succeeded
+        - 'success': bool
         - 'angles': np.ndarray of shape (n_triangles, 3), optimal angles (radians)
-        - 'volume': float, optimal hyperbolic volume
-        - 'message': str, optimization message
-        - 'n_iterations': int, number of iterations
+        - 'volume': float (computed from the Fourier series at convergence)
+        - 'n_active_constraints': int, number of pinned inequality constraints
+        - 'message': str
+        - 'n_iterations': int (total across all active-set rounds)
     """
+    from scipy.linalg import null_space
+
     n_triangles = len(triangles)
     n_angles = 3 * n_triangles
 
     if boundary_vertices is None:
         boundary_vertices = extract_boundary_vertices(triangles)
 
-    # Get all vertices and interior vertices
     all_vertices = set()
     for tri in triangles:
         all_vertices.update(tri)
     interior_vertices = all_vertices - boundary_vertices
 
-    # Build data structures
     vertex_angles = build_vertex_angle_incidence(triangles)
     edge_opposite_angles = build_edge_adjacency(triangles)
-    interior_edges = {edge: angles for edge, angles in edge_opposite_angles.items() if len(angles) == 2}
+    interior_edges = {edge: angles for edge, angles in edge_opposite_angles.items()
+                      if len(angles) == 2}
 
-    # If no initial angles provided, solve LP to get a feasible starting point
+    # --- Feasible starting point from LP ---
     if initial_angles is None:
         if verbose:
-            print("Solving LP to find feasible starting point...")
+            print("Solving LP for feasible starting point...")
         lp_result = check_delaunay_realizability(triangles, boundary_vertices, verbose=False)
         if not lp_result['realizable']:
             return {
@@ -664,155 +747,197 @@ def optimize_hyperbolic_volume(triangles: List[Tuple[int, int, int]],
                 'angles': None,
                 'volume': None,
                 'message': 'Triangulation is not Delaunay realizable',
+                'n_active_constraints': 0,
                 'n_iterations': 0,
             }
-        initial_angles = lp_result['angles_radians']  # Already in radians
+        initial_angles = lp_result['angles_radians']
 
-    # Flatten initial angles
-    x0 = initial_angles.flatten()
+    x = initial_angles.flatten().copy()
 
-    # Build constraint matrices (same as in LP, but for angles in radians)
-    # Equality constraints: A_eq @ x == b_eq
-    A_eq_list = []
-    b_eq_list = []
+    # --- Base equality constraints ---
+    # Triangle angle sums = π,  interior vertex angle sums = 2π
+    A_base_rows = []
 
-    # Triangle angle sum = π
     for tri_id in range(n_triangles):
         row = np.zeros(n_angles)
-        for corner_id in range(3):
-            angle_idx = 3 * tri_id + corner_id
-            row[angle_idx] = 1.0
-        A_eq_list.append(row)
-        b_eq_list.append(np.pi)  # Radians, not scaled
+        for c in range(3):
+            row[3 * tri_id + c] = 1.0
+        A_base_rows.append(row)
 
-    # Interior vertex angle sum = 2π
     for vertex in interior_vertices:
         row = np.zeros(n_angles)
         for tri_id, corner_id in vertex_angles[vertex]:
-            angle_idx = 3 * tri_id + corner_id
-            row[angle_idx] = 1.0
-        A_eq_list.append(row)
-        b_eq_list.append(2 * np.pi)  # Radians, not scaled
+            row[3 * tri_id + corner_id] = 1.0
+        A_base_rows.append(row)
 
-    A_eq = np.array(A_eq_list) if A_eq_list else np.zeros((0, n_angles))
-    b_eq = np.array(b_eq_list) if b_eq_list else np.zeros(0)
+    A_base = np.array(A_base_rows)
 
-    # Inequality constraints: A_ub @ x <= b_ub
-    A_ub_list = []
-    b_ub_list = []
+    # --- Build all inequality constraint rows (for checking violations) ---
+    # Each is a row a such that a @ x <= π
+    ineq_rows = []
+    ineq_labels = []
 
-    # Boundary vertex angle sum <= π
-    for vertex in boundary_vertices:
-        row = np.zeros(n_angles)
-        for tri_id, corner_id in vertex_angles[vertex]:
-            angle_idx = 3 * tri_id + corner_id
-            row[angle_idx] = 1.0
-        A_ub_list.append(row)
-        b_ub_list.append(np.pi)  # Radians, not scaled
-
-    # Interior edge opposite angles sum <= π
     for edge, opposite_angles in interior_edges.items():
         row = np.zeros(n_angles)
         for tri_id, corner_id in opposite_angles:
-            angle_idx = 3 * tri_id + corner_id
-            row[angle_idx] = 1.0
-        A_ub_list.append(row)
-        b_ub_list.append(np.pi)  # Radians, not scaled
+            row[3 * tri_id + corner_id] = 1.0
+        ineq_rows.append(row)
+        ineq_labels.append(f"dihedral {edge}")
 
-    A_ub = np.array(A_ub_list) if A_ub_list else np.zeros((0, n_angles))
-    b_ub = np.array(b_ub_list) if b_ub_list else np.zeros(0)
+    n_dihedral_rows = len(ineq_rows)  # dihedral rows come first
 
-    # Bounds: all angles in (0, π)
-    bounds = [(1e-8, np.pi - 1e-8) for _ in range(n_angles)]
+    for vertex in boundary_vertices:
+        row = np.zeros(n_angles)
+        for tri_id, corner_id in vertex_angles[vertex]:
+            row[3 * tri_id + corner_id] = 1.0
+        ineq_rows.append(row)
+        ineq_labels.append(f"boundary vertex {vertex}")
 
-    # Define objective: we MINIMIZE the negative volume
-    # Volume = ∑ Lobachevsky(θᵢ)
-    # Scipy minimizes, so we minimize -Volume
-    def objective(x):
-        return -np.sum([lobachevsky_function(theta) for theta in x])
+    # --- Active-set loop ---
+    active_indices = []      # indices into ineq_rows that are pinned at π
+    total_iters = 0
+    converged = False
+    MAX_ACTIVE_ROUNDS = len(ineq_rows) + 1  # can't activate more than all
 
-    # Gradient: ∂(-Volume)/∂θᵢ = -Λ'(θᵢ) = log(2sin(θᵢ))
-    def gradient(x):
-        return np.array([-lobachevsky_gradient(theta) for theta in x])
+    # RHS for base equality constraints
+    b_base = np.array(
+        [np.pi] * n_triangles + [2 * np.pi] * len(interior_vertices))
 
-    # Hessian: ∂²(-Volume)/∂θᵢ² = -Λ''(θᵢ) = cot(θᵢ)
-    # Since Hessian is diagonal, we return it as a sparse diagonal matrix
-    def hessian(x):
-        diag_elements = np.array([-lobachevsky_hessian(theta) for theta in x])
-        return diags(diag_elements, format='csr')
+    for active_round in range(MAX_ACTIVE_ROUNDS):
+        # Build augmented equality constraint matrix and RHS
+        if active_indices:
+            A_active = np.array([ineq_rows[i] for i in active_indices])
+            A_eq = np.vstack([A_base, A_active])
+            b_eq = np.concatenate([b_base, np.full(len(active_indices), np.pi)])
+        else:
+            A_eq = A_base
+            b_eq = b_base
 
-    # Build constraints in scipy format
-    from scipy.optimize import LinearConstraint
+        # Project x onto the augmented constraint manifold:
+        # x -= A_eq^T (A_eq A_eq^T)^{-1} (A_eq x - b_eq)
+        residual = A_eq @ x - b_eq
+        if np.linalg.norm(residual) > 1e-12:
+            x -= A_eq.T @ np.linalg.solve(A_eq @ A_eq.T, residual)
 
-    constraints = []
+        N = null_space(A_eq)
 
-    if A_eq.shape[0] > 0:
-        constraints.append(LinearConstraint(A_eq, b_eq, b_eq))
+        if N.shape[1] == 0:
+            # Fully determined — no free dimensions left
+            converged = True
+            if verbose:
+                print(f"  No free dimensions (round {active_round}), "
+                      f"system fully determined")
+            break
 
-    if A_ub.shape[0] > 0:
-        constraints.append(LinearConstraint(A_ub, -np.inf, b_ub))
+        if verbose:
+            if active_round == 0:
+                print(f"\nNewton in null space: {n_angles} angles, "
+                      f"{A_eq.shape[0]} equality constraints, "
+                      f"{N.shape[1]} free dims")
+            else:
+                print(f"\n  Active-set round {active_round}: "
+                      f"{len(active_indices)} pinned, "
+                      f"{N.shape[1]} free dims")
 
-    if verbose:
-        print(f"\nOptimizing hyperbolic volume...")
-        print(f"  Variables: {n_angles} angles")
-        print(f"  Equality constraints: {A_eq.shape[0]}")
-        print(f"  Inequality constraints: {A_ub.shape[0]}")
+        x, n_it, converged = _newton_in_nullspace(
+            x, N, verbose=verbose,
+            label=f"[r{active_round}] " if active_round > 0 else "")
+        total_iters += n_it
 
-    # Use trust-constr method with exact gradient and Hessian
-    result = minimize(
-        objective,
-        x0,
-        method='trust-constr',
-        jac=gradient,
-        hess=hessian,
-        constraints=constraints,
-        bounds=bounds,
-        options={'verbose': 1 if verbose else 0, 'maxiter': 1000}
-    )
+        if not converged:
+            break
 
-    if verbose:
-        print(f"\nOptimization complete:")
-        print(f"  Success: {result.success}")
-        print(f"  Iterations: {result.nit}")
-        print(f"  Message: {result.message}")
+        # Check all inequality constraints: a @ x <= π
+        worst_violation = 0.0
+        worst_idx = -1
+        for i, row in enumerate(ineq_rows):
+            if i in active_indices:
+                continue  # already pinned
+            violation = row @ x - np.pi
+            if violation > worst_violation:
+                worst_violation = violation
+                worst_idx = i
 
-    # Compute final volume (positive, since we minimized the negative)
-    optimal_angles = result.x.reshape(n_triangles, 3)
-    volume = np.sum([lobachevsky_function(theta) for theta in result.x])
+        if worst_violation <= 1e-6:
+            # All inequalities satisfied — done
+            if verbose and active_round > 0:
+                print(f"  All inequalities satisfied after "
+                      f"{active_round} activation(s)")
+            break
 
-    # Check dihedral angles (sums of opposite angles across interior edges)
-    # If these are very close to π, we're in a degenerate situation
+        # Early tie-rejection: a dihedral about to be pinned means the
+        # maximum is a boundary (cocircular-tie) maximum, which can never
+        # be zero-shear certified — bail out now rather than converge.
+        if require_interior and worst_idx < n_dihedral_rows:
+            if verbose:
+                print(f"  REJECT (require_interior): {ineq_labels[worst_idx]} "
+                      f"hit π (excess {np.degrees(worst_violation):.2f}°) — "
+                      f"boundary maximum, not zero-shear certifiable")
+            return {
+                'success': False,
+                'angles': x.reshape(n_triangles, 3),
+                'volume': None,
+                'max_dihedral_angle': float(ineq_rows[worst_idx] @ x),
+                'n_active_constraints': len(active_indices),
+                'message': (f'Rejected: cocircular tie active '
+                            f'({ineq_labels[worst_idx]}) — boundary maximum '
+                            f'(require_interior)'),
+                'rejected_tie': True,
+                'n_iterations': total_iters,
+            }
+
+        # Pin the most-violated constraint at equality
+        active_indices.append(worst_idx)
+        if verbose:
+            print(f"  Violated: {ineq_labels[worst_idx]} "
+                  f"(excess {np.degrees(worst_violation):.2f}°), "
+                  f"pinning at π")
+
+    optimal_angles = x.reshape(n_triangles, 3)
+
+    # --- Compute volume via Fourier series ---
+    k = np.arange(1, 65)
+    volume = 0.5 * np.sum(np.sin(2.0 * np.outer(x, k)) / (k * k))
+
+    # --- Final feasibility check ---
     max_dihedral = 0.0
+    for edge, opposite_angles in interior_edges.items():
+        (tri1, c1), (tri2, c2) = opposite_angles
+        dihedral = optimal_angles[tri1, c1] + optimal_angles[tri2, c2]
+        max_dihedral = max(max_dihedral, dihedral)
+
+    success = converged and (max_dihedral <= np.pi + 1e-6)
+
+    # Asymptotically tight tie (converged onto the boundary without a pin):
+    # equally not zero-shear certifiable.
+    if require_interior and success and max_dihedral >= np.pi - 1e-9:
+        return {
+            'success': False,
+            'angles': optimal_angles,
+            'volume': volume,
+            'max_dihedral_angle': max_dihedral,
+            'n_active_constraints': len(active_indices),
+            'message': ('Rejected: dihedral within 1e-9 of π at convergence '
+                        '— boundary maximum (require_interior)'),
+            'rejected_tie': True,
+            'n_iterations': total_iters,
+        }
+
     if verbose:
-        print(f"\nChecking dihedral angles (opposite angles across interior edges):")
-        dihedral_angles = []
-        for edge, opposite_angles in interior_edges.items():
-            if len(opposite_angles) == 2:
-                (tri1, corner1), (tri2, corner2) = opposite_angles
-                angle1 = optimal_angles[tri1, corner1]
-                angle2 = optimal_angles[tri2, corner2]
-                dihedral = angle1 + angle2
-                dihedral_angles.append(dihedral)
-                max_dihedral = max(max_dihedral, dihedral)
-
-        if dihedral_angles:
-            mean_dihedral = np.mean(dihedral_angles)
-            print(f"  Mean dihedral angle: {mean_dihedral:.6f} rad ({np.degrees(mean_dihedral):.2f}°)")
-            print(f"  Max dihedral angle:  {max_dihedral:.6f} rad ({np.degrees(max_dihedral):.2f}°)")
-            print(f"  π =                  {np.pi:.6f} rad (180.00°)")
-
-            if max_dihedral > np.pi - 0.01:
-                print(f"  ⚠ WARNING: Max dihedral angle very close to π!")
-                print(f"  This is nearly degenerate - geometric reconstruction may fail!")
+        print(f"\n  Volume: {volume:.6f}")
+        print(f"  Max dihedral: {max_dihedral:.6f} rad ({np.degrees(max_dihedral):.2f}°)")
+        print(f"  Active constraints: {len(active_indices)}")
+        print(f"  Total Newton iterations: {total_iters}")
+        print(f"  Success: {success}")
 
     return {
-        'success': result.success,
+        'success': success,
         'angles': optimal_angles,
         'volume': volume,
         'max_dihedral_angle': max_dihedral,
-        'message': result.message,
-        'n_iterations': result.nit,
-        'optimization_result': result,
+        'n_active_constraints': len(active_indices),
+        'message': 'Converged' if success else 'Did not converge',
+        'n_iterations': total_iters,
     }
 
 
@@ -907,116 +1032,121 @@ def realize_angles_as_points(triangles: List[Tuple[int, int, int]],
     from scipy.spatial import Delaunay as scipy_Delaunay
     expected_triangulation_set = set(tuple(sorted(tri)) for tri in triangles)
 
+    # Developing-map layout (exact similar-triangle construction).
+    #
+    # The previous implementation placed each new vertex at the apex of an
+    # ISOSCELES triangle over the base edge (height = (L/2)/tan(theta/2)),
+    # which satisfies the apex angle but generically violates the other two
+    # prescribed angles by tens of degrees, and chose the side of the edge
+    # arbitrarily (the pos1/pos2 "scores" were identical).  That produced
+    # the 27-38 degree angle errors observed on 50/100-vertex Rivin-optimal
+    # angle structures.
+    #
+    # The correct construction develops the triangulated disk across shared
+    # edges: each triangle's shape is determined exactly by its three target
+    # angles (law of sines), and the new vertex is placed on the OPPOSITE
+    # side of the shared edge from the already-placed triangle, giving a
+    # consistent orientation.  At Rivin's critical point the log-sin edge
+    # conditions are precisely the closure conditions of this developing
+    # map, so re-visited vertices reproduce their positions up to numerical
+    # error (reported as closure_error).
+
+    closure_error = [0.0]
+
     def construct_from_angles():
-        """Incrementally place vertices using angle constraints."""
+        """Develop the triangulation across shared edges with exact
+        per-triangle shapes given by target_angles.  Returns the point
+        array, or None if the dual graph is disconnected."""
         points = np.zeros((n_vertices, 2))
 
-        # Set fixed points
-        for v, pos in fixed_points.items():
-            points[vertex_to_idx[v]] = pos
+        # edge -> list of (tri_id, opposite_vertex)
+        edge_tris = {}
+        for tid, tri in enumerate(triangles):
+            for k in range(3):
+                e = tuple(sorted((tri[k], tri[(k + 1) % 3])))
+                edge_tris.setdefault(e, []).append((tid, tri[(k + 2) % 3]))
 
-        placed = set(fixed_points.keys())
-        remaining = set(free_vertices)
+        tri_index = {tuple(tri): tid for tid, tri in enumerate(triangles)}
 
-        # Build adjacency information from triangles
-        vertex_triangles = {v: [] for v in vertex_list}
-        for tri_id, (v0, v1, v2) in enumerate(triangles):
-            vertex_triangles[v0].append((tri_id, v0, v1, v2))
-            vertex_triangles[v1].append((tri_id, v0, v1, v2))
-            vertex_triangles[v2].append((tri_id, v0, v1, v2))
+        def angle_at(tid, v):
+            tri = triangles[tid]
+            return target_angles[tid][list(tri).index(v)]
 
-        iteration = 0
-        max_iterations = n_vertices * 3
+        def third_position(tid, u, v, w, side_sign):
+            """Position of w in triangle tid given placed u, v; side_sign
+            = +1 places w to the left of the directed edge u->v."""
+            pu = points[vertex_to_idx[u]]
+            pv = points[vertex_to_idx[v]]
+            au = angle_at(tid, u)
+            aw = angle_at(tid, w)
+            av = angle_at(tid, v)
+            d = pv - pu
+            L = np.hypot(d[0], d[1])
+            if L < 1e-14 or np.sin(aw) < 1e-14:
+                return None
+            r = L * np.sin(av) / np.sin(aw)  # |uw| by the law of sines
+            c, s = np.cos(au), np.sin(au) * side_sign
+            rot = np.array([c * d[0] - s * d[1], s * d[0] + c * d[1]]) / L
+            return pu + r * rot
 
-        while remaining and iteration < max_iterations:
-            iteration += 1
+        placed_vertices = set()
+        placed_tris = set()
 
-            # Find a vertex that can be placed using existing vertices
-            best_vertex = None
-            best_placement = None
-            best_score = -1
+        # Seed: first triangle, first edge along (0,0)-(1,0), apex above.
+        t0 = 0
+        u0, v0_, w0 = triangles[t0]
+        points[vertex_to_idx[u0]] = np.array([0.0, 0.0])
+        points[vertex_to_idx[v0_]] = np.array([1.0, 0.0])
+        pw = third_position(t0, u0, v0_, w0, +1.0)
+        if pw is None:
+            return None
+        points[vertex_to_idx[w0]] = pw
+        placed_vertices.update((u0, v0_, w0))
+        placed_tris.add(t0)
 
-            for v in remaining:
-                # Find triangles containing this vertex
-                candidate_triangles = vertex_triangles[v]
+        from collections import deque
+        queue = deque([t0])
+        while queue:
+            t1 = queue.popleft()
+            tri1 = triangles[t1]
+            for k in range(3):
+                a, b = tri1[k], tri1[(k + 1) % 3]
+                e = tuple(sorted((a, b)))
+                for (t2, w2) in edge_tris[e]:
+                    if t2 in placed_tris:
+                        continue
+                    # third vertex of t1 across this edge
+                    w1 = tri1[(k + 2) % 3]
+                    pa = points[vertex_to_idx[a]]
+                    pb = points[vertex_to_idx[b]]
+                    pw1 = points[vertex_to_idx[w1]]
+                    dx = pb - pa
+                    cross1 = dx[0] * (pw1[1] - pa[1]) - dx[1] * (pw1[0] - pa[0])
+                    side_sign = -1.0 if cross1 > 0 else +1.0
+                    pos = third_position(t2, a, b, w2, side_sign)
+                    if pos is None:
+                        return None
+                    idx = vertex_to_idx[w2]
+                    if w2 in placed_vertices:
+                        closure_error[0] = max(
+                            closure_error[0],
+                            float(np.hypot(*(points[idx] - pos))))
+                    else:
+                        points[idx] = pos
+                        placed_vertices.add(w2)
+                    placed_tris.add(t2)
+                    queue.append(t2)
 
-                # Count how many have both other vertices already placed
-                valid_triangles = []
-                for tri_id, v0, v1, v2 in candidate_triangles:
-                    others = [u for u in (v0, v1, v2) if u != v]
-                    if all(u in placed for u in others):
-                        valid_triangles.append((tri_id, v0, v1, v2))
-
-                if not valid_triangles:
-                    continue
-
-                # Use the first valid triangle to compute position
-                tri_id, v0, v1, v2 = valid_triangles[0]
-
-                # Get angle at vertex v and positions of other two vertices
-                if v == v0:
-                    angle_at_v = target_angles[tri_id, 0]
-                    p1 = points[vertex_to_idx[v1]]
-                    p2 = points[vertex_to_idx[v2]]
-                elif v == v1:
-                    angle_at_v = target_angles[tri_id, 1]
-                    p1 = points[vertex_to_idx[v2]]
-                    p2 = points[vertex_to_idx[v0]]
-                else:  # v == v2
-                    angle_at_v = target_angles[tri_id, 2]
-                    p1 = points[vertex_to_idx[v0]]
-                    p2 = points[vertex_to_idx[v1]]
-
-                # Compute position that satisfies the angle constraint
-                # Place v such that angle(p1, v, p2) = angle_at_v
-                edge_vec = p2 - p1
-                edge_len = np.linalg.norm(edge_vec)
-
-                if edge_len < 1e-10:
-                    continue
-
-                # Midpoint and perpendicular direction
-                midpoint = (p1 + p2) / 2
-                perp = np.array([-edge_vec[1], edge_vec[0]]) / edge_len
-
-                # Height from edge to vertex (using trigonometry)
-                # For angle theta at apex of isosceles triangle with base edge_len:
-                # height = (edge_len / 2) / tan(theta / 2)
-                if angle_at_v > 0.01 and angle_at_v < np.pi - 0.01:
-                    height = (edge_len / 2) / np.tan(angle_at_v / 2)
-                else:
-                    continue
-
-                # Two possible positions (above/below the edge)
-                pos1 = midpoint + perp * height
-                pos2 = midpoint - perp * height
-
-                # Choose the position that best satisfies other angle constraints
-                score1 = len(valid_triangles)
-                score2 = len(valid_triangles)
-
-                # Prefer position with more valid triangles
-                if len(valid_triangles) > best_score:
-                    best_vertex = v
-                    best_placement = pos1  # Default to pos1
-                    best_score = len(valid_triangles)
-
-            if best_vertex is None:
-                # Can't place any more vertices - break
-                if verbose:
-                    print(f"    ⚠ Stuck after placing {len(placed)}/{n_vertices} vertices")
-                break
-
-            # Place the vertex
-            points[vertex_to_idx[best_vertex]] = best_placement
-            placed.add(best_vertex)
-            remaining.remove(best_vertex)
-
-        if remaining:
+        if len(placed_tris) < len(triangles) or len(placed_vertices) < n_vertices:
             if verbose:
-                print(f"    ⚠ Could not place all vertices ({len(remaining)} remaining)")
+                print(f"    Developing map incomplete: "
+                      f"{len(placed_tris)}/{len(triangles)} triangles, "
+                      f"{len(placed_vertices)}/{n_vertices} vertices")
             return None
 
+        if verbose:
+            print(f"    Developing map complete; closure error = "
+                  f"{closure_error[0]:.3e}")
         return points
 
     points_constructed = construct_from_angles()
@@ -1039,7 +1169,63 @@ def realize_angles_as_points(triangles: List[Tuple[int, int, int]],
 
     points = points_constructed
 
-    # Check initial triangulation
+    def triangulation_is_delaunay(pts, tol=1e-7):
+        """Is the TARGET triangulation a Delaunay triangulation of pts?
+
+        Robust to ties: at Rivin's volume maximum some interior edges are
+        exactly cocircular (active constraints), so scipy's Delaunay picks
+        an arbitrary diagonal there and a strict set-equality test fails
+        spuriously.  By Delaunay's lemma, an embedded triangulation with a
+        convex boundary is (a) Delaunay iff every interior edge is locally
+        Delaunay; with angles available, "locally Delaunay" is exactly
+        opposite-angle sum <= pi (+ tol for ties).
+        Checks: (1) all triangles consistently oriented (embedding),
+        (2) every interior edge locally Delaunay within tol,
+        (3) boundary convex (angle sums at boundary vertices <= pi + tol).
+        """
+        # (1) consistent orientation
+        signs = []
+        for (a, b, c) in triangles:
+            pa, pb, pc = (pts[vertex_to_idx[a]], pts[vertex_to_idx[b]],
+                          pts[vertex_to_idx[c]])
+            cr = (pb[0]-pa[0])*(pc[1]-pa[1]) - (pb[1]-pa[1])*(pc[0]-pa[0])
+            signs.append(np.sign(cr))
+            if abs(cr) < 1e-14:
+                return False
+        if len(set(signs)) > 1:
+            return False
+        # actual corner angles from the layout
+        def corner(pa, pb, pc):
+            u = pb - pa; v = pc - pa
+            cosang = np.dot(u, v) / (np.linalg.norm(u)*np.linalg.norm(v))
+            return float(np.arccos(np.clip(cosang, -1.0, 1.0)))
+        # (2) local Delaunay per interior edge
+        edge_opp = {}
+        for tid, (a, b, c) in enumerate(triangles):
+            tri_pts = {a: pts[vertex_to_idx[a]], b: pts[vertex_to_idx[b]],
+                       c: pts[vertex_to_idx[c]]}
+            for (x, y, o) in ((a, b, c), (b, c, a), (c, a, b)):
+                e = tuple(sorted((x, y)))
+                ang = corner(tri_pts[o], tri_pts[x], tri_pts[y])
+                edge_opp.setdefault(e, []).append(ang)
+        vertex_sums = {}
+        for tid, (a, b, c) in enumerate(triangles):
+            pa, pb, pc = (pts[vertex_to_idx[a]], pts[vertex_to_idx[b]],
+                          pts[vertex_to_idx[c]])
+            vertex_sums[a] = vertex_sums.get(a, 0.0) + corner(pa, pb, pc)
+            vertex_sums[b] = vertex_sums.get(b, 0.0) + corner(pb, pc, pa)
+            vertex_sums[c] = vertex_sums.get(c, 0.0) + corner(pc, pa, pb)
+        for e, angs in edge_opp.items():
+            if len(angs) == 2 and angs[0] + angs[1] > np.pi + tol:
+                return False
+        # (3) convex boundary
+        for v in boundary_vertices:
+            if vertex_sums.get(v, 0.0) > np.pi + tol:
+                return False
+        return True
+
+    # Check initial triangulation: exact scipy match, else the tie-robust
+    # local-Delaunay certificate.
     try:
         tri = scipy_Delaunay(points)
         current_triangles = set()
@@ -1047,20 +1233,17 @@ def realize_angles_as_points(triangles: List[Tuple[int, int, int]],
             v0, v1, v2 = [vertex_list[i] for i in simplex]
             current_triangles.add(tuple(sorted([v0, v1, v2])))
         initial_tri_correct = (current_triangles == expected_triangulation_set)
-
-        if verbose:
-            if initial_tri_correct:
-                print(f"    ✓ Initial geometry has correct triangulation!")
-            else:
-                print(f"    ⚠ Initial triangulation mismatch:")
-                print(f"    Expected {len(expected_triangulation_set)} triangles, got {len(current_triangles)}")
-                missing = expected_triangulation_set - current_triangles
-                extra = current_triangles - expected_triangulation_set
-                if missing:
-                    print(f"    Missing {len(missing)} triangles")
-                if extra:
-                    print(f"    Extra {len(extra)} triangles")
-                print(f"    Will refine using optimization...")
+        if not initial_tri_correct and triangulation_is_delaunay(points):
+            initial_tri_correct = True
+            if verbose:
+                print(f"    ✓ Target triangulation is Delaunay for the layout "
+                      f"(scipy picked other diagonals on cocircular ties)")
+        elif verbose and initial_tri_correct:
+            print(f"    ✓ Initial geometry has correct triangulation!")
+        elif verbose:
+            print(f"    ⚠ Initial triangulation mismatch:")
+            print(f"    Expected {len(expected_triangulation_set)} triangles, got {len(current_triangles)}")
+            print(f"    Will refine using optimization...")
     except Exception as e:
         if verbose:
             print(f"    ⚠ Triangulation check failed: {e}")
@@ -1135,14 +1318,15 @@ def realize_angles_as_points(triangles: List[Tuple[int, int, int]],
         if verbose:
             print(f"    Optimization completed ({opt_result.nit} iterations)")
 
-    # Final triangulation check
+    # Final triangulation check (exact match, else tie-robust certificate)
     try:
         tri = scipy_Delaunay(points)
         current_triangles = set()
         for simplex in tri.simplices:
             v0, v1, v2 = [vertex_list[i] for i in simplex]
             current_triangles.add(tuple(sorted([v0, v1, v2])))
-        triangulation_correct = (current_triangles == expected_triangulation_set)
+        triangulation_correct = (current_triangles == expected_triangulation_set) \
+            or triangulation_is_delaunay(points)
     except:
         triangulation_correct = False
 
@@ -1178,15 +1362,20 @@ def realize_angles_as_points(triangles: List[Tuple[int, int, int]],
         print(f"  Triangulation preserved: {'✓' if triangulation_correct else '✗'}")
         print(f"  RMS angle error: {rms_error:.6f} rad = {np.degrees(rms_error):.2f}°")
 
+    # Success requires BOTH the target combinatorics and the target angles
+    # to be attained (the old criterion ignored the angle error, so layouts
+    # tens of degrees off the Rivin-optimal shape could report success).
+    angles_attained = rms_error < 1e-6
     return {
-        'success': result.success and triangulation_correct,
+        'success': triangulation_correct and angles_attained,
         'points': points,
         'vertex_list': vertex_list,  # Maps point index to original vertex ID
         'volume': final_volume,
         'triangulation_preserved': triangulation_correct,
         'angle_error': rms_error,
         'angle_error_degrees': np.degrees(rms_error),
-        'message': 'Incremental construction completed',
+        'closure_error': closure_error[0],
+        'message': 'Developing-map construction completed',
         'n_iterations': 0,
     }
 

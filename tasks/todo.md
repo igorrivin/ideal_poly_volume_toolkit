@@ -40,6 +40,29 @@
 - Required for the non-simplicial Q1 benchmark (20 non-simplicial facets, vol ~ 8pi^2/9).
 - The simplicial checker works fine as-is for simplicial polytopes.
 
+### Hodge spectral realization for d≥5
+- Graph Laplacian (L₀) spectral embedding works for volume-optimal polytopes in d=3,4 (Blind–Mani–Kalai regime) but fails in d≥5.
+- The Hodge 1-Laplacian L₁ = B₁B₁ᵀ + B₂B₂ᵀ on edges encodes the full simplicial structure, not just the graph.
+- **Naive approach (averaging edge eigenvectors to vertices) fails** — tested, no improvement over L₀.
+- **Better approach**: use Hodge decomposition of edge flows to reconstruct the Gram matrix.
+  - Assign target edge flows Y[i,j] = ⟨v_i, v_j⟩ on the 1-skeleton.
+  - Since H¹(S^{d-1}) = 0 for the polytope boundary, the harmonic component vanishes.
+  - The flow is purely gradient: Y = δ⁰(φ) for some vertex potential φ.
+  - Invert the gradient to get vertex coordinates (least-squares in gradient subspace).
+- Reference: Wei, Wee, Laurent, Xia (2022) "Hodge theory-based biomolecular data analysis" PMC9188576 — uses Hodge decomposition of edge flows for structural analysis. The gradient/curl/harmonic decomposition is exactly what we need.
+- Also: Forman (2003) "Bochner's method for cell complexes" for the Bochner–Weitzenböck decomposition L₁ = □₁ + F₁ and Forman–Ricci curvature.
+- Also: sheaf Laplacians (preserving fiber structure over vertices) may be a cleaner framework.
+- **Goal**: a spectral realization algorithm that works in all dimensions, not just d≤4.
+
+### Inscribability oracle pipeline
+- Use the spectral realization tool (d≤4) or cone/Volkov method as an oracle for inscribability.
+- Enumerate simplicial 4-polytope combinatorial types (Firsching's data for small N, polymake for larger).
+- For each type, attempt inscribed realization. Success = certified inscribable.
+- Extract combinatorial features (f-vector, degree sequence, graph spectrum, flag f-numbers).
+- Train a neural net classifier to predict inscribability from features.
+- If the classifier achieves high accuracy from simple features, that's evidence for a Rivin-type characterization in d=4.
+- GPT-5.4's explicit algorithm (spectral init + facet-support LBFGS on S³) could serve as a fast oracle — needs to be stress-tested on non-inscribable types to confirm it correctly fails.
+
 ## Medium Priority
 
 ### Benchmark test case generation

@@ -1,0 +1,8 @@
+# H^3 ideal polyhedron volume maximization
+# CMA-ES on Bloch-Wigner volume, 20 restarts x 800N evals (10 for N>=70)
+# Date: 2026-04-10
+
+N= 30: vol=46.485648 paper=46.231 (100.6%)
+N= 50: vol=84.971073 paper=83.990 (101.2%)
+N= 70: vol=123.892840 NEW
+N=100: vol=182.670849 NEW

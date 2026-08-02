@@ -1,0 +1,10 @@
+step 5000: best=-2.853069
+step 10000: best=-2.147350
+step 15000: best=-2.345208
+step 20000: best=-2.054805
+step 25000: best=-3.842381
+step 30000: best=-2.147350
+step 35000: best=-2.771281
+step 40000: best=-2.853069
+step 45000: best=-3.649581
+step 50000: best=-1.929306

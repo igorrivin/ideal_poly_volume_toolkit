@@ -28,9 +28,25 @@ import argparse
 import json
 import math
 import os
+# Cap BLAS / OpenMP thread counts BEFORE importing numpy/scipy/torch.
+# Without this, a fresh validation run can spin up 20+ threads per task
+# on large core counts, thrashes the scheduler, and (worse) starves any
+# concurrent training jobs.
+os.environ.setdefault("OMP_NUM_THREADS", "2")
+os.environ.setdefault("MKL_NUM_THREADS", "2")
+os.environ.setdefault("OPENBLAS_NUM_THREADS", "2")
+os.environ.setdefault("NUMEXPR_NUM_THREADS", "2")
+
+import sys
 import time
 from pathlib import Path
 from typing import Any, Dict, List, Optional
+
+# Line-buffered stdout so progress shows in real time even under `tee`.
+try:
+    sys.stdout.reconfigure(line_buffering=True)
+except AttributeError:
+    pass
 
 import numpy as np
 

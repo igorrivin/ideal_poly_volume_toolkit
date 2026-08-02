@@ -1,0 +1,763 @@
+\documentclass[11pt]{article}
+
+\usepackage{amsmath,amssymb,amsthm}
+\usepackage{graphicx}
+\usepackage{hyperref}
+\usepackage{booktabs}
+
+\newtheorem{theorem}{Theorem}
+\newtheorem{conjecture}{Conjecture}
+\newtheorem{proposition}{Proposition}
+\newtheorem{remark}{Remark}
+
+\title{On the Variance of the Volume Deficit of Random Inscribed
+Polytopes in~$S^2$}
+
+\author{Igor Rivin}
+
+\date{\today}
+
+\begin{document}
+
+\maketitle
+
+\begin{abstract}
+Let $P_N$ denote the convex hull of $N$ independent uniformly distributed
+points on the unit sphere $S^2 \subset \mathbb{R}^3$.  It is known
+(Buchta--M\"uller--Tichy, Akopyan--Edelsbrunner--Nikitenko) that the expected
+volume satisfies the exact formula
+$\mathbb{E}[\operatorname{vol}(P_N)] = \frac{4\pi}{3}\,
+\frac{(N-1)(N-2)(N-3)}{(N+1)(N+2)(N+3)}$,
+which gives $\mathbb{E}[\Delta_N] = 16\pi/N + O(1/N^2)$ for the volume
+deficit $\Delta_N = \operatorname{vol}(B^3) - \operatorname{vol}(P_N)$.
+We present numerical evidence for the exact value of the variance constant:
+\[
+  \operatorname{Var}(\Delta_N) \;=\; \frac{576\pi}{N^3} + o(1/N^3).
+\]
+Normalizing by $\operatorname{vol}(B^3) = 4\pi/3$, the variance constant
+becomes $324/\pi$.  This appears not to have been computed in the literature,
+despite extensive work on the asymptotic theory of random polytopes; it
+answers a question posed by Akopyan, Edelsbrunner, and
+Nikitenko~\cite{AEN2021}.  We also verify the central limit theorem for the
+standardized deficit, with skewness and excess kurtosis both converging to
+zero.
+\end{abstract}
+
+% ============================================================================
+\section{Introduction}
+% ============================================================================
+
+The study of random polytopes---convex hulls of random point sets---is a
+classical subject in stochastic geometry, with origins in the work of
+R\'enyi and Sulanke~\cite{RS1963,RS1964}.  A basic question is: how
+well does the convex hull of $N$ random points approximate the ambient
+convex body as $N \to \infty$?
+
+For the model considered here, $N$ independent points are sampled
+uniformly on the unit sphere $S^{d-1} \subset \mathbb{R}^d$, and
+$P_N$ denotes their convex hull.  Since every point lies on $S^{d-1}$,
+every point is a vertex of $P_N$, and $P_N$ is an inscribed polytope
+approximating the unit ball $B^d$ from within.  The volume deficit
+$\Delta_N = \operatorname{vol}(B^d) - \operatorname{vol}(P_N)$
+measures the quality of this approximation.
+
+The expected volume of $P_N$ for $d = 3$ is known exactly.
+Buchta, M\"uller, and Tichy~\cite{BMT1985} computed the expected
+intrinsic volumes of random polytopes inscribed in spherical
+bodies; Kabluchko, Temesvari, and Thal\"e~\cite{KTT2019} obtained
+equivalent results for beta polytopes.  Akopyan, Edelsbrunner,
+and Nikitenko~\cite{AEN2021} gave an elegant direct proof and
+highlighted the particularly clean form for~$S^2$:
+\begin{equation}\label{eq:exact-mean}
+  \mathbb{E}[\operatorname{vol}(P_N)]
+  = \frac{4\pi}{3}\,
+    \frac{(N-1)(N-2)(N-3)}{(N+1)(N+2)(N+3)},
+\end{equation}
+from which the volume deficit satisfies
+\begin{equation}\label{eq:deficit-exact}
+  \mathbb{E}[\Delta_N]
+  = \frac{4\pi}{3}\cdot
+    \frac{12N^2 + 12}{(N+1)(N+2)(N+3)}
+  = \frac{16\pi}{N} - \frac{96\pi}{N^2} + O(1/N^3).
+\end{equation}
+
+The asymptotic behavior of $\Delta_N$ has been studied extensively
+beyond the mean.  For smooth convex bodies, B\'ar\'any~\cite{Barany2008}
+surveys the general theory; Reitzner~\cite{Reitzner2005} establishes
+central limit theorems for the volume of random polytopes;
+Richardson, Vu, and Wu~\cite{RVW2007,RVW2008} treat the inscribed
+case (vertices on the boundary), proving variance bounds
+$c_1/N^3 \le \operatorname{Var}(\Delta_N) \le c_2/N^3$ for $d = 3$
+and establishing a CLT; Calka, Schreiber, and Yukich~\cite{CSY2013}
+establish Brownian limits for related functionals.
+
+Despite this work, the \emph{explicit value} of the variance constant
+\[
+  \operatorname{Var}(\Delta_N) \sim \frac{C_2}{N^3}
+\]
+does not appear to have been computed for $d = 3$.  Akopyan,
+Edelsbrunner, and Nikitenko~\cite{AEN2021} explicitly pose the
+question of determining the \emph{distributions} of the normalized
+intrinsic volume deficiencies (their Open Question~5).  In this
+note, we answer part of that question by determining $C_2$
+numerically to high precision and conjecturing its exact value.
+
+% ============================================================================
+\section{Experimental Setup}
+% ============================================================================
+
+We sample $N$ independent uniform points on $S^2$ by drawing
+three-dimensional standard Gaussian vectors and normalizing to unit
+length.  For each sample, we compute the convex hull volume using the
+Quickhull algorithm (via \texttt{scipy.spatial.ConvexHull}).  The
+deficit $\Delta_N = \operatorname{vol}(B^3) -
+\operatorname{vol}(P_N)$ is recorded for each trial.
+
+For each value of $N$, we compute $M$ independent trials and record
+the sample statistics of the rescaled deficit $N \cdot \Delta_N$ and
+the variance-rescaled quantity $N^{3/2} \cdot \Delta_N$.  Specifically,
+we compute:
+\begin{itemize}
+  \item The sample mean of $N \cdot \Delta_N$ (estimating $C_1$),
+  \item $N^{3/2}$ times the sample standard deviation of $\Delta_N$
+    (estimating $\sqrt{C_2}$),
+  \item The sample skewness and excess kurtosis of $N \cdot \Delta_N$
+    (testing the CLT).
+\end{itemize}
+
+We use $M = 500{,}000$ trials for $N \le 10{,}000$ and $M =
+50{,}000$--$200{,}000$ for larger $N$ (up to $N = 50{,}000$).
+Computation is parallelized over 64 CPU cores.
+
+% ============================================================================
+\section{Results}
+% ============================================================================
+
+\subsection{The mean: verification of the exact formula}
+
+Table~\ref{tab:data} reports the rescaled mean deficit $\hat{C}_1(N)
+= N \cdot \overline{\Delta_N}$ for each $N$.  The sequence increases
+monotonically toward $16\pi = 50.26548\ldots$, matching the
+leading term of the exact formula~\eqref{eq:deficit-exact}.  In
+fact, the agreement extends beyond the leading term: for each~$N$,
+the sample mean of $\Delta_N$ agrees with the exact rational
+expression~\eqref{eq:deficit-exact} to within statistical error,
+providing a strong consistency check on our computations.
+
+The exact formula also yields the full asymptotic expansion.
+In terms of the fractional deficit,
+\[
+  \mathbb{E}\!\left[\frac{\Delta_N}{\operatorname{vol}(B^3)}\right]
+  = \frac{12}{N} - \frac{72}{N^2} + \frac{312}{N^3} - \cdots,
+\]
+where the leading normalized constant $12$ is particularly striking
+in its simplicity.
+
+\subsection{The variance constant}
+
+We estimate $\sqrt{C_2}$ via $N^{3/2} \cdot
+\operatorname{sd}(\Delta_N)$.  Table~\ref{tab:data} shows this
+quantity converging to approximately $42.54$.  We observe that
+$24\sqrt{\pi} = 42.5389\ldots$, so that $C_2 = 576\pi$.
+
+\begin{conjecture}\label{conj:var}
+Under the same hypotheses,
+\[
+  \operatorname{Var}\!\left[\operatorname{vol}(B^3) -
+  \operatorname{vol}(P_N)\right] = \frac{576\pi}{N^3} + o(1/N^3).
+\]
+Equivalently, the variance of the fractional deficit is $324/(\pi
+N^3) + o(1/N^3)$.
+\end{conjecture}
+
+\subsection{Central limit theorem}
+
+The skewness and excess kurtosis of $N \cdot \Delta_N$ both
+decrease toward zero as $N$ increases (Table~\ref{tab:data}),
+consistent with the CLT established by Richardson, Vu, and
+Wu~\cite{RVW2008}.  Combining the exact mean with
+Conjecture~\ref{conj:var}, the standardized deficit
+\[
+  Z_N = \frac{\Delta_N - \mathbb{E}[\Delta_N]}{24\sqrt{\pi}\,/\,N^{3/2}}
+\]
+converges in distribution to $\mathcal{N}(0,1)$.
+
+\begin{table}[t]
+\centering
+\caption{Numerical estimates of the deficit constants.  $\hat{C}_1(N) = N \cdot \overline{\Delta_N}$ estimates the mean constant;
+$\hat{\sigma}(N) = N^{3/2} \cdot \operatorname{sd}(\Delta_N)$ estimates $\sqrt{C_2}$.  Reference values: $16\pi \approx 50.2655$, $24\sqrt{\pi} \approx 42.5389$.}
+\label{tab:data}
+\smallskip
+\begin{tabular}{@{}rcccc@{}}
+\toprule
+$N$ & $\hat{C}_1(N)$ & $\hat{\sigma}(N)$ & Skewness & Ex.\ Kurtosis \\
+\midrule
+10      & 29.589 &  8.646 & 0.363 & $-0.109$ \\
+20      & 37.937 & 18.682 & 0.725 & 0.877 \\
+50      & 44.723 & 30.454 & 0.795 & 1.334 \\
+100     & 47.374 & 36.007 & 0.683 & 1.051 \\
+200     & 48.790 & 39.220 & 0.531 & 0.643 \\
+500     & 49.667 & 41.259 & 0.357 & 0.304 \\
+1\,000  & 49.965 & 41.970 & 0.252 & 0.159 \\
+2\,000  & 50.116 & 42.342 & 0.187 & 0.088 \\
+5\,000  & 50.205 & 42.671 & 0.115 & 0.034 \\
+10\,000 & 50.235 & 42.787 & 0.082 & 0.020 \\
+20\,000 & 50.251 & 42.677 & 0.058 & 0.005 \\
+30\,000 & 50.255 & 42.535 & 0.047 & 0.013 \\
+50\,000 & 50.259 & 42.790 & 0.027 & 0.017 \\
+\midrule
+$\infty$ & $16\pi \approx 50.265$ & $24\sqrt{\pi} \approx 42.539$ & 0 & 0 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+% ============================================================================
+\section{Discussion}
+% ============================================================================
+
+\subsection{Cap-volume heuristic for the variance}
+
+The deficit $\Delta_N$ is the total volume of the $2N-4$ spherical
+caps cut off by the faces of $P_N$.  A typical Delaunay triangle
+has area $\sim 4\pi/N$, so the cap height is $h \sim 1/N$ and
+the cap volume is $V_{\mathrm{cap}} \sim \pi/N^2$.  The variance
+of a single cap volume is therefore $\operatorname{Var}(V_{\mathrm{cap}})
+\sim c/N^4$.  Since cap volumes are only weakly dependent (caps
+whose triangles are well-separated on the sphere are nearly
+independent), summing $\sim 2N$ weakly dependent terms gives
+\[
+  \operatorname{Var}(\Delta_N) \sim 2N \cdot c/N^4 = O(1/N^3),
+\]
+consistent with the rigorous bounds of Richardson, Vu, and
+Wu~\cite{RVW2008}.  However, extracting the exact constant
+$576\pi$ from this heuristic would require the precise
+distribution of cap volumes and their covariance structure.
+
+\subsection{Relation to the literature}
+
+The exact formula~\eqref{eq:exact-mean} for the expected volume
+was first obtained (in more general form) by Buchta, M\"uller,
+and Tichy~\cite{BMT1985} and later rederived by Kabluchko,
+Temesvari, and Thal\"e~\cite{KTT2019} in the framework of beta
+polytopes.  Akopyan, Edelsbrunner, and Nikitenko~\cite{AEN2021}
+highlighted the clean form for~$S^2$ and gave an elegant
+combinatorial proof using Crofton's formula.  They also posed
+the question of determining the \emph{distributions} of the
+normalized deficiencies (their Open Question~5); our variance
+conjecture provides a partial answer.
+
+Richardson, Vu, and Wu~\cite{RVW2008} prove that for
+$d$-dimensional convex bodies with $C^2$ boundary, the variance
+of the volume of the inscribed random polytope satisfies
+$\operatorname{Var} \asymp N^{-(d+3)/(d-1)}$, which gives
+$N^{-3}$ for $d = 3$.  Their methods involve Poissonization and
+yield unspecified constants; the explicit value $576\pi$ does not
+appear to follow from their framework.
+
+\subsection{Higher dimensions}\label{sec:higher-d}
+
+The exact mean formula generalizes to all~$d$: for $N$ uniform
+points on $S^{d-1}$, the expected volume of the convex hull is
+\[
+  \mathbb{E}[\operatorname{vol}(P_N)]
+  = \operatorname{vol}(B^d) \prod_{k=1}^{d} \frac{N-k}{N+k}.
+\]
+The normalized leading term of the fractional deficit is
+$d(d+1)/N$, giving $12$ for $d = 3$, $20$ for $d = 4$, $30$
+for $d = 5$, and $d(d+1)$ in general.  (Note: the pattern is
+$d(d+1)$, not $2\cdot d!$ as might be guessed from the case
+$d = 3$ alone.)
+
+However, the deficit scaling changes qualitatively for $d \ge 4$.
+For points on $S^{d-1}$ with $d \ge 4$, the expected deficit
+scales as $N^{-2/(d-1)}$, not $N^{-1}$.  (The exponent
+$2/(d-1)$ arises from the curvature of the
+sphere~\cite{Muller1990}; for $d = 3$ one has $2/(d-1) = 1$,
+recovering the $N^{-1}$ scaling.)  The product formula above
+gives exact rational expressions for all~$N$, but the leading
+asymptotics for $d = 4$ become
+\[
+  \mathbb{E}[\Delta_N] \sim C_d \cdot N^{-2/3},
+\]
+with convergence to the asymptotic regime that is much slower
+than in $d = 3$: the correction terms are $O(N^{-1/3})$
+relative to the leading term, compared to $O(N^{-1})$ for
+$d = 3$.
+
+We performed experiments for $d = 4$ with $N$ up to
+$100{,}000$.  The rescaled deficit $N^{2/3}\Delta_N$ converges
+very slowly, reaching $47.53$ at $N = 100{,}000$ (between the
+candidates $15\pi \approx 47.12$ and $48$).  The variance
+exponent, which Richardson, Vu, and Wu~\cite{RVW2008} predict
+to be $(d+3)/(d-1) = 7/3$ for $d = 4$, is confirmed by our
+data: the local log-log slopes of $\operatorname{Var}(\Delta_N)$
+converge to $2.33$ by $N = 20{,}000$.  However, the variance
+\emph{constant} has not yet converged at $N = 100{,}000$,
+reflecting the same slow-convergence phenomenon.
+Table~\ref{tab:data4d} summarizes the $d = 4$ results.
+
+\begin{table}[t]
+\centering
+\caption{Volume deficit statistics for $d = 4$.
+$N^{2/3}\overline{\Delta_N}$ estimates the mean constant;
+$N^{7/3}\widehat{\operatorname{Var}}$ tests the RVW variance
+scaling.  The log-log slope of the variance converges to the
+predicted $7/3 \approx 2.333$.}
+\label{tab:data4d}
+\smallskip
+\begin{tabular}{@{}rccc@{}}
+\toprule
+$N$ & $N^{2/3}\overline{\Delta_N}$ & $N^{7/3}\widehat{\operatorname{Var}}$ & Var.\ slope \\
+\midrule
+100     & 39.96 &  167.5 & --- \\
+200     & 42.67 &  236.9 & 1.83 \\
+500     & 44.89 &  305.5 & 2.06 \\
+1\,000  & 45.89 &  340.2 & 2.18 \\
+2\,000  & 46.52 &  363.2 & 2.24 \\
+5\,000  & 47.02 &  380.2 & 2.28 \\
+10\,000 & 47.24 &  390.3 & 2.30 \\
+20\,000 & 47.38 &  391.7 & 2.33 \\
+50\,000 & 47.48 &  399.4 & 2.31 \\
+100\,000& 47.53 &  408.3 & 2.30 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Open questions}
+
+\begin{enumerate}
+  \item \emph{Prove} Conjecture~\ref{conj:var}.  The variance
+    computation requires understanding the covariance structure
+    of cap volumes across faces of the Delaunay triangulation,
+    which goes beyond the techniques used for the mean
+    in~\cite{AEN2021}.
+  \item Compute the analogous variance constant for $d = 4$.
+    Our experiments confirm the RVW exponent $7/3$ but do not
+    yet pin down the constant.  Is there a clean closed form
+    analogous to $576\pi$?
+  \item Characterize the rate of convergence in the CLT.  Our
+    data for $d = 3$ show persistent positive skewness
+    $\sim N^{-1/2}$, suggesting that a Berry--Esseen bound
+    of order $N^{-1/2}$ may be sharp.
+  \item Determine the full distribution of the normalized
+    deficiency, answering the remainder of Open Question~5
+    of~\cite{AEN2021}.
+\end{enumerate}
+
+% ============================================================================
+\section{Ideal polytope volumes in hyperbolic 4-space}\label{sec:hyp4d}
+% ============================================================================
+
+We now turn from Euclidean inscribed polytopes to ideal polytopes
+in hyperbolic space.  An \emph{ideal polytope} in $\mathbb{H}^4$
+is the convex hull of $N$ points on $S^3 = \partial\mathbb{H}^4$.
+Its hyperbolic volume can be computed by decomposing into ideal
+4-simplices via Delaunay triangulation and summing their volumes
+using the Hopf--Poincar\'e--Schl\"afli angle formula.
+
+\subsection{Volume of an ideal 4-simplex}
+
+For a single ideal 4-simplex $[\infty, v_1, v_2, v_3, v_4]$ in
+the upper half-space model, the volume is an \emph{exact affine
+function} of the ten codimension-2 dihedral angles:
+\begin{equation}\label{eq:vol4simplex}
+  \operatorname{Vol}_4(\Delta)
+  = \frac{\pi}{3}\Bigl(4\pi - \sum_{k=1}^{10}\theta_k\Bigr).
+\end{equation}
+The Euclidean tetrahedron $T = \operatorname{conv}(v_1,\ldots,v_4)$
+determines all ten angles: six are the Euclidean dihedral angles
+$\phi_{ij}$ of~$T$, and four are $\arccos(d_\ell/R)$, where $R$
+is the circumradius and $d_\ell$ is the signed distance from the
+circumcenter to the face opposite~$v_\ell$.
+
+Because formula~\eqref{eq:vol4simplex} involves only $\arccos$
+of algebraic numbers, the volume can be evaluated to \emph{arbitrary
+precision} using extended arithmetic---no numerical integration
+is needed.
+
+\begin{remark}
+The regular ideal 4-simplex has all ten dihedral angles equal to
+$\arccos(1/3)$, giving
+$\operatorname{Vol}_4(\Delta_{\mathrm{reg}})
+= \frac{\pi}{3}(4\pi - 10\arccos(1/3)) \approx 0.26890$.
+\end{remark}
+
+\subsection{Volume distribution for random ideal 4-polytopes}
+
+For $N$ uniformly random points on $S^3$, we computed the total
+hyperbolic 4-volume of the corresponding ideal polytope
+($100{,}000$ samples per vertex count, $N = 6$ to $100$).
+Key findings:
+
+\begin{enumerate}
+\item The expected volume grows as $\mathbb{E}[V] \approx cN -
+  b\sqrt{N}$, with $c \approx 1.10$ and a substantial $\sqrt{N}$
+  correction.
+
+\item A beta distribution fits the marginal volume distribution
+  better than a normal (KS statistics $0.002$--$0.005$ for
+  $N \ge 15$), mirroring the 3D behavior.  However, the beta
+  parameters $\alpha$, $\beta$ scale as $N^{1.40}$ and $N^{1.20}$
+  respectively, without the clean interpretation found in 3D.
+
+\item The explanation lies in the \emph{fluctuating Delaunay
+  combinatorics}.  In 3D, the number of Delaunay triangles for
+  $N$ points on~$S^2$ is essentially deterministic ($2N - 4$
+  minus boundary).  In 4D, the number of Delaunay tetrahedra for
+  $N$ points on~$S^3$ has substantial variance: $\mathrm{CV}
+  \approx 13\%$ at $N = 10$, still $1.7\%$ at $N = 100$.
+
+\item The volume decomposes as $V = n \cdot \bar{v}$, where $n$
+  is the number of Delaunay tetrahedra and $\bar{v}$ is the mean
+  per-tetrahedron volume.  Both $\bar{v}$ and $n$ are
+  approximately normally distributed, but they are \emph{negatively
+  correlated} ($\rho \approx -0.18$ at $N = 100$): denser
+  triangulations produce more but thinner simplices.
+
+\item Conditioned on $n$, the volume is well-described by a normal
+  distribution (KS~$\approx 0.02$), while the beta fit fails.
+  The per-tetrahedron volume $\bar{v} = V/n$ is also normally
+  distributed.  The marginal beta-like shape arises from the
+  product of two negatively correlated normals, not from any
+  intrinsic beta structure.
+\end{enumerate}
+
+\subsection{Optimal ideal 4-polytopes}
+
+For each $N$, we maximized the total hyperbolic volume over all
+configurations of $N$ points on~$S^3$, using L-BFGS-B with
+200 random restarts and two-phase polishing.
+Table~\ref{tab:opt4d} summarizes the results.
+
+\begin{table}[t]
+\centering
+\caption{Optimal ideal 4-polytopes.  The $f$-vector
+$(f_0, f_1, f_2, f_3)$ counts vertices, edges, triangles, and
+tetrahedra of the boundary.  $|\mathrm{Aut}|$ is the automorphism
+group order of the 1-skeleton (meaningful only when the skeleton
+is not the complete graph~$K_N$, i.e., $N \ge 7$).}
+\label{tab:opt4d}
+\smallskip
+\begin{tabular}{@{}rrcrl@{}}
+\toprule
+$N$ & Volume & $f$-vector & $|\mathrm{Aut}|$ & Identification \\
+\midrule
+ 5  & 0.26890 & $(5,10,10,5)$      & 120 & Regular 4-simplex \\
+ 6  & 0.58783 & $(6,15,18,9)$      & 720$^*$ & Neighborly ($K_6$) \\
+ 7  & 1.02360 & $(7,19,24,12)$     &  48 & \\
+ 8  & 1.77143 & $(8,24,32,16)$     & 384 & 16-cell (hyperoctahedron) \\
+ 9  & 2.31385 & $(9,29,40,20)$     &  80 & \\
+10  & 3.00910 & $(10,35,50,25)$    & 200 & \\
+12  & 4.37720 & $(12,46,68,34)$    &   8 & \\
+16  & 7.79862 & $(16,69,106,53)$   &   2 & \\
+20  & 11.9358 & $(20,92,144,72)$   &  16 & \\
+30  & 22.0037 & $(30,154,248,124)$ &   1 & \\
+\bottomrule
+\end{tabular}
+\smallskip
+
+{\footnotesize $^*$For $N \le 6$, points on $S^3$ in general
+position form a neighborly polytope with 1-skeleton~$K_N$, so
+$|\mathrm{Aut}(K_N)| = N!$ is not informative about geometric
+symmetry.}
+\end{table}
+
+The optimizer for $N = 8$ is the \emph{16-cell}
+(4-cross-polytope), with $f$-vector $(8,24,32,16)$ and
+$|\mathrm{Aut}| = 384 = 2^4 \cdot 4!$ (the hyperoctahedral
+group~$B_4$).  Using the exact coordinates $\pm e_i \in S^3$
+and stereographic projection, each of the 8~congruent ideal
+4-simplices has volume computable to arbitrary precision:
+\[
+  V_{\mathrm{tet}} = \frac{\pi}{3}\Bigl(\frac{3\pi}{2}
+  - 6\arccos\frac{1}{\sqrt{3}} + \arccos\frac{1}{3}\Bigr),
+  \qquad
+  V_{\mathrm{16\text{-}cell}} = 8\,V_{\mathrm{tet}}
+  \approx 1.77143.
+\]
+The extreme symmetry of the 16-cell also admits a direct
+computation in the Klein model: the hyperbolic volume
+element is $dV = d^4x\,(1 - |x|^2)^{-5/2}$, and the
+16-cell is the $L^1$~unit ball $\{x : \sum|x_i| \le 1\}$,
+so the volume is $16$ times a simplex integral.  This yields
+the equivalent closed form
+\begin{equation}\label{eq:16cell}
+  V_{\mathrm{16\text{-}cell}}
+  = \frac{4\pi^2}{3} - \frac{32\pi}{3}\,\arcsin\frac{1}{3}
+  = \frac{4\pi^2}{15} - \frac{16}{5}\,v_4,
+\end{equation}
+where $v_4 = \frac{10\pi}{3}\arcsin(1/3) - \frac{\pi^2}{3}$
+is the volume of the regular ideal 4-simplex.
+
+In contrast, the optimizer for $N = 9$ has $|\mathrm{Aut}| = 80$
+with two vertex orbits (of sizes 4 and~5), degree sequence
+$[7^4, 6^5]$, and 10 congruent ideal 4-simplices involving
+exactly 5~distinct angle values (including $2\pi/5$ and $\pi/2$).
+However, all $\binom{9}{2} = 36$ pairwise inner products on~$S^3$
+are distinct: the graph automorphism group is purely combinatorial,
+not a metric symmetry.  The two non-rational angles
+$\theta_1 \approx 51.03°$ and $\theta_2 \approx 62.81°$ satisfy
+$\cos(2\theta_1) = 2\cos^2\theta_1 - 1$ (accounting for the
+fifth angle type at $102.05°$), but do not appear to be
+expressible in elementary closed form.  No Klein-model reduction
+is available, and the volume $V(9) \approx 2.31385$ is accessible
+only through the angle formula or numerical optimization.
+
+\paragraph{Comparison with symmetry-based constructions.}
+An appealing strategy for constructing large-volume ideal
+4-polytopes is to exploit the supplementarity
+$\arccos(1/3) + \arccos(-1/3) = \pi$ of the dihedral angles of
+the regular ideal 4-simplex and the ideal 16-cell: gluing a
+regular simplex onto one facet of the 16-cell produces a convex
+ideal polytope with 9 vertices and volume
+$V_{\mathrm{16\text{-}cell}} + v_4 \approx 2.040$.  While this
+exceeds the mean volume of a random 9-vertex configuration
+($\mathbb{E}[V] \approx 1.08$), it falls $12\%$ short of the
+actual optimum $V(9) \approx 2.314$.  The optimizer achieves its
+advantage not through regularity of the individual simplices but
+through packing efficiency: 10~simplices at
+$\approx 0.231$ each, versus $9$~simplices (8~at
+$\approx 0.221$ plus 1~at $0.269$) in the glued construction.
+This illustrates a general principle: \emph{maximal symmetry does
+not imply maximal volume}, and the gap between symmetry-based
+lower bounds and actual optima grows with~$N$.
+
+\paragraph{Surface area and isoperimetric ratio.}
+Each boundary facet of an ideal 4-polytope is an ideal tetrahedron
+in a totally geodesic $\mathbb{H}^3 \subset \mathbb{H}^4$; its
+hyperbolic 3-volume can be computed by the classical Lobachevsky
+formula.  The total 3-surface area
+$A = \sum_{\text{facets}} \operatorname{Vol}_3(F)$ defines a
+natural companion to the 4-volume.
+Table~\ref{tab:surface} compares the maximizers of volume, surface
+area, and the isoperimetric ratio $V/A$ for small~$N$.
+
+\begin{table}[t]
+\centering
+\caption{Three optimization objectives for ideal 4-polytopes.
+For $N \le 10$ (excluding $N = 6$), all three objectives are
+maximized by the \emph{same} polytope.  At $N = 6$ and
+$N \ge 12$ the optimizers diverge.}
+\label{tab:surface}
+\smallskip
+\begin{tabular}{@{}r|ccc|ccc|cc@{}}
+\toprule
+& \multicolumn{3}{c|}{Max Volume} & \multicolumn{3}{c|}{Max Area} & \multicolumn{2}{c}{Max $V/A$} \\
+$N$ & $V$ & $A$ & $V/A$ & $A$ & $V$ & $V/A$ & $V/A$ & same? \\
+\midrule
+5   & 0.269 & 5.074 & 0.053 & 5.075 & 0.269 & 0.053 & 0.053 & yes \\
+6   & 0.588 & 7.818 & 0.075 & 8.119 & 0.538 & 0.066 & 0.075 & V=iso$\ne$A \\
+7   & 1.024 & 11.83 & 0.087 & 11.83 & 1.024 & 0.087 & 0.087 & yes \\
+8   & 1.771 & 16.24 & 0.109 & 16.24 & 1.771 & 0.109 & 0.109 & yes \\
+9   & 2.314 & 19.96 & 0.116 & 19.96 & 2.314 & 0.116 & 0.116 & yes \\
+10  & 3.009 & 23.91 & 0.126 & 23.91 & 3.009 & 0.126 & 0.126 & yes \\
+12  & 4.377 & 32.33 & 0.135 & 32.43 & 4.015 & 0.124 & 0.136 & all differ \\
+16  & 7.799 & 50.49 & 0.154 & 50.74 & 7.785 & 0.153 & 0.155 & all differ \\
+20  & 11.86 & 70.35 & 0.169 & 70.58 & 11.81 & 0.167 & 0.168 & all differ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+A striking finding: for $N \in \{5, 7, 8, 9, 10\}$, the same
+polytope simultaneously maximizes all three objectives (the
+entries marked ``yes'' in Table~\ref{tab:surface}).  These are
+precisely the highly symmetric optimizers---the regular simplex
+($N = 5$), the 16-cell ($N = 8$), and the configurations with
+$|\mathrm{Aut}| \ge 48$.  At $N = 6$, the surface-area maximizer
+has 8~boundary facets all at maximum volume~$v_3$ (the regular
+ideal tetrahedron in $\mathbb{H}^3$), while the volume maximizer
+has 9~facets at sub-maximal individual volume.  For $N \ge 12$,
+all three objectives diverge, with the surface-area maximizer
+favoring fewer but more regular boundary tetrahedra.
+
+\paragraph{Dihedral angles and rationality.}
+For each optimizer, we examined whether the dihedral angles are
+rational multiples of~$\pi$ (which would be needed to tile
+$\mathbb{H}^4$ by copies of the polytope and obtain a hyperbolic
+manifold).  The cosines of the dihedral angles are
+\emph{algebraic numbers of low degree}---square roots of
+rationals---but the angles themselves are generically
+\emph{not} rational multiples of~$\pi$.  In detail:
+\begin{itemize}
+\item $N=5$: all angles $\arccos(1/3)$;
+\item $N=6$: angles $\arccos(\sqrt{3/7})$, $\arccos(-1/7)$, $2\pi/3$;
+\item $N=8$: angles $\arccos(1/\!\sqrt{3})$, $\pi/2$, $\arccos(-1/3)$;
+\item $N=9$: includes $2\pi/5$ and $\pi/2$ alongside irrational-over-$\pi$ angles.
+\end{itemize}
+Only $\pi/2$, $2\pi/3$, and $2\pi/5$ appear as rational multiples
+of~$\pi$; the dominant angles are irrational over~$\pi$ in every
+case.  This means these optimal ideal 4-polytopes cannot directly
+tile $\mathbb{H}^4$ to produce manifolds.
+
+A sharp symmetry phase transition occurs around $N = 12$:
+for $N \le 10$, the optimizers have large automorphism groups
+($48$--$384$, excluding the trivial $K_N$ cases), few distinct
+angle values ($1$--$8$), and all tetrahedra are nearly congruent.
+For $N \ge 12$, symmetry collapses to $|\mathrm{Aut}| \le 16$,
+with hundreds of distinct angles and irregular structure.
+
+\subsection{Facet-parameterized optimization}
+
+The vertex-based optimization of Section~\ref{tab:opt4d}
+parameterizes ideal 4-polytopes by their vertices on~$S^3$
+and fixes the vertex count~$N$.  A complementary approach
+parameterizes by \emph{facet normals}: given $f$~unit
+vectors $u_1, \ldots, u_f \in S^3$, define
+\[
+  P(h) = \bigl\{ x \in \mathbb{R}^4 : u_i \cdot x \le h_i
+  \;\text{for all } i \bigr\}.
+\]
+This polytope has at most~$f$ facets, with the number of vertices
+determined by the arrangement of the bounding hyperplanes.
+To obtain an \emph{ideal} polytope, we require all vertices of~$P(h)$
+to lie on~$S^3$, i.e., $|v|^2 = 1$ for each vertex~$v$.
+
+For a fixed combinatorial type (determined by the normals~$u_i$
+at a probe value of~$h$), each vertex is a linear function
+$v_j = A_j h$ of the support numbers, where $A_j$ encodes the
+four active hyperplane constraints at vertex~$j$.  The ideal
+condition $|v_j|^2 = 1$ becomes a system of quadratic equations
+in the~$f$ unknowns~$h_i$, which we solve by Levenberg--Marquardt
+to machine precision.  This inner solver succeeds for $30$--$70\%$
+of random normal configurations, with the success rate depending
+on~$f$.
+
+\paragraph{Two-level optimization.}
+To maximize volume over the facet normals, we use a two-level
+scheme: the outer loop optimizes the $3f$~hyperspherical angles
+parameterizing the normals on~$S^3$ via Powell's method, while
+the inner loop solves the ideal constraint for each candidate
+set of normals.  Table~\ref{tab:facet_opt} summarizes the results.
+
+\begin{table}[t]
+\centering
+\caption{Facet-parameterized optimal ideal 4-polytopes.
+$f$~denotes the number of facet normals, $N$~the emergent vertex
+count, and $V$~the hyperbolic 4-volume.  The scan column gives
+the best volume from 100~random normal configurations (inner solve
+only); the optimized column includes the outer Powell
+optimization over normals.}
+\label{tab:facet_opt}
+\smallskip
+\begin{tabular}{@{}rrrrrr@{}}
+\toprule
+$f$ & $N$ & $V_{\mathrm{scan}}$ & $V_{\mathrm{opt}}$
+    & Improvement & $V/f^2$ \\
+\midrule
+ 8  &  18 &  5.56 &   8.01 & 44\% & 0.125 \\
+10  &  30 & 12.37 &  15.92 & 29\% & 0.159 \\
+12  &  41 & 18.68 &  26.65 & 43\% & 0.185 \\
+16  &  61 & 36.71 &  41.51 & 13\% & 0.162 \\
+20  &  91 & 57.07 &  68.60 & 20\% & 0.172 \\
+24  & 111 & 78.42 &  84.27 &  8\% & 0.146 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Several features stand out.  First, the outer optimization
+consistently improves volumes by $8$--$44\%$ over the best
+random scan, demonstrating that the normal directions matter
+significantly.  Second, the vertex count~$N$ is not fixed by~$f$
+but emerges from the dual construction: the number of vertices
+equals the number of facets of $Q = \operatorname{conv}(u_i/h_i)$,
+which varies with the normal configuration.  For simplicial
+4-polytopes, $N$~satisfies the Dehn--Sommerville relation
+$f_3 = f_1 - f_0$, and the typical vertex count grows roughly
+as $N \approx 4f$.
+
+Third, the optimal volume scales approximately as
+$V \approx 0.17\,f^2$.  The ratio $V/f^2$ in the last column is
+nearly constant across the range $f = 8$ to~$24$, suggesting a
+quadratic growth law.  This should be contrasted with the
+vertex-parameterized scaling, which is closer to linear in~$N$
+(cf.\ Table~\ref{tab:opt4d}).
+
+The cross-validated volumes agree to machine precision with
+those obtained from the independent general Schl\"afli formula
+for hyperbolic 4-simplices~\cite{Murakami2011}, which handles
+both compact and ideal vertices via Murakami's dilogarithm formula
+for spherical link volumes.
+
+% ============================================================================
+\section*{Acknowledgments}
+% ============================================================================
+
+Computations were performed using \texttt{scipy.spatial.ConvexHull}
+with parallelization over 64 CPU cores.  Code is available at
+\url{https://github.com/igorrivin/ideal_poly_volume_toolkit}.
+
+\begin{thebibliography}{10}
+
+\bibitem{AEN2021}
+A.~Akopyan, H.~Edelsbrunner, and A.~Nikitenko,
+The beauty of random polytopes inscribed in the 2-sphere,
+\emph{Experimental Mathematics} \textbf{34} (2025), 327--341.
+
+\bibitem{Barany2008}
+I.~B\'ar\'any,
+Random polytopes, convex bodies, and approximation,
+in \emph{Stochastic Geometry} (A.~Baddeley, I.~B\'ar\'any,
+R.~Schneider, W.~Weil, eds.), Lecture Notes in Math.\ 1892,
+Springer, 2007, pp.~77--118.
+
+\bibitem{CSY2013}
+P.~Calka, T.~Schreiber, and J.~E.~Yukich,
+Brownian limits, local limits and variance asymptotics for convex
+hulls in the ball,
+\emph{Ann.\ Probab.}\ \textbf{41} (2013), 50--108.
+
+\bibitem{BMT1985}
+C.~Buchta, J.~M\"uller, and R.~F.~Tichy,
+Stochastical approximation of convex bodies,
+\emph{Math.\ Ann.}\ \textbf{271} (1985), 225--235.
+
+\bibitem{KTT2019}
+Z.~Kabluchko, D.~Temesvari, and C.~Thal\"e,
+Expected intrinsic volumes and facet numbers of random
+beta-polytopes,
+\emph{Math.\ Nachr.}\ \textbf{292} (2019), 79--105.
+
+\bibitem{Muller1990}
+J.~S.~M\"uller,
+Approximation of a ball by random polytopes,
+\emph{J.\ Approx.\ Theory} \textbf{63} (1990), 198--209.
+
+\bibitem{Reitzner2005}
+M.~Reitzner,
+Central limit theorems for random polytopes,
+\emph{Probab.\ Theory Related Fields} \textbf{133} (2005),
+483--507.
+
+\bibitem{RS1963}
+A.~R\'enyi and R.~Sulanke,
+\"Uber die konvexe H\"ulle von $n$ zuf\"allig gew\"ahlten Punkten,
+\emph{Z.\ Wahrsch.\ Verw.\ Gebiete} \textbf{2} (1963), 75--84.
+
+\bibitem{RS1964}
+A.~R\'enyi and R.~Sulanke,
+\"Uber die konvexe H\"ulle von $n$ zuf\"allig gew\"ahlten Punkten, II,
+\emph{Z.\ Wahrsch.\ Verw.\ Gebiete} \textbf{3} (1964), 138--147.
+
+\bibitem{RVW2007}
+C.~Richardson, V.~H.~Vu, and L.~Wu,
+Random inscribing polytopes,
+\emph{European J.\ Combin.}\ \textbf{28} (2007), 2057--2071.
+
+\bibitem{RVW2008}
+C.~Richardson, V.~H.~Vu, and L.~Wu,
+An inscribing model for random polytopes,
+\emph{Discrete Comput.\ Geom.}\ \textbf{39} (2008), 469--499.
+
+\bibitem{Murakami2011}
+J.~Murakami,
+The volume formulas for a spherical tetrahedron,
+\emph{Proc.\ Amer.\ Math.\ Soc.}\ \textbf{140} (2012), 3289--3295.
+
+\bibitem{Kolpakov2014}
+A.~Kolpakov,
+On the optimality of the ideal right-angled 24-cell,
+\emph{Algebr.\ Geom.\ Topol.}\ \textbf{12} (2012), 1941--1960.
+
+\end{thebibliography}
+
+\end{document}

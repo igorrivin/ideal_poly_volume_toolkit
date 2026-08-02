@@ -107,6 +107,124 @@ def cycle_vertices(p: int, axes: Tuple[int, int], d: int) -> np.ndarray:
     return out
 
 
+def cross_polytope(d: int) -> np.ndarray:
+    """The 2d vertices ±e_i of the d-dimensional cross polytope."""
+    return np.vstack([np.eye(d), -np.eye(d)])
+
+
+def cell_24_vertices() -> np.ndarray:
+    """The 24 vertices ±(e_i + e_j)/sqrt(2), 1 <= i < j <= 4 of the 24-cell on S^3."""
+    out = []
+    for i in range(4):
+        for j in range(i + 1, 4):
+            for s_i in (1, -1):
+                for s_j in (1, -1):
+                    v = np.zeros(4)
+                    v[i] = s_i / np.sqrt(2)
+                    v[j] = s_j / np.sqrt(2)
+                    out.append(v)
+    return np.asarray(out)
+
+
+def icosahedron_vertices() -> np.ndarray:
+    """The 12 vertices of the regular icosahedron on S^2."""
+    phi = (1 + np.sqrt(5)) / 2
+    norm = np.sqrt(1 + phi * phi)
+    out = []
+    for s1 in (1, -1):
+        for s2 in (1, -1):
+            out.append(np.array([0.0, s1 * 1.0, s2 * phi]) / norm)
+            out.append(np.array([s1 * 1.0, s2 * phi, 0.0]) / norm)
+            out.append(np.array([s1 * phi, 0.0, s2 * 1.0]) / norm)
+    return np.asarray(out)
+
+
+def cell_24_candidates(N: int, d: int, rng: np.random.Generator,
+                       max_each: int = 5) -> List[np.ndarray]:
+    """24-cell-based seeds for d=4: take the 24-cell, then either drop
+    excess vertices (N <= 24) or add random unit vectors (N > 24).
+    Returns up to `max_each` independently-padded candidates."""
+    if d != 4:
+        return []
+    base = cell_24_vertices()  # (24, 4)
+    out: List[np.ndarray] = []
+    for k in range(max_each):
+        if N <= base.shape[0]:
+            idx = rng.choice(base.shape[0], size=N, replace=False)
+            v = base[idx]
+        else:
+            extra = rng.standard_normal((N - base.shape[0], d))
+            extra = extra / np.linalg.norm(extra, axis=1, keepdims=True)
+            v = np.vstack([base, extra])
+        out.append(v)
+    return out
+
+
+def orthogonal_block_candidates(N: int, d: int, rng: np.random.Generator,
+                                max_each: int = 5) -> List[np.ndarray]:
+    """Block-diagonal seeds: split d into two halves d1 + d2 (with
+    d1 = floor(d/2), d2 = ceil(d/2)), split N into two halves
+    n1 + n2 = N near the proportional split, place n1 random unit
+    vectors in the first d1 coords and n2 random unit vectors in the
+    last d2 coords.  This is the structure GPT used for the d=6 open
+    submission."""
+    if d < 4:
+        return []
+    d1 = d // 2
+    d2 = d - d1
+    out: List[np.ndarray] = []
+    # Try several splits of N between the two blocks.
+    # At d=6 we also try the "icosahedron + N-12" decomposition.
+    base_splits = [(N // 2, N - N // 2)]
+    if d == 6:
+        if N > 12:
+            base_splits.append((12, N - 12))
+        if N > 15:
+            base_splits.append((15, N - 15))
+    for k in range(max_each):
+        n1, n2 = base_splits[k % len(base_splits)]
+        if n1 < d1 + 1 or n2 < d2 + 1:
+            continue
+        block1 = rng.standard_normal((n1, d1))
+        block1 = block1 / np.linalg.norm(block1, axis=1, keepdims=True)
+        block2 = rng.standard_normal((n2, d2))
+        block2 = block2 / np.linalg.norm(block2, axis=1, keepdims=True)
+        full = np.zeros((N, d))
+        full[:n1, :d1] = block1
+        full[n1:, d1:] = block2
+        out.append(full)
+    # If d=6 and N is large enough, also include the icosahedron-fixed split.
+    if d == 6 and N > 12:
+        ico = icosahedron_vertices()  # 12 x 3
+        n2 = N - 12
+        block2 = rng.standard_normal((n2, 3))
+        block2 = block2 / np.linalg.norm(block2, axis=1, keepdims=True)
+        full = np.zeros((N, d))
+        full[:12, :3] = ico
+        full[12:, 3:] = block2
+        out.append(full)
+    return out
+
+
+def all_structured_seeds(N: int, d: int, rng: np.random.Generator) -> List[np.ndarray]:
+    """Aggregate all structured-seed candidates for (d, N).
+    For testing the structured-seed-vs-random hypothesis."""
+    seeds: List[np.ndarray] = []
+    seeds.extend(join_candidates(N, d, max_per_dim=10))
+    seeds.extend(cell_24_candidates(N, d, rng, max_each=5))
+    seeds.extend(orthogonal_block_candidates(N, d, rng, max_each=5))
+    if N >= 2 * d:
+        # Cross-polytope-based: 2d vertices + (N-2d) random
+        cp = cross_polytope(d)  # (2d, d)
+        for k in range(3):
+            extra_n = N - 2 * d
+            extra = rng.standard_normal((extra_n, d)) if extra_n > 0 else np.zeros((0, d))
+            if extra_n > 0:
+                extra = extra / np.linalg.norm(extra, axis=1, keepdims=True)
+            seeds.append(np.vstack([cp, extra]) if extra_n > 0 else cp[:N])
+    return seeds
+
+
 def join_candidates(N: int, d: int, max_per_dim: int = 10) -> List[np.ndarray]:
     """Generate join-of-cycles candidates whose total vertex count is N
     and whose component dimensions sum to d.  Each cycle is in its own
@@ -206,10 +324,17 @@ def main() -> None:
                    help="JSON file with key 'vertices' giving an (N', d) array; "
                         "seeds the search.  If N' < N we add random vertices; "
                         "if N' > N we drop the highest-magnitude.  Repeatable.")
+    p.add_argument("--seed-strategy", choices=("mixed", "random", "structured"),
+                   default="mixed",
+                   help="mixed = structured seeds + random restarts (default); "
+                        "random = no structural seeds (pure CMA random); "
+                        "structured = only structural seeds + Powell polish, "
+                        "no random restarts.")
     args = p.parse_args()
 
     args.out_dir.mkdir(parents=True, exist_ok=True)
-    out_path = args.out_dir / f"d{args.d}_N{args.N}_{args.measure}.json"
+    suffix = f"_{args.seed_strategy}" if args.seed_strategy != "mixed" else ""
+    out_path = args.out_dir / f"d{args.d}_N{args.N}_{args.measure}{suffix}.json"
 
     objective = make_objective(args.d, args.measure)
 
@@ -222,7 +347,10 @@ def main() -> None:
     t0 = time.time()
 
     # --- Phase 0: structural warm-starts + explicit warm-start files ---
-    structural = join_candidates(args.N, args.d, max_per_dim=10)
+    if args.seed_strategy == "random":
+        structural = []
+    else:
+        structural = all_structured_seeds(args.N, args.d, rng)
     structural_results: List[Tuple[np.ndarray, float]] = []
 
     # User-supplied warm-start files (each has key 'vertices').
@@ -265,7 +393,8 @@ def main() -> None:
     flat_streak = 0
     n_done = 0
 
-    for r in range(args.restarts):
+    n_random_restarts = 0 if args.seed_strategy == "structured" else args.restarts
+    for r in range(n_random_restarts):
         seed_r = args.seed + 1000 + r
         x0 = _normalize_rows(rng.standard_normal((args.N, args.d)))
         try:
@@ -335,13 +464,14 @@ def main() -> None:
         "vertices": best_verts.tolist(),
         "search_budget": {
             "restarts_run": int(n_done),
-            "restarts_max": int(args.restarts),
+            "restarts_max": int(n_random_restarts),
             "cma_maxfevals_per_restart": int(args.cma_budget),
             "polish_top": int(len(top_K)),
             "polish_iter_max": int(args.polish_iter),
             "structural_seeds": int(len(structural_results)),
+            "seed_strategy": args.seed_strategy,
             "wall_time_sec": round(elapsed, 1),
-            "early_stopped": bool(n_done < args.restarts),
+            "early_stopped": bool(n_done < n_random_restarts),
         },
         "seed": int(args.seed),
     }

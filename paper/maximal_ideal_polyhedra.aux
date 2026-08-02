@@ -24,104 +24,109 @@
 \@writefile{toc}{\contentsline {subsection}{\numberline {2.2}Rivin's Variational Characterization}{4}{subsection.2.2}\protected@file@percent }
 \citation{RivinTriangulations}
 \@writefile{toc}{\contentsline {subsection}{\numberline {2.3}The Lobachevsky Function and Hyperbolic Volume}{5}{subsection.2.3}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsection}{\numberline {2.4}The Penner-Rivin Algorithm}{5}{subsection.2.4}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {2.4}The Penner-Rivin Algorithm}{6}{subsection.2.4}\protected@file@percent }
 \@writefile{toc}{\contentsline {section}{\numberline {3}Methods}{6}{section.3}\protected@file@percent }
 \newlabel{sec:methods}{{3}{6}{Methods}{section.3}{}}
-\@writefile{toc}{\contentsline {subsection}{\numberline {3.1}Dimension 3: Angle-Based Optimization}{6}{subsection.3.1}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsubsection}{\numberline {3.1.1}Realizability testing}{6}{subsubsection.3.1.1}\protected@file@percent }
 \citation{HansenOstermeier2001}
+\@writefile{toc}{\contentsline {subsection}{\numberline {3.1}Dimension 3: Angle-Based Optimization}{7}{subsection.3.1}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {3.1.1}Realizability testing}{7}{subsubsection.3.1.1}\protected@file@percent }
 \@writefile{toc}{\contentsline {subsubsection}{\numberline {3.1.2}Volume optimization in angle coordinates}{7}{subsubsection.3.1.2}\protected@file@percent }
 \@writefile{toc}{\contentsline {subsubsection}{\numberline {3.1.3}Direct vertex optimization via Bloch--Wigner}{7}{subsubsection.3.1.3}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsubsection}{\numberline {3.1.4}Rational angle detection}{7}{subsubsection.3.1.4}\protected@file@percent }
 \citation{HansenOstermeier2001}
 \citation{HM}
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {3.1.4}Rational angle detection}{8}{subsubsection.3.1.4}\protected@file@percent }
 \@writefile{toc}{\contentsline {subsection}{\numberline {3.2}Dimensions $d \geq 4$: Vertex-Based Optimization}{8}{subsection.3.2}\protected@file@percent }
 \@writefile{toc}{\contentsline {subsubsection}{\numberline {3.2.1}Stage 1: Euclidean warm start via CMA-ES}{8}{subsubsection.3.2.1}\protected@file@percent }
 \@writefile{toc}{\contentsline {subsubsection}{\numberline {3.2.2}Stage 2: Hyperbolic polish}{8}{subsubsection.3.2.2}\protected@file@percent }
 \@writefile{toc}{\contentsline {paragraph}{$d = 4$: Haagerup--Munkholm formula + Powell.}{8}{section*.2}\protected@file@percent }
-\@writefile{toc}{\contentsline {paragraph}{$d = 5$: Schl\"afli gradient + LBFGS.}{8}{section*.3}\protected@file@percent }
-\citation{DouadyEarle}
+\@writefile{toc}{\contentsline {paragraph}{$d = 5$: Schl\"afli gradient + LBFGS.}{9}{section*.3}\protected@file@percent }
 \@writefile{toc}{\contentsline {paragraph}{$d = 6$: Hopf--Murakami formula + torch LBFGS.}{9}{section*.4}\protected@file@percent }
 \@writefile{toc}{\contentsline {subsubsection}{\numberline {3.2.3}Stage 3: Triangulation management}{9}{subsubsection.3.2.3}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsection}{\numberline {3.3}Symmetry Analysis}{9}{subsection.3.3}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {3.2.4}Structured initialization: a small-$N$ phenomenon}{10}{subsubsection.3.2.4}\protected@file@percent }
+\newlabel{sec:structured-seeds}{{3.2.4}{10}{Structured initialization: a small-$N$ phenomenon}{subsubsection.3.2.4}{}}
+\citation{DouadyEarle}
 \citation{McKayPiperno}
-\@writefile{toc}{\contentsline {subsection}{\numberline {3.4}Hessian Analysis}{10}{subsection.3.4}\protected@file@percent }
-\@writefile{toc}{\contentsline {section}{\numberline {4}Results}{10}{section.4}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsection}{\numberline {4.1}Maximal Volume Configurations}{10}{subsection.4.1}\protected@file@percent }
-\@writefile{lot}{\contentsline {table}{\numberline {1}{\ignorespaces Maximal volume ideal polyhedra with $n$ vertices. $V_4 \approx 1.0149$ is the volume of the regular ideal tetrahedron. For $n \leq 12$, angle denominators are shown; for larger\nobreakspace  {}$n$ the volume was maximized directly via CMA-ES on the Bloch--Wigner functional over vertex configurations on\nobreakspace  {}$S^2$.}}{11}{table.1}\protected@file@percent }
-\newlabel{tab:maximal-volumes}{{1}{11}{Maximal volume ideal polyhedra with $n$ vertices. $V_4 \approx 1.0149$ is the volume of the regular ideal tetrahedron. For $n \leq 12$, angle denominators are shown; for larger~$n$ the volume was maximized directly via CMA-ES on the Bloch--Wigner functional over vertex configurations on~$S^2$}{table.1}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {3.3}Symmetry Analysis}{11}{subsection.3.3}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {3.4}Hessian Analysis}{11}{subsection.3.4}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{\numberline {4}Results}{11}{section.4}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {4.1}Maximal Volume Configurations}{11}{subsection.4.1}\protected@file@percent }
+\@writefile{lot}{\contentsline {table}{\numberline {1}{\ignorespaces Maximal volume ideal polyhedra with $n$ vertices. $V_4 \approx 1.0149$ is the volume of the regular ideal tetrahedron. For $n \leq 12$, angle denominators are shown; for larger\nobreakspace  {}$n$ the volume was maximized directly via CMA-ES on the Bloch--Wigner functional over vertex configurations on\nobreakspace  {}$S^2$.}}{12}{table.1}\protected@file@percent }
+\newlabel{tab:maximal-volumes}{{1}{12}{Maximal volume ideal polyhedra with $n$ vertices. $V_4 \approx 1.0149$ is the volume of the regular ideal tetrahedron. For $n \leq 12$, angle denominators are shown; for larger~$n$ the volume was maximized directly via CMA-ES on the Bloch--Wigner functional over vertex configurations on~$S^2$}{table.1}{}}
 \@writefile{toc}{\contentsline {subsection}{\numberline {4.2}The Rational Angle Phenomenon}{13}{subsection.4.2}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsection}{\numberline {4.3}Connection to Arithmetic Groups}{13}{subsection.4.3}\protected@file@percent }
 \@writefile{lof}{\contentsline {figure}{\numberline {1}{\ignorespaces Planar Delaunay triangulations of the maximal volume ideal polyhedra. Each triangulation represents the combinatorial structure of the polyhedron projected onto the plane, with the point at infinity as the unbounded face.}}{14}{figure.1}\protected@file@percent }
 \newlabel{fig:triangulations}{{1}{14}{Planar Delaunay triangulations of the maximal volume ideal polyhedra. Each triangulation represents the combinatorial structure of the polyhedron projected onto the plane, with the point at infinity as the unbounded face}{figure.1}{}}
 \@writefile{lof}{\contentsline {figure}{\numberline {2}{\ignorespaces Maximal volume ideal polyhedra visualized in the Poincar\'e ball model of $\mathbb  {H}^3$. Vertices lie on the boundary sphere $\partial _\infty \mathbb  {H}^3$, and the geodesic faces curve inward as characteristic of hyperbolic space.}}{15}{figure.2}\protected@file@percent }
 \newlabel{fig:poincare}{{2}{15}{Maximal volume ideal polyhedra visualized in the Poincar\'e ball model of $\mathbb {H}^3$. Vertices lie on the boundary sphere $\partial _\infty \mathbb {H}^3$, and the geodesic faces curve inward as characteristic of hyperbolic space}{figure.2}{}}
-\@writefile{toc}{\contentsline {subsection}{\numberline {4.4}Volume Distribution of Random Configurations}{16}{subsection.4.4}\protected@file@percent }
-\@writefile{lot}{\contentsline {table}{\numberline {2}{\ignorespaces Beta distribution fit parameters for normalized volume $V/V_{\qopname  \relax m{max}}$.}}{16}{table.2}\protected@file@percent }
-\newlabel{tab:beta-fits}{{2}{16}{Beta distribution fit parameters for normalized volume $V/V_{\max }$}{table.2}{}}
-\@writefile{lof}{\contentsline {figure}{\numberline {3}{\ignorespaces Volume distributions of random ideal polyhedra, normalized by $V_{\qopname  \relax m{max}}(n)$. Histograms (blue) show empirical distributions from 5000 samples; red curves show fitted Beta($\alpha $, $\beta $) distributions. The fit quality improves with $n$.}}{17}{figure.3}\protected@file@percent }
-\newlabel{fig:volume-distributions}{{3}{17}{Volume distributions of random ideal polyhedra, normalized by $V_{\max }(n)$. Histograms (blue) show empirical distributions from 5000 samples; red curves show fitted Beta($\alpha $, $\beta $) distributions. The fit quality improves with $n$}{figure.3}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {4.3}Connection to Arithmetic Groups}{16}{subsection.4.3}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {4.4}Volume Distribution of Random Configurations}{17}{subsection.4.4}\protected@file@percent }
+\@writefile{lot}{\contentsline {table}{\numberline {2}{\ignorespaces Beta distribution fit parameters for normalized volume $V/V_{\qopname  \relax m{max}}$.}}{17}{table.2}\protected@file@percent }
+\newlabel{tab:beta-fits}{{2}{17}{Beta distribution fit parameters for normalized volume $V/V_{\max }$}{table.2}{}}
+\@writefile{lof}{\contentsline {figure}{\numberline {3}{\ignorespaces Volume distributions of random ideal polyhedra, normalized by $V_{\qopname  \relax m{max}}(n)$. Histograms (blue) show empirical distributions from 5000 samples; red curves show fitted Beta($\alpha $, $\beta $) distributions. The fit quality improves with $n$.}}{18}{figure.3}\protected@file@percent }
+\newlabel{fig:volume-distributions}{{3}{18}{Volume distributions of random ideal polyhedra, normalized by $V_{\max }(n)$. Histograms (blue) show empirical distributions from 5000 samples; red curves show fitted Beta($\alpha $, $\beta $) distributions. The fit quality improves with $n$}{figure.3}{}}
 \@writefile{lof}{\contentsline {figure}{\numberline {4}{\ignorespaces Scaling of Beta distribution parameters with vertex count $n$. Left: $\alpha $ grows approximately as $4.25n$. Center: $\beta $ grows as $1.78n$. Right: Mean normalized volume stabilizes near $0.69 \approx \qopname  \relax o{ln}2$.}}{18}{figure.4}\protected@file@percent }
 \newlabel{fig:beta-scaling}{{4}{18}{Scaling of Beta distribution parameters with vertex count $n$. Left: $\alpha $ grows approximately as $4.25n$. Center: $\beta $ grows as $1.78n$. Right: Mean normalized volume stabilizes near $0.69 \approx \ln 2$}{figure.4}{}}
-\@writefile{toc}{\contentsline {section}{\numberline {5}Visualizations}{18}{section.5}\protected@file@percent }
-\@writefile{toc}{\contentsline {section}{\numberline {6}Software}{18}{section.6}\protected@file@percent }
 \citation{RivinDjinn}
-\@writefile{toc}{\contentsline {paragraph}{Development methodology.}{19}{section*.5}\protected@file@percent }
-\@writefile{toc}{\contentsline {section}{\numberline {7}Higher Dimensions: Ideal Polytopes in $\mathbb  {H}^4$}{19}{section.7}\protected@file@percent }
-\newlabel{sec:H4}{{7}{19}{Higher Dimensions: Ideal Polytopes in $\mathbb {H}^4$}{section.7}{}}
-\@writefile{toc}{\contentsline {subsection}{\numberline {7.1}Setup}{19}{subsection.7.1}\protected@file@percent }
-\citation{HansenOstermeier2001}
+\@writefile{toc}{\contentsline {section}{\numberline {5}Visualizations}{19}{section.5}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{\numberline {6}Software}{19}{section.6}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Development methodology.}{20}{section*.5}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{\numberline {7}Higher Dimensions: Ideal Polytopes in $\mathbb  {H}^4$}{20}{section.7}\protected@file@percent }
+\newlabel{sec:H4}{{7}{20}{Higher Dimensions: Ideal Polytopes in $\mathbb {H}^4$}{section.7}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {7.1}Setup}{20}{subsection.7.1}\protected@file@percent }
 \@writefile{toc}{\contentsline {subsection}{\numberline {7.2}Combinatorial Invariance of Optimal Polytopes}{20}{subsection.7.2}\protected@file@percent }
-\newlabel{conj:comb_invariance}{{3}{20}{Combinatorial invariance --- strong form}{conjecture.3}{}}
-\@writefile{lot}{\contentsline {table}{\numberline {3}{\ignorespaces Combinatorial type comparison: Euclidean vs.\ Hyperbolic volume maximization in $d = 4$ (points on $S^3$). CMA-ES Euclidean warm start with Powell hyperbolic polish. Exact $f$-vector match holds for $N \leq 40$; small discrepancies ($\leq 3$ facets) appear at larger\nobreakspace  {}$N$.}}{21}{table.3}\protected@file@percent }
-\newlabel{tab:comb_d4}{{3}{21}{Combinatorial type comparison: Euclidean vs.\ Hyperbolic volume maximization in $d = 4$ (points on $S^3$). CMA-ES Euclidean warm start with Powell hyperbolic polish. Exact $f$-vector match holds for $N \leq 40$; small discrepancies ($\leq 3$ facets) appear at larger~$N$}{table.3}{}}
+\citation{HansenOstermeier2001}
+\newlabel{conj:comb_invariance}{{3}{21}{Combinatorial invariance --- strong form}{conjecture.3}{}}
 \newlabel{conj:comb_weak}{{4}{21}{Combinatorial invariance --- weak form}{conjecture.4}{}}
-\@writefile{toc}{\contentsline {subsection}{\numberline {7.3}Cross-Metric Divergence}{21}{subsection.7.3}\protected@file@percent }
-\newlabel{sec:cross_metric}{{7.3}{21}{Cross-Metric Divergence}{subsection.7.3}{}}
-\@writefile{lot}{\contentsline {table}{\numberline {4}{\ignorespaces Same comparison in $d=3$ (points on $S^2$). All $f$-vectors match.}}{22}{table.4}\protected@file@percent }
-\newlabel{tab:comb_d3}{{4}{22}{Same comparison in $d=3$ (points on $S^2$). All $f$-vectors match}{table.4}{}}
-\@writefile{toc}{\contentsline {subsection}{\numberline {7.4}Correlation Between Euclidean and Hyperbolic Volumes}{22}{subsection.7.4}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsection}{\numberline {7.5}Non-Isolated Maxima: The Volume Plateau}{23}{subsection.7.5}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsection}{\numberline {7.6}Higher Dimensions}{24}{subsection.7.6}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsection}{\numberline {7.7}Ideal Polytopes in $\mathbb  {H}^5$}{25}{subsection.7.7}\protected@file@percent }
+\@writefile{lot}{\contentsline {table}{\numberline {3}{\ignorespaces Combinatorial type comparison: Euclidean vs.\ Hyperbolic volume maximization in $d = 4$ (points on $S^3$). CMA-ES Euclidean warm start with Powell hyperbolic polish. Exact $f$-vector match holds for $N \leq 40$; small discrepancies ($\leq 3$ facets) appear at larger\nobreakspace  {}$N$.}}{22}{table.3}\protected@file@percent }
+\newlabel{tab:comb_d4}{{3}{22}{Combinatorial type comparison: Euclidean vs.\ Hyperbolic volume maximization in $d = 4$ (points on $S^3$). CMA-ES Euclidean warm start with Powell hyperbolic polish. Exact $f$-vector match holds for $N \leq 40$; small discrepancies ($\leq 3$ facets) appear at larger~$N$}{table.3}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {7.3}Cross-Metric Divergence}{22}{subsection.7.3}\protected@file@percent }
+\newlabel{sec:cross_metric}{{7.3}{22}{Cross-Metric Divergence}{subsection.7.3}{}}
+\@writefile{lot}{\contentsline {table}{\numberline {4}{\ignorespaces Same comparison in $d=3$ (points on $S^2$). All $f$-vectors match.}}{23}{table.4}\protected@file@percent }
+\newlabel{tab:comb_d3}{{4}{23}{Same comparison in $d=3$ (points on $S^2$). All $f$-vectors match}{table.4}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {7.4}Correlation Between Euclidean and Hyperbolic Volumes}{23}{subsection.7.4}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {7.5}Non-Isolated Maxima: The Volume Plateau}{24}{subsection.7.5}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {7.6}Higher Dimensions}{25}{subsection.7.6}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {7.7}Ideal Polytopes in $\mathbb  {H}^5$}{26}{subsection.7.7}\protected@file@percent }
 \@writefile{lot}{\contentsline {table}{\numberline {5}{\ignorespaces Combinatorial invariance: Euclidean vs.\ ideal $\mathbb  {H}^5$ volume maximization (points on $S^4$). All $f$-vectors match, and the hyperbolic polish improvement is exactly zero in every case.}}{26}{table.5}\protected@file@percent }
 \newlabel{tab:comb_H5}{{5}{26}{Combinatorial invariance: Euclidean vs.\ ideal $\mathbb {H}^5$ volume maximization (points on $S^4$). All $f$-vectors match, and the hyperbolic polish improvement is exactly zero in every case}{table.5}{}}
-\@writefile{toc}{\contentsline {paragraph}{Reproducibility note on Table\nobreakspace  {}\ref  {tab:comb_H5}.}{26}{section*.6}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsection}{\numberline {7.8}Ideal Polytopes in $\mathbb  {H}^6$}{26}{subsection.7.8}\protected@file@percent }
 \citation{H56note}
-\@writefile{lot}{\contentsline {table}{\numberline {6}{\ignorespaces Combinatorial invariance: Euclidean vs.\ ideal $\mathbb  {H}^6$ volume maximization (points on $S^5$). Exact match holds for $N \leq 30$; at $N = 40$ the hyperbolic optimizer finds $2$ fewer facets.}}{27}{table.6}\protected@file@percent }
-\newlabel{tab:comb_H6}{{6}{27}{Combinatorial invariance: Euclidean vs.\ ideal $\mathbb {H}^6$ volume maximization (points on $S^5$). Exact match holds for $N \leq 30$; at $N = 40$ the hyperbolic optimizer finds $2$ fewer facets}{table.6}{}}
+\@writefile{toc}{\contentsline {paragraph}{Reproducibility note on Table\nobreakspace  {}\ref  {tab:comb_H5}.}{27}{section*.6}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {7.8}Ideal Polytopes in $\mathbb  {H}^6$}{27}{subsection.7.8}\protected@file@percent }
 \@writefile{toc}{\contentsline {subsection}{\numberline {7.9}Identification of Optimal Polytopes: Joins of Regular Polygons}{27}{subsection.7.9}\protected@file@percent }
+\newlabel{sec:joins}{{7.9}{27}{Identification of Optimal Polytopes: Joins of Regular Polygons}{subsection.7.9}{}}
+\@writefile{lot}{\contentsline {table}{\numberline {6}{\ignorespaces Combinatorial invariance: Euclidean vs.\ ideal $\mathbb  {H}^6$ volume maximization (points on $S^5$). Exact match holds for $N \leq 30$; at $N = 40$ the hyperbolic optimizer finds $2$ fewer facets.}}{28}{table.6}\protected@file@percent }
+\newlabel{tab:comb_H6}{{6}{28}{Combinatorial invariance: Euclidean vs.\ ideal $\mathbb {H}^6$ volume maximization (points on $S^5$). Exact match holds for $N \leq 30$; at $N = 40$ the hyperbolic optimizer finds $2$ fewer facets}{table.6}{}}
 \citation{McKayPiperno}
 \@writefile{toc}{\contentsline {subsection}{\numberline {7.10}Symmetry Analysis via Douady--Earle Centering}{29}{subsection.7.10}\protected@file@percent }
-\@writefile{lot}{\contentsline {table}{\numberline {7}{\ignorespaces Symmetry groups of volume-optimal inscribed polytopes in $d = 4$. For small\nobreakspace  {}$N$, the join structure produces highly symmetric polytopes; symmetry breaks sharply at $N \approx 11$ and vanishes beyond $N = 20$.}}{29}{table.7}\protected@file@percent }
-\newlabel{tab:symmetry_d4}{{7}{29}{Symmetry groups of volume-optimal inscribed polytopes in $d = 4$. For small~$N$, the join structure produces highly symmetric polytopes; symmetry breaks sharply at $N \approx 11$ and vanishes beyond $N = 20$}{table.7}{}}
+\@writefile{lot}{\contentsline {table}{\numberline {7}{\ignorespaces Symmetry groups of volume-optimal inscribed polytopes in $d = 4$. For small\nobreakspace  {}$N$, the join structure produces highly symmetric polytopes; symmetry breaks sharply at $N \approx 11$ and vanishes beyond $N = 20$.}}{30}{table.7}\protected@file@percent }
+\newlabel{tab:symmetry_d4}{{7}{30}{Symmetry groups of volume-optimal inscribed polytopes in $d = 4$. For small~$N$, the join structure produces highly symmetric polytopes; symmetry breaks sharply at $N \approx 11$ and vanishes beyond $N = 20$}{table.7}{}}
 \citation{FrobeniusNote}
-\@writefile{toc}{\contentsline {subsubsection}{\numberline {7.10.1}The Frobenius construction}{30}{subsubsection.7.10.1}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {7.10.1}The Frobenius construction}{31}{subsubsection.7.10.1}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {7.10.2}Volume ridges}{31}{subsubsection.7.10.2}\protected@file@percent }
 \citation{SchulteWilliams2015}
 \citation{Doignon2018}
 \citation{Babai1977}
-\@writefile{toc}{\contentsline {subsubsection}{\numberline {7.10.2}Volume ridges}{31}{subsubsection.7.10.2}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsection}{\numberline {7.11}Isoperimetric Ratio}{31}{subsection.7.11}\protected@file@percent }
-\citation{LLMNote}
 \@writefile{lot}{\contentsline {table}{\numberline {8}{\ignorespaces Symmetry groups of volume-optimal polytopes in $d = 5$ (points on $S^4$). Joins $C_p \oplus C_q \oplus I$ dominate for $N \leq 11$; symmetry breaks at $N = 12$.}}{32}{table.8}\protected@file@percent }
 \newlabel{tab:symmetry_d5}{{8}{32}{Symmetry groups of volume-optimal polytopes in $d = 5$ (points on $S^4$). Joins $C_p \oplus C_q \oplus I$ dominate for $N \leq 11$; symmetry breaks at $N = 12$}{table.8}{}}
-\@writefile{toc}{\contentsline {section}{\numberline {8}LLM Benchmarks: A Pointer}{32}{section.8}\protected@file@percent }
-\newlabel{sec:llm_benchmark}{{8}{32}{LLM Benchmarks: A Pointer}{section.8}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {7.11}Isoperimetric Ratio}{32}{subsection.7.11}\protected@file@percent }
+\citation{LLMNote}
 \@writefile{lot}{\contentsline {table}{\numberline {9}{\ignorespaces Symmetry groups of volume-optimal polytopes in $d = 6$ (points on $S^5$). Triple joins $C_p \oplus C_q \oplus C_r$ dominate for $N \leq 15$; symmetry breaks at $N = 16$.}}{33}{table.9}\protected@file@percent }
 \newlabel{tab:symmetry_d6}{{9}{33}{Symmetry groups of volume-optimal polytopes in $d = 6$ (points on $S^5$). Triple joins $C_p \oplus C_q \oplus C_r$ dominate for $N \leq 15$; symmetry breaks at $N = 16$}{table.9}{}}
-\@writefile{toc}{\contentsline {subsection}{\numberline {8.1}The reconstruction problem and rigidity}{33}{subsection.8.1}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{\numberline {8}LLM Benchmarks: A Pointer}{33}{section.8}\protected@file@percent }
+\newlabel{sec:llm_benchmark}{{8}{33}{LLM Benchmarks: A Pointer}{section.8}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {8.1}The reconstruction problem and rigidity}{34}{subsection.8.1}\protected@file@percent }
 \@writefile{toc}{\contentsline {subsection}{\numberline {8.2}Volume lower bound and our records}{34}{subsection.8.2}\protected@file@percent }
-\@writefile{toc}{\contentsline {section}{\numberline {9}Open Questions}{34}{section.9}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{\numberline {9}Open Questions}{35}{section.9}\protected@file@percent }
 \citation{Kalai1988}
 \citation{Forman2003}
-\bibcite{Rivin1994}{1}
-\bibcite{RivinCombOpt}{2}
 \@writefile{toc}{\contentsline {section}{\numberline {10}Application: High-Girth Cubic Graphs}{37}{section.10}\protected@file@percent }
 \newlabel{sec:cages}{{10}{37}{Application: High-Girth Cubic Graphs}{section.10}{}}
 \@writefile{toc}{\contentsline {subsection}{\numberline {10.1}Method}{37}{subsection.10.1}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsection}{\numberline {10.2}Results}{37}{subsection.10.2}\protected@file@percent }
+\bibcite{Rivin1994}{1}
+\bibcite{RivinCombOpt}{2}
 \bibcite{RivinTriangulations}{3}
+\@writefile{toc}{\contentsline {subsection}{\numberline {10.2}Results}{38}{subsection.10.2}\protected@file@percent }
+\@writefile{lot}{\contentsline {table}{\numberline {10}{\ignorespaces Best girth found for cubic graphs on $N$ vertices, using log-determinant warm start + cycle breaking (100 trials, total budget 600 edge swaps per trial). Known cage values are shown for reference.}}{38}{table.10}\protected@file@percent }
+\newlabel{tab:cages}{{10}{38}{Best girth found for cubic graphs on $N$ vertices, using log-determinant warm start + cycle breaking (100 trials, total budget 600 edge swaps per trial). Known cage values are shown for reference}{table.10}{}}
 \bibcite{RivinDjinn}{4}
 \bibcite{Milnor}{5}
 \bibcite{H56note}{6}
@@ -131,8 +136,6 @@
 \bibcite{HansenOstermeier2001}{10}
 \bibcite{McKayPiperno}{11}
 \bibcite{SchulteWilliams2015}{12}
-\@writefile{lot}{\contentsline {table}{\numberline {10}{\ignorespaces Best girth found for cubic graphs on $N$ vertices, using log-determinant warm start + cycle breaking (100 trials, total budget 600 edge swaps per trial). Known cage values are shown for reference.}}{38}{table.10}\protected@file@percent }
-\newlabel{tab:cages}{{10}{38}{Best girth found for cubic graphs on $N$ vertices, using log-determinant warm start + cycle breaking (100 trials, total budget 600 edge swaps per trial). Known cage values are shown for reference}{table.10}{}}
 \bibcite{Doignon2018}{13}
 \bibcite{Babai1977}{14}
 \bibcite{DouadyEarle}{15}
@@ -140,4 +143,4 @@
 \bibcite{Firsching2017}{17}
 \bibcite{Kalai1988}{18}
 \bibcite{Forman2003}{19}
-\gdef \@abspage@last{39}
+\gdef \@abspage@last{40}
