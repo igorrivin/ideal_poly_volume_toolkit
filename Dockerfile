@@ -12,17 +12,14 @@ RUN apt-get update && apt-get install -y \
 # Set working directory
 WORKDIR /app
 
-# Copy requirements first (for caching)
-COPY requirements.txt .
+# Install the numerical core plus the GUI and symmetry features without
+# pulling in Torch or the separate RL/research environment.
+COPY pyproject.toml README.md LICENSE ./
+COPY ideal_poly_volume_toolkit ./ideal_poly_volume_toolkit
+RUN pip install --no-cache-dir '.[gui,graph]'
 
-# Install Python dependencies
-RUN pip install --no-cache-dir -r requirements.txt
-
-# Copy the rest of the application
+# Copy the GUI entry points and remaining application files.
 COPY . .
-
-# Install the package itself
-RUN pip install --no-cache-dir -e .
 
 # Expose port 7860 (HF Spaces default)
 EXPOSE 7860

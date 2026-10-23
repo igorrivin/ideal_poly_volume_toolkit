@@ -26,13 +26,15 @@ except Exception as e:
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 try:
-    from bin.gui import create_gui
+    from bin.gui import APP_THEME, create_gui
     demo = create_gui()
     print("Successfully loaded Ideal Polyhedron Volume Toolkit GUI")
 except Exception as e:
     # Fallback: show error in a simple Gradio interface
     import gradio as gr
     import traceback
+
+    APP_THEME = gr.themes.Soft()
 
     error_msg = f"Failed to load the main GUI:\n\n{str(e)}\n\n{traceback.format_exc()}"
     print(error_msg)
@@ -44,4 +46,4 @@ except Exception as e:
 # For Docker SDK on HF Spaces, we must explicitly launch
 # with server_name="0.0.0.0" to bind to all interfaces
 if __name__ == "__main__":
-    demo.launch(server_name="0.0.0.0", server_port=7860)
+    demo.launch(server_name="0.0.0.0", server_port=7860, theme=APP_THEME)

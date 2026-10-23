@@ -1,0 +1,117 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/igorrivin/ideal_poly_volume_toolkit/schemas/result-manifest-v1.schema.json",
+  "title": "Repository result manifest v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "repository", "artifacts", "collections"],
+  "properties": {
+    "schema_version": {"const": 1},
+    "repository": {"type": "string", "minLength": 1},
+    "artifacts": {
+      "type": "array",
+      "minItems": 1,
+      "items": {"$ref": "#/$defs/artifact"}
+    },
+    "collections": {
+      "type": "array",
+      "items": {"$ref": "#/$defs/collection"}
+    }
+  },
+  "$defs": {
+    "nullable_string": {"type": ["string", "null"]},
+    "artifact": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "path",
+        "sha256",
+        "size_bytes",
+        "media_type",
+        "role",
+        "status",
+        "schema",
+        "producer",
+        "input_checksums",
+        "parameters",
+        "seed",
+        "git_commit",
+        "dirty",
+        "python",
+        "platform",
+        "numerical_mode",
+        "supersedes",
+        "notes"
+      ],
+      "properties": {
+        "path": {"type": "string", "minLength": 1},
+        "sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+        "size_bytes": {"type": "integer", "minimum": 0},
+        "media_type": {"type": "string", "minLength": 1},
+        "role": {"type": "string", "minLength": 1},
+        "status": {
+          "enum": [
+            "canonical",
+            "derived",
+            "historical",
+            "superseded",
+            "cache",
+            "ephemeral"
+          ]
+        },
+        "schema": {"$ref": "#/$defs/nullable_string"},
+        "producer": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["name", "command"],
+          "properties": {
+            "name": {"type": "string", "minLength": 1},
+            "command": {"$ref": "#/$defs/nullable_string"}
+          }
+        },
+        "input_checksums": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string",
+            "pattern": "^[0-9a-f]{64}$"
+          }
+        },
+        "parameters": {"type": "object"},
+        "seed": {"type": ["integer", "null"]},
+        "git_commit": {
+          "type": ["string", "null"],
+          "pattern": "^[0-9a-f]{7,64}$"
+        },
+        "dirty": {"type": ["boolean", "null"]},
+        "python": {"$ref": "#/$defs/nullable_string"},
+        "platform": {"$ref": "#/$defs/nullable_string"},
+        "numerical_mode": {"$ref": "#/$defs/nullable_string"},
+        "supersedes": {
+          "type": "array",
+          "items": {"type": "string", "minLength": 1}
+        },
+        "notes": {"type": "string", "minLength": 1}
+      }
+    },
+    "collection": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["path_glob", "role", "status", "notes"],
+      "properties": {
+        "path_glob": {"type": "string", "minLength": 1},
+        "role": {"type": "string", "minLength": 1},
+        "status": {
+          "enum": [
+            "canonical",
+            "derived",
+            "historical",
+            "superseded",
+            "cache",
+            "ephemeral"
+          ]
+        },
+        "notes": {"type": "string", "minLength": 1}
+      }
+    }
+  }
+}

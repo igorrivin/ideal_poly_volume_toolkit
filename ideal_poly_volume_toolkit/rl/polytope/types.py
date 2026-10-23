@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import List
 
 import numpy as np
@@ -17,3 +17,9 @@ class PolytopeSolution:
     """
     vertices: np.ndarray
     simplices: List[List[int]]
+    _simplices_key: bytes | None = field(default=None, repr=False, compare=False)
+    _simplices_signature: tuple[tuple[int, ...], ...] | None = field(
+        default=None,
+        repr=False,
+        compare=False,
+    )

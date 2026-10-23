@@ -1,0 +1,841 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/igorrivin/ideal_poly_volume_toolkit/blob/main/docs/schemas/tutte-zero-shear-audit-v1.schema.json",
+  "title": "Weighted Tutte zero-shear basin audit v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "protocol_version",
+    "generator",
+    "status",
+    "created_at",
+    "updated_at",
+    "input",
+    "run_config",
+    "run_config_sha256",
+    "provenance",
+    "planned_task_count",
+    "root_representatives",
+    "tasks",
+    "cases",
+    "summary",
+    "timings"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": "ideal-poly-tutte-zero-shear-audit/1"
+    },
+    "protocol_version": {
+      "const": "weighted-tutte-zero-shear-trf/1"
+    },
+    "generator": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "version", "source_sha256"],
+      "properties": {
+        "name": {
+          "const": "scripts/audit_tutte_zero_shear_basins.py"
+        },
+        "version": {
+          "type": "string",
+          "minLength": 1
+        },
+        "source_sha256": {
+          "$ref": "#/$defs/sha256"
+        }
+      }
+    },
+    "status": {
+      "enum": ["in_progress", "complete", "exhausted", "failed"]
+    },
+    "created_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "updated_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "input": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "path",
+        "sha256",
+        "schema_version",
+        "selected_configuration_ids"
+      ],
+      "properties": {
+        "path": {
+          "type": "string",
+          "minLength": 1
+        },
+        "sha256": {
+          "$ref": "#/$defs/sha256"
+        },
+        "schema_version": {
+          "const": "ideal-poly-arithmetic-corpus/1"
+        },
+        "selected_configuration_ids": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      }
+    },
+    "run_config": {
+      "$ref": "#/$defs/run_config"
+    },
+    "run_config_sha256": {
+      "$ref": "#/$defs/sha256"
+    },
+    "provenance": {
+      "$ref": "#/$defs/provenance"
+    },
+    "planned_task_count": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "root_representatives": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/root_representative"
+      }
+    },
+    "tasks": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/task"
+      }
+    },
+    "cases": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "$ref": "#/$defs/case"
+      }
+    },
+    "summary": {
+      "$ref": "#/$defs/summary"
+    },
+    "timings": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["cumulative_active_seconds", "last_invocation_seconds"],
+      "properties": {
+        "cumulative_active_seconds": {
+          "type": "number",
+          "minimum": 0
+        },
+        "last_invocation_seconds": {
+          "type": "number",
+          "minimum": 0
+        }
+      }
+    }
+  },
+  "$defs": {
+    "sha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "tagged_sha256": {
+      "type": "string",
+      "pattern": "^sha256:[0-9a-f]{64}$"
+    },
+    "face": {
+      "type": "array",
+      "minItems": 3,
+      "maxItems": 3,
+      "items": {
+        "type": "integer",
+        "minimum": 0
+      }
+    },
+    "start_spec": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "sigma", "replicate", "seed"],
+      "properties": {
+        "kind": {
+          "enum": ["uniform", "lognormal"]
+        },
+        "sigma": {
+          "type": ["number", "null"],
+          "exclusiveMinimum": 0
+        },
+        "replicate": {
+          "type": ["integer", "null"],
+          "minimum": 0
+        },
+        "seed": {
+          "type": ["integer", "null"],
+          "minimum": 0,
+          "maximum": 9223372036854775807
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "kind": {
+                "const": "uniform"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "sigma": {
+                "type": "null"
+              },
+              "replicate": {
+                "type": "null"
+              },
+              "seed": {
+                "type": "null"
+              }
+            }
+          },
+          "else": {
+            "properties": {
+              "sigma": {
+                "type": "number",
+                "exclusiveMinimum": 0
+              },
+              "replicate": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "seed": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 9223372036854775807
+              }
+            }
+          }
+        }
+      ]
+    },
+    "run_config": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "selected_configuration_ids",
+        "anchors_per_configuration",
+        "explicit_distinguished_faces",
+        "sigmas",
+        "starts_per_sigma",
+        "base_seed",
+        "max_nfev",
+        "shear_tolerance",
+        "support_tolerance",
+        "bending_tolerance",
+        "xtol",
+        "ftol",
+        "gtol",
+        "record_trajectory",
+        "include_endpoint_coordinates",
+        "root_cluster_tolerance",
+        "max_wall_seconds",
+        "workers",
+        "blas_threads_per_worker"
+      ],
+      "properties": {
+        "selected_configuration_ids": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "anchors_per_configuration": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "explicit_distinguished_faces": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/$defs/face"
+          }
+        },
+        "sigmas": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "type": "number",
+            "exclusiveMinimum": 0
+          }
+        },
+        "starts_per_sigma": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "base_seed": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9223372036854775807
+        },
+        "max_nfev": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "shear_tolerance": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "support_tolerance": {
+          "type": "number",
+          "minimum": 0
+        },
+        "bending_tolerance": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "xtol": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "ftol": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "gtol": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "record_trajectory": {
+          "type": "boolean"
+        },
+        "include_endpoint_coordinates": {
+          "type": "boolean"
+        },
+        "root_cluster_tolerance": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "max_wall_seconds": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "workers": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 8
+        },
+        "blas_threads_per_worker": {
+          "const": 1
+        }
+      }
+    },
+    "provenance": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "invocation",
+        "python",
+        "python_implementation",
+        "platform",
+        "git_commit",
+        "dependency_versions",
+        "source_files",
+        "thread_environment"
+      ],
+      "properties": {
+        "invocation": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "python": {
+          "type": "string",
+          "minLength": 1
+        },
+        "python_implementation": {
+          "type": "string",
+          "minLength": 1
+        },
+        "platform": {
+          "type": "string",
+          "minLength": 1
+        },
+        "git_commit": {
+          "type": ["string", "null"],
+          "pattern": "^[0-9a-f]{40}$"
+        },
+        "dependency_versions": {
+          "type": "object",
+          "additionalProperties": {
+            "type": ["string", "null"]
+          }
+        },
+        "source_files": {
+          "type": "object",
+          "minProperties": 5,
+          "additionalProperties": {
+            "$ref": "#/$defs/sha256"
+          }
+        },
+        "thread_environment": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "OPENBLAS_NUM_THREADS",
+            "OMP_NUM_THREADS",
+            "MKL_NUM_THREADS",
+            "NUMEXPR_NUM_THREADS"
+          ],
+          "properties": {
+            "OPENBLAS_NUM_THREADS": {
+              "type": ["string", "null"]
+            },
+            "OMP_NUM_THREADS": {
+              "type": ["string", "null"]
+            },
+            "MKL_NUM_THREADS": {
+              "type": ["string", "null"]
+            },
+            "NUMEXPR_NUM_THREADS": {
+              "type": ["string", "null"]
+            }
+          }
+        }
+      }
+    },
+    "start_record": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "kind",
+        "sigma",
+        "replicate",
+        "seed",
+        "weight_sha256",
+        "minimum_weight",
+        "maximum_weight",
+        "initial_embedding_sha256"
+      ],
+      "properties": {
+        "kind": {
+          "enum": ["uniform", "lognormal"]
+        },
+        "sigma": {
+          "type": ["number", "null"]
+        },
+        "replicate": {
+          "type": ["integer", "null"]
+        },
+        "seed": {
+          "type": ["integer", "null"]
+        },
+        "weight_sha256": {
+          "$ref": "#/$defs/tagged_sha256"
+        },
+        "minimum_weight": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "maximum_weight": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "initial_embedding_sha256": {
+          "$ref": "#/$defs/tagged_sha256"
+        }
+      }
+    },
+    "error": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["type", "message"],
+      "properties": {
+        "type": {
+          "type": "string",
+          "minLength": 1
+        },
+        "message": {
+          "type": "string"
+        }
+      }
+    },
+    "cp1_vertex": {
+      "oneOf": [
+        {
+          "type": "null"
+        },
+        {
+          "type": "array",
+          "minItems": 2,
+          "maxItems": 2,
+          "items": {
+            "type": "number"
+          }
+        }
+      ]
+    },
+    "task": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "task_index",
+        "task_id",
+        "case_id",
+        "configuration_id",
+        "distinguished_face",
+        "start_spec",
+        "started_at",
+        "finished_at",
+        "elapsed_seconds",
+        "status",
+        "outcome",
+        "start",
+        "core_result",
+        "trajectory_summary",
+        "root_fingerprint",
+        "endpoint_coordinates",
+        "error"
+      ],
+      "properties": {
+        "task_index": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "task_id": {
+          "type": "string",
+          "pattern": "^task-sha256:[0-9a-f]{64}$"
+        },
+        "case_id": {
+          "type": "string",
+          "pattern": "^case-sha256:[0-9a-f]{64}$"
+        },
+        "configuration_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "distinguished_face": {
+          "$ref": "#/$defs/face"
+        },
+        "start_spec": {
+          "$ref": "#/$defs/start_spec"
+        },
+        "started_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "finished_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "elapsed_seconds": {
+          "type": "number",
+          "minimum": 0
+        },
+        "status": {
+          "enum": ["completed", "error", "timed_out"]
+        },
+        "outcome": {
+          "enum": [
+            "target_strict_zero_shear",
+            "embedded_wrong_hull_zero_shear",
+            "nonembedded_zero_shear",
+            "degenerate_zero_shear",
+            "residual_failure",
+            "solver_failure",
+            "error",
+            "timed_out"
+          ]
+        },
+        "start": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/start_record"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "core_result": {
+          "type": ["object", "null"]
+        },
+        "trajectory_summary": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/trajectory_summary"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "root_fingerprint": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/tagged_sha256"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "endpoint_coordinates": {
+          "oneOf": [
+            {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/cp1_vertex"
+              }
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "error": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/error"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    "trajectory_summary": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "trajectory_kind",
+        "recorded_iterate_count",
+        "target_cell_iterate_count",
+        "strict_target_iterate_count",
+        "first_target_cell_iteration",
+        "first_exit_after_target_entry_iteration",
+        "exited_after_target_entry",
+        "final_in_target_convex_cell"
+      ],
+      "properties": {
+        "trajectory_kind": {
+          "type": "string",
+          "minLength": 1
+        },
+        "recorded_iterate_count": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "target_cell_iterate_count": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "strict_target_iterate_count": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "first_target_cell_iteration": {
+          "type": ["integer", "null"],
+          "minimum": 0
+        },
+        "first_exit_after_target_entry_iteration": {
+          "type": ["integer", "null"],
+          "minimum": 0
+        },
+        "exited_after_target_entry": {
+          "type": "boolean"
+        },
+        "final_in_target_convex_cell": {
+          "type": ["boolean", "null"]
+        }
+      }
+    },
+    "root_cluster": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["fingerprint", "size", "outcome_counts", "task_ids"],
+      "properties": {
+        "fingerprint": {
+          "$ref": "#/$defs/tagged_sha256"
+        },
+        "size": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "outcome_counts": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "integer",
+            "minimum": 1
+          }
+        },
+        "task_ids": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "pattern": "^task-sha256:[0-9a-f]{64}$"
+          }
+        }
+      }
+    },
+    "root_representative": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["fingerprint", "representative_vertices_cp1"],
+      "properties": {
+        "fingerprint": {
+          "$ref": "#/$defs/tagged_sha256"
+        },
+        "representative_vertices_cp1": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "$ref": "#/$defs/cp1_vertex"
+          }
+        }
+      }
+    },
+    "case": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "case_id",
+        "configuration_id",
+        "distinguished_face",
+        "planned_task_count",
+        "finished_task_count",
+        "outcome_counts",
+        "uniform_outcome",
+        "target_success_count",
+        "target_success_fraction",
+        "root_clusters",
+        "hardness_class",
+        "hardness_key",
+        "hardness_rank"
+      ],
+      "properties": {
+        "case_id": {
+          "type": "string",
+          "pattern": "^case-sha256:[0-9a-f]{64}$"
+        },
+        "configuration_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "distinguished_face": {
+          "$ref": "#/$defs/face"
+        },
+        "planned_task_count": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "finished_task_count": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "outcome_counts": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "integer",
+            "minimum": 1
+          }
+        },
+        "uniform_outcome": {
+          "type": ["string", "null"]
+        },
+        "target_success_count": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "target_success_fraction": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "root_clusters": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/root_cluster"
+          }
+        },
+        "hardness_class": {
+          "enum": [
+            "incomplete",
+            "canonical_wrong_root",
+            "canonical_nonconvergence",
+            "multibasin",
+            "fragile",
+            "robust"
+          ]
+        },
+        "hardness_key": {
+          "type": "array",
+          "minItems": 4,
+          "maxItems": 4,
+          "items": {
+            "type": "number"
+          }
+        },
+        "hardness_rank": {
+          "type": ["integer", "null"],
+          "minimum": 1
+        }
+      }
+    },
+    "summary": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "planned",
+        "finished",
+        "completed",
+        "errors",
+        "timed_out",
+        "pending",
+        "outcome_counts"
+      ],
+      "properties": {
+        "planned": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "finished": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "completed": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "errors": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "timed_out": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "pending": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "outcome_counts": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "integer",
+            "minimum": 1
+          }
+        }
+      }
+    }
+  }
+}

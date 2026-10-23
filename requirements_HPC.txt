@@ -93,8 +93,7 @@ httplib2==0.20.2
 httpx==0.28.1
 httpx-sse==0.4.3
 huggingface_hub==1.4.1
-# Editable install with no version control (hydra-groups==0.1.0)
--e /home/igor/devel/hyd/hydra-groups
+# Host-local editable hydra-groups checkout omitted from this environment snapshot.
 hyperlink==21.0.0
 icdiff==2.0.4
 idna==3.3
@@ -305,4 +304,3 @@ Werkzeug==2.0.2
 wrapt==1.13.3
 zipp==1.0.0
 zope.interface==5.4.0
-

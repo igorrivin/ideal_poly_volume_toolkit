@@ -13,14 +13,16 @@ Pipeline:
 Requirements:
   - numpy
   - scipy (for 3D convex hull)
-  - mpmath (for Bloch–Wigner)
+  - ideal_poly_volume_toolkit.geometry (for Bloch–Wigner)
   - trimesh, pyrender (optional: meshing & rendering)
   - rivin_holonomy.py in the same directory (Penner–Rivin core)
 """
 
 from typing import List, Tuple, Dict, Any, Optional
+import cmath
+import math
+
 import numpy as np
-import math, cmath
 
 # Sentinel for infinity
 INF = None
@@ -32,14 +34,14 @@ try:
 except Exception:
     _HAS_SCIPY = False
 
-try:
-    import mpmath as mp
-    _HAS_MPMATH = True
-except Exception:
-    _HAS_MPMATH = False
-
-# local
-from rivin_holonomy import Triangulation, generators_from_triangulation
+# Local sibling import.  Keep the fallback for direct execution of this file,
+# while normal package imports use the unambiguous relative path.
+if __package__:
+    from .geometry import bloch_wigner
+    from .rivin_holonomy import Triangulation, generators_from_triangulation
+else:  # pragma: no cover - direct-script compatibility
+    from geometry import bloch_wigner
+    from rivin_holonomy import Triangulation, generators_from_triangulation
 
 # ---------- Stereographic and cross ratios ----------
 
@@ -125,22 +127,60 @@ def convex_hull_from_points_on_sphere(pts3: np.ndarray) -> Dict[str, Any]:
         if norm == 0: continue
         n = n / norm
         key = tuple(np.round(np.append(n, d/norm), 8))
-        planes.setdefault(key, []).append(hull.simplices[fi])
+        group = planes.setdefault(key, {"normal": n, "triangles": []})
+        group["triangles"].append(hull.simplices[fi])
     faces = []
-    for tris in planes.values():
+    for group in planes.values():
+        tris = group["triangles"]
         edge_count = {}
         for tri in tris:
             v = list(tri)
             for e in [(v[0],v[1]),(v[1],v[2]),(v[2],v[0])]:
-                edge_count[e] = edge_count.get(e,0)+1
-        boundary = [e for e,cnt in edge_count.items() if cnt==1]
-        nxt = {}
-        for u,v in boundary: nxt[u]=v
-        if not boundary: continue
-        start = boundary[0][0]; poly=[start]; seen={start}
-        while poly[-1] in nxt and nxt[poly[-1]] not in seen:
-            poly.append(nxt[poly[-1]]); seen.add(poly[-1])
-        if len(poly)>=3: faces.append(poly)
+                edge = tuple(sorted((int(e[0]), int(e[1]))))
+                edge_count[edge] = edge_count.get(edge, 0) + 1
+
+        # Internal diagonals occur twice in the triangulation of a coplanar
+        # hull face.  Count them as undirected edges so their arbitrary Qhull
+        # orientations cannot make them look like boundary edges.
+        boundary = sorted(e for e, cnt in edge_count.items() if cnt == 1)
+        if not boundary:
+            continue
+
+        adjacency = {}
+        for u, v in boundary:
+            adjacency.setdefault(u, []).append(v)
+            adjacency.setdefault(v, []).append(u)
+        if any(len(neighbours) != 2 for neighbours in adjacency.values()):
+            raise ValueError("coplanar hull boundary is not a simple cycle")
+
+        # Traverse deterministically, then orient the polygon consistently
+        # with Qhull's outward plane normal.
+        start = min(adjacency)
+        first = min(adjacency[start])
+        poly = [start, first]
+        previous, current = start, first
+        while True:
+            candidates = [v for v in adjacency[current] if v != previous]
+            if len(candidates) != 1:
+                raise ValueError("coplanar hull boundary is not a simple cycle")
+            nxt = candidates[0]
+            if nxt == start:
+                break
+            if nxt in poly:
+                raise ValueError("coplanar hull boundary closes prematurely")
+            poly.append(nxt)
+            previous, current = current, nxt
+
+        if len(poly) != len(adjacency):
+            raise ValueError("coplanar hull boundary has multiple components")
+
+        polygon_normal = np.zeros(3, dtype=float)
+        for i, u in enumerate(poly):
+            polygon_normal += np.cross(pts3[u], pts3[poly[(i + 1) % len(poly)]])
+        if np.dot(polygon_normal, group["normal"]) < 0:
+            poly = [poly[0]] + list(reversed(poly[1:]))
+        faces.append(poly)
+    faces.sort(key=lambda face: tuple(face))
     edge_set=set()
     for f in faces:
         for i in range(len(f)):
@@ -252,11 +292,6 @@ def edge_dihedrals(info: Dict[str,Any]) -> Dict[Tuple[int,int], float]:
         dihedral[tuple(sorted((u,v)))]=abs(float(tau.imag))
     return dihedral
 
-def bloch_wigner(z: complex) -> float:
-    if not _HAS_MPMATH:
-        raise RuntimeError("mpmath is required for volume computation.")
-    return float(mp.im(mp.polylog(2, z)) + mp.arg(1 - z)*mp.log(abs(z)))
-
 def tetra_shape(z0, z1, z2, z3) -> complex:
     # Use INF-safe cross ratio if available
     CR = cr_axby(z0, z1, z2, z3)
@@ -264,7 +299,6 @@ def tetra_shape(z0, z1, z2, z3) -> complex:
     return CR
 
 def volume_from_hull(pts3: np.ndarray, faces: List[List[int]], apex: Optional[int]=None) -> float:
-    if not _HAS_MPMATH: raise RuntimeError("mpmath is required for volume computation.")
     z=[stereographic(p) for p in pts3]
     tris,_=triangulate_faces_with_face_id(faces)
     if apex is None: apex=0
@@ -352,37 +386,40 @@ def hull_to_mesh(points: List[complex], add_north_pole=False, refinement=0, mode
 
 # ---------- Volume gradients ----------
 
-def _log_two_sin_angle_from_complex(w, eps=1e-15):
-    """
-    For w != real, log|2 sin Arg(w)| = log( 2 |Im w| / |w| ).
-    Branch-free (uses only real logs). 'eps' protects degeneracies.
-    """
-    if w is INF:
-        # Should not occur for shape factors in valid configurations
-        return 0.0
-    return math.log(2.0 * max(abs(w.imag), eps) / max(abs(w), eps))
-
 def _G_of_shape(z):
     """
     dVol = Im( G(z) * dz ), where
-      G(z) = (-sα + sβ)/z  -  sβ/(z-1)  +  sγ/(1-z),
-    with s• = log|2 sin(angle•)| evaluated branch-free via Im/|.|.
+      G(z) = log|z|/(z-1) - log|1-z|/z.
+
+    This is the standard differential of the Bloch-Wigner dilogarithm,
+
+      dD(z) = log|z| d arg(1-z) - log|1-z| d arg(z).
     """
-    # the three angles' log-sine factors
-    s_alpha  = _log_two_sin_angle_from_complex(z)
-    s_beta   = _log_two_sin_angle_from_complex(1.0 - 1.0/z if z != 0 else 1.0+0.0j)
-    s_gamma  = _log_two_sin_angle_from_complex(1.0 - z)
+    if z is INF:
+        return 0.0 + 0.0j
+    z = complex(z)
+    if z == 0.0 or z == 1.0:
+        # Degenerate tetrahedra have zero volume and a singular differential.
+        # Do not flatten merely near-degenerate shapes: their large, finite
+        # derivatives provide an important direction away from collisions.
+        return 0.0 + 0.0j
 
-    def inv(u):
-        if u is INF:                # 1/∞ -> 0
-            return 0.0 + 0.0j
-        if isinstance(u, complex):
-            if abs(u) < 1e-15:      # safe reciprocal
-                return u.conjugate() / (abs(u)**2 + 1e-30)
-            return 1.0/u
-        return 1.0/complex(u)
+    # Preserve the first-order terms of these logarithms near their removable
+    # cancellation points.  Directly evaluating abs(1-z), for example, rounds
+    # away Re(z) when z is much smaller than one.
+    x, y = z.real, z.imag
+    z_minus_one = z - 1.0
+    if abs(z_minus_one) < 0.5:
+        dx = z_minus_one.real
+        log_abs_z = 0.5 * math.log1p(2.0 * dx + dx * dx + y * y)
+    else:
+        log_abs_z = math.log(abs(z))
+    if abs(z) < 0.5:
+        log_abs_one_minus_z = 0.5 * math.log1p(-2.0 * x + x * x + y * y)
+    else:
+        log_abs_one_minus_z = math.log(abs(1.0 - z))
 
-    return (-s_alpha + s_beta) * inv(z) - s_beta * inv(z - 1.0) + s_gamma * inv(1.0 - z)
+    return log_abs_z / z_minus_one - log_abs_one_minus_z / z
 
 def _dlog_cr_coeffs(a, x, b, y):
     """
@@ -392,9 +429,13 @@ def _dlog_cr_coeffs(a, x, b, y):
     def inv_diff(u, v):
         if u is INF or v is INF:
             return 0.0 + 0.0j       # 1/(∞ - finite) = 0
-        d = (u - v)
-        if abs(d) < 1e-15:
-            return d.conjugate() / (abs(d)**2 + 1e-30)
+        d = u - v
+        if d == 0:
+            # The logarithmic cross-ratio differential is singular for an
+            # exact collision.  Preserve the existing zero convention only
+            # at that endpoint; every nonzero separation uses the true
+            # reciprocal, however small it is.
+            return 0.0 + 0.0j
         return 1.0 / d
 
     # Reduced forms for INF cases
@@ -469,11 +510,14 @@ def volume_and_gradient_from_hull_simplices(pts3, hull, apex=None, variable_mask
         # shape for tetra (z0,z1,z2,z3) using CR(z2,z0; z3,z1)
         z = cr_axby(z2, z0, z3, z1)
 
-        # volume via Bloch–Wigner (value only; gradient doesn't need Li2)
-        V += abs(bloch_wigner(z))
+        # The public volume is unsigned.  Its derivative therefore includes
+        # the orientation sign of the signed Bloch-Wigner value.
+        signed_volume = bloch_wigner(z)
+        V += abs(signed_volume)
 
         # dVol = Im( G(z)*dz ), dz = z * d log z, d log z = S_a da + S_x dx + S_b db + S_y dy
-        G  = _G_of_shape(z)
+        volume_sign = 1.0 if signed_volume > 0 else (-1.0 if signed_volume < 0 else 0.0)
+        G  = volume_sign * _G_of_shape(z)
         Sa, Sx, Sb, Sy = _dlog_cr_coeffs(z2, z0, z3, z1)
 
         W_a = G * z * Sa

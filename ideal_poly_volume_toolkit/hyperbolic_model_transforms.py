@@ -44,7 +44,7 @@ Typical usage
 
 from __future__ import annotations
 
-from typing import Any, Iterable, List, Sequence
+from typing import Any, Sequence
 
 import mpmath as mp
 
@@ -151,7 +151,9 @@ def _canonical_model_name(model: str) -> str:
 def _is_halfspace_infinity(point: Any) -> bool:
     if isinstance(point, str):
         return point.strip().lower() in {"inf", "infinity", "halfspace_infinity"}
-    return point == HALFSPACE_INFINITY
+    # Sequence-like points (especially NumPy arrays) implement elementwise
+    # equality, which cannot be used as a scalar truth value.
+    return False
 
 
 def _coerce_ball_point(

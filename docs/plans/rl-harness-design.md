@@ -1,8 +1,10 @@
 # RL Harness Modularization — Design
 
-*Status:* Stage B (design only, no code). Companion to the staged plan in
-`docs/implementation-status.md`. Once this is agreed, Stage C implements it
-in three reviewable commits.
+*Status:* historical Stage-B design; Stage C has since been implemented. See
+`docs/implementation-status.md` for current status and
+`ideal_poly_volume_toolkit/rl/README.md` for the live interfaces. Return types
+and optimizer details below describe the pre-accounting design and are retained
+for provenance.
 
 ## 1. Goal
 

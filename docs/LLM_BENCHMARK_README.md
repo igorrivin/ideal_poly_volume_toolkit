@@ -2,12 +2,154 @@
 
 A torture test for evaluating Large Language Model capabilities in geometric reasoning and computational geometry.
 
+This repository also contains a stricter, label-preserving zero-shear
+realization protocol. It is different from the older relabeling-insensitive
+planar Delaunay benchmark described later on this page.
+
 ## Overview
 
 This benchmark tests whether an LLM can:
 1. Recognize when a triangulation is geometrically realizable
 2. Construct a valid point set that realizes a given triangulation
 3. Correctly identify impossible cases
+
+## Strict normalized zero-shear realization protocol
+
+The strict protocol asks for CP1 coordinates with fixed labels and anchors
+`z_0 = infinity`, `z_1 = 0`, and `z_2 = 1`. Its private answer key contains
+`ground_truth.exists`, `ground_truth.oriented_faces`, normalization metadata,
+and optionally `ground_truth.vertices` for a private reference diagnostic. A
+model response must be one bare strict-JSON object, with no regex extraction,
+Markdown, comments, duplicate keys, `NaN`, or `Infinity` accepted:
+
+```json
+{"exists": false}
+```
+
+or
+
+```json
+{"exists": true, "vertices": [null, [0.0, 0.0], [1.0, 0.0], [0.5, 0.8]]}
+```
+
+Run the independent grader with:
+
+```bash
+python3 scripts/check_zero_shear_response.py \
+  PRIVATE_ANSWER_KEY.json MODEL_RESPONSE.json \
+  --output GRADE.json \
+  --shear-tolerance 1e-8 \
+  --support-tolerance 0
+```
+
+The grade is written atomically when `--output` is supplied; otherwise it is
+the only JSON object on stdout. An existing output is protected unless
+`--overwrite` is explicit. A malformed response or failed realization returns
+a nonzero process status. `--reference-tolerance VALUE` promotes the otherwise
+diagnostic, label-aligned private-reference chordal error to an additional
+gate. It is not needed for independent geometric acceptance.
+
+The package owner is
+`ideal_poly_volume_toolkit.rivin_zero_shear.audit_zero_shear_realization`.
+Its report keeps the following predicates separate:
+
+- normalization/anchors and handedness, chordal distinctness, and coherent
+  closed-sphere topology;
+- authoritative strict supporting-plane inequalities and coherent facet
+  orientation, with exact labeled Qhull facet-set agreement retained as an
+  independent, non-authoritative diagnostic;
+- signed bending/Delaunay inequalities;
+- zero-shear equalities;
+- spherical embeddedness, plus a chart-dependent planar straight-edge
+  diagnostic.
+
+This separation is essential: zero shear does not imply Delaunayness,
+convexity, the required labeled hull, or embeddedness. A Tutte embedding is an
+initial guess only, and an unconstrained solve can cross a cocircular/Delaunay
+wall or an embedding wall.
+
+### Tutte-start and multi-start audit
+
+The reproducibility search records whether a Tutte start is unusually reliable
+and whether alternative zero-shear roots occur:
+
+```bash
+python3 scripts/audit_tutte_zero_shear_basins.py INPUT.json \
+  --output AUDIT.json \
+  --anchors-per-config 3 \
+  --sigmas .25,.5,.75,1 \
+  --starts-per-sigma 10 \
+  --workers 4
+```
+
+Use `--config-id ID` or `--distinguished-face A,B,C` repeatedly to restrict
+the search or prescribe ordered anchors. Re-run the same command with
+`--resume` after an interruption. The schema is
+`docs/schemas/tutte-zero-shear-audit-v1.schema.json`, with schema version
+`ideal-poly-tutte-zero-shear-audit/1` and solver protocol
+`weighted-tutte-zero-shear-trf/1`. Endpoint classes distinguish the target
+strict realization, embedded wrong-hull and nonembedded zero-shear roots,
+degenerate roots, residual failures, solver failures, errors, and timeouts.
+Root clusters use deterministic task-order representative assignment with a
+direct maximum per-label spherical chordal-distance test; a checkpoint keeps
+one normalized CP1 representative per discovered cluster, not coordinates for
+every start. Resume verifies the corpus, deterministic plan, generator/core
+source files (including the holonomy dependency), Python/dependency/platform
+versions, and numerical thread environment before adding work. A fully
+attempted campaign containing worker errors has status `failed`; wall-time
+exhaustion has status `exhausted`. Both return a nonzero CLI status, while only
+an error-free `complete` campaign returns zero.
+Validate a saved artifact without running a search via:
+
+```bash
+python3 scripts/audit_tutte_zero_shear_basins.py --validate-only AUDIT.json
+```
+
+### Leakage-resistant holdout packages
+
+`scripts/build_zero_shear_holdouts.py` converts one arithmetic corpus and one
+or more finalized basin audits into separate public and private packages. The
+public directory contains only opaque sequential IDs, paste-ready prompts,
+and prompt hashes. The private directory contains source provenance,
+relabeling maps, basin evidence, strict numerical audits, and checker-compatible
+answer keys. It must be outside the repository, and neither directory may
+already exist:
+
+```bash
+python3 scripts/build_zero_shear_holdouts.py \
+  CORPUS.json BASIN_A.json BASIN_B.json \
+  --public-dir /tmp/zero-shear-holdouts-public \
+  --private-dir /SECURE/PATH/zero-shear-holdouts-private \
+  --case-id CASE_ID_A --case-id CASE_ID_B
+```
+
+Use `--top N` instead of explicit case IDs only after freezing the basin
+audits and ranking, before querying any model. Selection admits at most one
+case per source configuration/topology, independently reaudits rounded private
+coordinates, and requires positive bending orientation. Omitting keys is only
+allowed with the explicit `--public-only` flag.
+
+Current holdouts are a positive-only, anchor-mined **Tutte-hard stress set**,
+not a representative sample and not a binary existence benchmark. Report
+strict-coordinate realization rate as the primary score. An always-true
+existence answer is trivial for such a set, and uncertified flipped or
+nonconvex examples must not be presented as negative instances. Keep public
+prompts and private answer keys in different storage and never commit them
+together. Run each holdout one-shot: checker reports containing label-aligned
+private-reference errors are internal evaluator artifacts and must not be
+returned to a model as an adaptive refinement oracle. A prompt ceases to be a
+future holdout once it or its source corpus is published.
+
+Arithmetic-corpus acceptance by
+`scripts/generate_arithmeticity_benchmark.py` is not strict convex
+certification. Its coordinate-shear, exact abstract PSL(2,Z), KKT, and
+realization gates do not by themselves prove spherical embeddedness, signed
+bending, or exact labeled hull facets. Apply the strict audit separately.
+
+Finally, the strict audit and checker are double-precision numerical
+verification, not formal exact proof. A rigorous existence certificate still
+requires a validated root enclosure (for example interval Newton/Krawczyk)
+and interval-certified strict support, embedding, and bending inequalities.
 
 ## The Challenge
 

@@ -1,0 +1,5 @@
+# The sdist is an installable source artifact, not a partial repository
+# snapshot. Repository-level tests depend on docs, scripts, examples, and LFS
+# data that are intentionally excluded by the package finder, so omit the test
+# tree rather than shipping a suite that cannot run from the sdist alone.
+prune tests

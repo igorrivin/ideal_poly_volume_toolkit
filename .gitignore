@@ -83,8 +83,17 @@ coverage.xml
 /complete_challenge_package.json
 /llm_benchmark_150v.json
 
+# Private LLM holdout material must never be committed beside public prompts.
+*.answer-key.json
+manifest.private.json
+
 # Results data (keep structure, ignore large generated files)
 results/data/*.json
+!results/data/optimal_d4_symmetry_analysis.json
+!results/data/optimal_d5_d6_symmetry_analysis.json
+# Mutable arithmetic-corpus checkpoints are operational outputs. Completed,
+# validated corpora may be promoted deliberately through the result manifest.
+results/data/arithmetic_corpora/*.json
 bin/results/*.aux
 *.out
 *.toc

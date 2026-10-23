@@ -2,6 +2,12 @@
 
 This directory contains general-purpose wrapper scripts and GUI for common tasks.
 
+The reusable H^3 optimization implementation lives in
+`ideal_poly_volume_toolkit.optimization`. The CLI and GUI adapt that service;
+numerical objectives, trial selection, and positive-volume result accounting
+must stay in the package module. The underlying volume kernel lives in
+`ideal_poly_volume_toolkit.geometry`.
+
 ## 🎨 Interactive GUI
 
 ### `gui.py`
@@ -26,7 +32,7 @@ The GUI will open in your browser at `http://127.0.0.1:7860` (or your custom por
 
 **Features:**
 - **Optimization Tab**: Find maximal volume configurations with adjustable parameters
-  - Number of vertices, trials, iterations
+  - Number of vertices, trials, iterations, and SciPy population multiplier
   - Real-time progress tracking
   - Automatic result saving
 
@@ -34,6 +40,10 @@ The GUI will open in your browser at `http://127.0.0.1:7860` (or your custom por
   - Configurable sample size
   - Automatic histogram generation
   - Statistics: mean, median, quartiles, std dev
+
+- **Fixed Combinatorics Tab**: Optimize a fixed Rivin-Delaunay triangulation
+
+- **Arithmeticity Tab**: Inspect Penner-Rivin holonomy and symmetry data
 
 - **3D Visualization Tab**: Interactive polyhedron visualization
   - Delaunay triangulation (2D complex plane)
@@ -58,32 +68,49 @@ The GUI will open in your browser at `http://127.0.0.1:7860` (or your custom por
 ### `optimize_polyhedron.py`
 
 General-purpose optimization wrapper for finding maximal volume configurations.
+The installed `ideal-poly-optimize` command and this source-tree script both
+delegate to `ideal_poly_volume_toolkit.optimization_cli`; output volumes are
+always positive even though SciPy minimizes an internal negative-volume
+objective.
 
 **Usage:**
 ```bash
 # Optimize a 7-vertex polyhedron with 10 trials
-python bin/optimize_polyhedron.py --vertices 7 --trials 10
+ideal-poly-optimize --vertices 7 --trials 10
 
 # Optimize 12-vertex with more iterations
-python bin/optimize_polyhedron.py --vertices 12 --trials 20 --maxiter 300
+ideal-poly-optimize --vertices 12 --trials 20 --maxiter 300
 
 # Custom output location
-python bin/optimize_polyhedron.py --vertices 20 --trials 5 --output my_results.json
+ideal-poly-optimize --vertices 20 --trials 5 --output my_results.json
 ```
+
+From a checkout, `python bin/optimize_polyhedron.py ...` remains a compatible
+spelling with the same arguments and output schema.
 
 **Arguments:**
 - `--vertices, -v`: Number of vertices (required, must be >= 4)
 - `--trials, -t`: Number of optimization trials (default: 10)
 - `--maxiter, -m`: Max iterations per trial (default: 200)
-- `--popsize, -p`: Population size for differential evolution (default: 15)
+- `--popsize, -p`: SciPy population multiplier; the nominal population is
+  `popsize × parameter dimension` (default: 15)
+- `--workers, -w`: Worker processes (`-1` uses all available CPUs; default: 1)
 - `--output, -o`: Output JSON file (default: auto-generated in results/data/)
 - `--seed, -s`: Random seed base (default: 42)
 
 **Output:**
-Saves a JSON file with:
-- Best configuration found (volume, parameters, vertex coordinates)
-- Combinatorial structure (faces, edges, Euler characteristic)
-- All trial results
+Both the CLI and GUI use schema version 1 and source-specific filenames. The
+legacy `triangulation` key remains an alias for
+`finite_delaunay_triangulation`. Saves a JSON file with:
+- Best configuration found (positive volume, parameters, and finite complex
+  vertices; the vertex at infinity is implicit)
+- `finite_delaunay_triangulation`, containing only finite Delaunay faces
+- `boundary_triangulation`, the full spherical boundary with the explicit
+  infinity-vertex index recorded in the metadata
+- Combinatorial structure for that full boundary (faces, edges, and Euler
+  characteristic)
+- All trial results; invalid penalty-only trials have `volume: null` and are
+  excluded from aggregate volume statistics
 
 ---
 
@@ -104,17 +131,49 @@ python bin/analyze_distribution.py --vertices 5 --samples 20000 --reference 3.66
 ```
 
 **Arguments:**
-- `--vertices, -v`: Number of vertices (required, must be >= 3)
+- `--vertices, -v`: Number of vertices (required, must be >= 4)
 - `--samples, -n`: Number of random samples (default: 10000)
 - `--seed, -s`: Random seed (default: 42)
 - `--output, -o`: Output plot file (default: auto-generated in results/plots/)
 - `--data, -d`: Output data JSON file (optional)
 - `--reference, -r`: Reference volume to mark on plot (optional)
-- `--series-terms`: Number of series terms for Lobachevsky function (default: 96)
+- `--series-terms`: Deprecated compatibility option; ignored by the current
+  vectorized Bloch–Wigner kernel
+- `--fit, -f`: Optional fitted distribution (`beta`, `gamma`, `lognorm`, or `norm`)
+- `--bootstrap, -b`: Bootstrap samples for fitted-parameter intervals (default: 1000)
+- `--confidence, -c`: Confidence level for fitted-parameter intervals (default: 0.95)
+- `--jobs, -j`: Parallel worker count. The automatic default uses no more
+  than 16 workers or the number of useful logical batches; use 1 for serial
+  execution.
 
 **Output:**
 - PNG plot with histogram and box plot
 - Optional JSON file with statistics and all volume samples
+
+Sampling is split into fixed 256-configuration logical batches, each seeded
+from the CLI seed and batch index. Therefore the same seed and sample request
+produce the same ordered volumes and rejection counters for serial and
+parallel runs. Rejected vertex draws are retried up to 100 times per required
+vertex, and rejected configurations are retried up to 20 attempts per requested
+valid sample within each batch. Saved metadata distinguishes rejected draws,
+rejected configurations, known numerical-evaluation failures, invalid volume
+evaluations, and the effective worker count. If those finite limits are
+exhausted, `status` is `attempt_limit_reached` and `n_missing` is nonzero;
+under-filling is never reported as a complete run. Bootstrap confidence
+intervals use a function-local generator initialized from `--seed`.
+
+---
+
+### `sample_size_calculator.py`
+
+Estimate the sample count needed to reach a requested confidence-interval
+half-width from a pilot distribution JSON file:
+
+```bash
+python bin/sample_size_calculator.py results/data/pilot.json --precision 0.01
+```
+
+Use `--confidence` to select a confidence level; the default is 0.95.
 
 ---
 
@@ -146,8 +205,9 @@ done
 
 All outputs are saved to standardized locations:
 
-- **Optimization results**: `results/data/{n}vertex_optimization_TIMESTAMP.json`
+- **Optimization results**: `results/data/{n}vertex_optimization_{cli|gui}_TIMESTAMP.json`
 - **Distribution plots**: `results/plots/{n}vertex_distribution_TIMESTAMP.png`
 - **Distribution data**: `results/data/{n}vertex_distribution_TIMESTAMP.json`
 
-Timestamps are in format: `YYYYMMDD_HHMMSS`
+Optimization timestamps use `YYYYMMDD_HHMMSS_microseconds`; other tools retain
+the shorter `YYYYMMDD_HHMMSS` form.

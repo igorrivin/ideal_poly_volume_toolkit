@@ -9,9 +9,11 @@ New code should import from `ideal_poly_volume_toolkit.rl` directly.
 """
 
 from .rl.generic import *  # noqa: F401,F403
-from .rl.generic import (  # explicit re-exports for static analyzers
+from .rl.generic import (  # noqa: F401  # explicit static re-exports
     OptimizationTask,
     InnerOptimizer,
+    OptimizerRun,
+    OptimizerRunError,
     TaskSampler,
     SearchNode,
     GenericOptEnv,

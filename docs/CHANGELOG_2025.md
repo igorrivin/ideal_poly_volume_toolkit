@@ -1,5 +1,10 @@
 # Changelog - Major Updates (2025)
 
+> **Historical document.** This narrative log describes work performed in
+> 2025 and is retained for provenance. It is not the current release changelog
+> or known-issues list. See the [canonical changelog](../CHANGELOG.md) and
+> [0.4 release note](release-0.4.0.md) for current release information.
+
 ## Critical Bug Fix: Triangle Extraction from Plantri
 
 ### The Bug

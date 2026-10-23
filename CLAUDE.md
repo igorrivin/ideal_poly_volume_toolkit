@@ -25,11 +25,14 @@ This repository is organized by functionality. Every new feature must have one c
 
 ## Commands
 
-- Setup: `...`
-- Test: `...`
-- Lint: `...`
-- Typecheck: `...`
-- Run app/service: `...`
+- Setup (development): `python3 -m pip install -e '.[dev]'`
+- Setup (full RL/research environment): install `requirements.txt`, then run
+  `python3 -m pip install -e .`
+- Test: `python3 -m pytest -q`
+- Lint changed Python files: `ruff check <paths>`
+- Typecheck: not configured
+- Run GUI: `python3 app.py`
+- Run optimizer CLI: `python3 bin/optimize_polyhedron.py --help`
 
 ## Placement rules
 

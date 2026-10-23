@@ -9,6 +9,8 @@ The generic layer (task / inner optimizer / search tree / Gym env) lives in
 from .generic import (
     OptimizationTask,
     InnerOptimizer,
+    OptimizerRun,
+    OptimizerRunError,
     TaskSampler,
     SearchNode,
     GenericOptEnv,
@@ -31,6 +33,8 @@ from .training import (
 __all__ = [
     "OptimizationTask",
     "InnerOptimizer",
+    "OptimizerRun",
+    "OptimizerRunError",
     "TaskSampler",
     "SearchNode",
     "GenericOptEnv",

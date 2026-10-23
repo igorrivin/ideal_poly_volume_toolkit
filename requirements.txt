@@ -2,16 +2,29 @@
 numpy
 scipy
 mpmath
+
+# Differentiable geometry and higher-dimensional optimization
 torch>=2.0
+
+# Plotting and GUI
 matplotlib
+plotly
+Pillow
+gradio>=6,<7
+
+# Mesh export and offscreen rendering
+trimesh
+pyrender
+imageio
 
 # Optimization
 cma
 
-# Polytope symmetry
+# Graph and polytope symmetry
 pynauty
+networkx
 
-# RL (optional, for rl_optimizer.py)
+# RL/controller workflows (ideal_poly_volume_toolkit.rl)
 gymnasium
 stable-baselines3
 

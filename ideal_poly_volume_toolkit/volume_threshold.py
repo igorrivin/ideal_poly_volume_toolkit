@@ -19,6 +19,11 @@ Usage:
 import numpy as np
 from scipy.spatial import ConvexHull, Delaunay
 
+if __package__:
+    from .geometry import bloch_wigner
+else:  # pragma: no cover - direct-script compatibility
+    from geometry import bloch_wigner
+
 
 # ============================================================================
 # Stereographic projection utilities
@@ -158,7 +163,7 @@ def _angles_for_triangle(z1, z2, z3):
             angle_at(z3, z1, z2))
 
 
-def triangle_volume(z1, z2, z3, series_terms=64):
+def triangle_volume(z1, z2, z3, series_terms=None):
     """
     Compute volume of ideal hyperbolic tetrahedron from base triangle.
 
@@ -170,22 +175,33 @@ def triangle_volume(z1, z2, z3, series_terms=64):
 
     Args:
         z1, z2, z3: Complex coordinates of triangle vertices
-        series_terms: Number of terms in Lobachevsky series (default 64)
+        series_terms: Number of terms in the Lobachevsky series. If None
+            (the default), use the accurate Bloch-Wigner closed form.
 
     Returns:
         Volume of the ideal tetrahedron
     """
+    if series_terms is None:
+        denominator = z2 - z3
+        if denominator == 0:
+            return 0.0
+        shape = (z1 - z3) / denominator
+        return abs(bloch_wigner(shape))
+
+    if not isinstance(series_terms, (int, np.integer)) or series_terms < 1:
+        raise ValueError("series_terms must be a positive integer or None")
     a1, a2, a3 = _angles_for_triangle(z1, z2, z3)
-    return (_lob_value_series(a1, series_terms) +
-            _lob_value_series(a2, series_terms) +
-            _lob_value_series(a3, series_terms))
+    return (_lob_value_series(a1, int(series_terms)) +
+            _lob_value_series(a2, int(series_terms)) +
+            _lob_value_series(a3, int(series_terms)))
 
 
 # ============================================================================
 # Volume computation strategies
 # ============================================================================
 
-def compute_volume_hull_method(vertices: np.ndarray, index_inf: int = None) -> float:
+def compute_volume_hull_method(vertices: np.ndarray, index_inf: int = None,
+                               series_terms=None) -> float:
     """
     Compute polyhedron volume using convex hull method.
 
@@ -212,11 +228,11 @@ def compute_volume_hull_method(vertices: np.ndarray, index_inf: int = None) -> f
     tris = hull_tris_projected_back(vertices, index_inf=index_inf)
     total = 0.0
     for (z1, z2, z3) in tris:
-        total += triangle_volume(z1, z2, z3)
+        total += triangle_volume(z1, z2, z3, series_terms=series_terms)
     return total
 
 
-def compute_volume_delaunay_method(vertices: np.ndarray) -> float:
+def compute_volume_delaunay_method(vertices: np.ndarray, series_terms=None) -> float:
     """
     Compute polyhedron volume using Delaunay triangulation.
 
@@ -245,7 +261,7 @@ def compute_volume_delaunay_method(vertices: np.ndarray) -> float:
     total = 0.0
     for (i, j, k) in idx_tris:
         z1, z2, z3 = z_finite[i], z_finite[j], z_finite[k]
-        total += triangle_volume(z1, z2, z3)
+        total += triangle_volume(z1, z2, z3, series_terms=series_terms)
     return total
 
 
@@ -253,7 +269,7 @@ def compute_volume_delaunay_method(vertices: np.ndarray) -> float:
 # Main API
 # ============================================================================
 
-def compute_volume(vertices, method="auto", series_terms=64):
+def compute_volume(vertices, method="auto", series_terms=None):
     """
     Compute volume of ideal hyperbolic polyhedron from vertex coordinates.
 
@@ -268,7 +284,8 @@ def compute_volume(vertices, method="auto", series_terms=64):
                - "auto": Use Delaunay if ∞ present, else hull
                - "hull": Lift to sphere, convex hull, project back
                - "delaunay": Delaunay triangulation of finite vertices
-        series_terms: Number of terms in Lobachevsky series (default 64)
+        series_terms: Number of terms in the Lobachevsky series. If None
+            (the default), use the accurate Bloch-Wigner closed form.
 
     Returns:
         Volume of the ideal polyhedron
@@ -295,17 +312,17 @@ def compute_volume(vertices, method="auto", series_terms=64):
     if method == "delaunay":
         if not has_inf:
             raise ValueError("Delaunay method requires vertex at infinity")
-        return compute_volume_delaunay_method(vertices)
+        return compute_volume_delaunay_method(vertices, series_terms=series_terms)
     elif method == "hull":
         if not has_inf:
             # Add infinity if not present
             vertices = np.append(vertices, np.inf)
-        return compute_volume_hull_method(vertices)
+        return compute_volume_hull_method(vertices, series_terms=series_terms)
     else:
         raise ValueError(f"Unknown method: {method}")
 
 
-def volume_exceeds_threshold(vertices, threshold):
+def volume_exceeds_threshold(vertices, threshold, series_terms=None):
     """
     Check if ideal polyhedron volume exceeds a threshold.
 
@@ -331,11 +348,11 @@ def volume_exceeds_threshold(vertices, threshold):
         >>> vertices = [0+0j, 1+0j, 1j, np.inf, 0.5+0.5j, -0.3+0.8j]
         >>> result = volume_exceeds_threshold(vertices, 2.5)
     """
-    volume = compute_volume(vertices)
+    volume = compute_volume(vertices, series_terms=series_terms)
     return volume > threshold
 
 
-def get_volume(vertices):
+def get_volume(vertices, series_terms=None):
     """
     Convenience function to get the exact volume value.
 
@@ -350,4 +367,4 @@ def get_volume(vertices):
         >>> vol = get_volume(vertices)
         >>> print(f"Volume: {vol:.6f}")
     """
-    return compute_volume(vertices)
+    return compute_volume(vertices, series_terms=series_terms)

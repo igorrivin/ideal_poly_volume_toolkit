@@ -75,14 +75,14 @@ Quick examples
 --------------
 1. Convert a point from Poincare to half-space:
 
-    from hyperbolic_model_transforms import convert_point
+    from ideal_poly_volume_toolkit.hyperbolic_model_transforms import convert_point
 
     p = [0.1, -0.2, 0.3, 0.05]
     h = convert_point(p, "poincare", "halfspace", dps=80)
 
 2. Convert a whole simplex from half-space to Klein:
 
-    from hyperbolic_model_transforms import convert_vertices, HALFSPACE_INFINITY
+    from ideal_poly_volume_toolkit.hyperbolic_model_transforms import convert_vertices, HALFSPACE_INFINITY
 
     verts_half = [
         HALFSPACE_INFINITY,
@@ -97,8 +97,8 @@ Quick examples
 3. Compute a 4-simplex volume directly from half-space vertices:
 
     import mpmath as mp
-    from hyperbolic_4_simplex_volume_models import hyperbolic_4_simplex_volume_from_model
-    from hyperbolic_model_transforms import HALFSPACE_INFINITY
+    from ideal_poly_volume_toolkit.hyperbolic_4_simplex_volume_models import hyperbolic_4_simplex_volume_from_model
+    from ideal_poly_volume_toolkit.hyperbolic_model_transforms import HALFSPACE_INFINITY
 
     verts_half = [
         HALFSPACE_INFINITY,
@@ -113,7 +113,7 @@ Quick examples
 
 4. Convert half-space infinity by itself:
 
-    from hyperbolic_model_transforms import halfspace_infinity
+    from ideal_poly_volume_toolkit.hyperbolic_model_transforms import halfspace_infinity
 
     north_pole = halfspace_infinity(4, to_model="klein")
     # returns [0, 0, 0, 1]

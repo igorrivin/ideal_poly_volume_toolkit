@@ -78,17 +78,17 @@ from __future__ import annotations
 from dataclasses import dataclass
 import itertools
 import math
-from typing import Dict, Iterable, List, Optional, Sequence, Tuple
+from typing import Dict, List, Optional, Sequence, Tuple
 
 import mpmath as mp
 import numpy as np
 import scipy.linalg
 from scipy.stats import qmc
 
-try:
+if __package__:
+    from .hyperbolic_model_transforms import convert_vertices
+else:  # pragma: no cover - direct-script compatibility
     from hyperbolic_model_transforms import convert_vertices
-except Exception:  # pragma: no cover - only matters when model wrappers are used
-    convert_vertices = None
 
 
 ArrayLike = Sequence[Sequence[float | int]]
@@ -742,18 +742,18 @@ def hyperbolic_6_simplex_data(
 
     tetra_link_volumes: Dict[Tuple[int, int, int, int], float] = {}
     total_link3 = 0.0
-    for I in itertools.combinations(facet_indices, 4):
-        B = A[np.ix_(I, I)]
+    for facet_subset in itertools.combinations(facet_indices, 4):
+        B = A[np.ix_(facet_subset, facet_subset)]
         vol = spherical_tetrahedron_volume_murakami(B, dps=murakami_dps)
-        tetra_link_volumes[tuple(I)] = vol
+        tetra_link_volumes[tuple(facet_subset)] = vol
         total_link3 += vol
     w2 = total_link3 / (2.0 * math.pi**2)
 
     vertex_link_volumes: List[float] = []
     total_link5 = 0.0
     for i in facet_indices:
-        I = [j for j in facet_indices if j != i]
-        B = A[np.ix_(I, I)]
+        facet_subset = [j for j in facet_indices if j != i]
+        B = A[np.ix_(facet_subset, facet_subset)]
         link_seed = None if seed is None else seed + 10000 + i
         vol = spherical_simplex_volume_qmc_from_angle_gram(
             B,

@@ -23,17 +23,21 @@ from datetime import datetime
 from pathlib import Path
 from PIL import Image
 
+from ideal_poly_volume_toolkit import __version__
 from ideal_poly_volume_toolkit.geometry import (
     delaunay_triangulation_indices,
-    triangle_volume_from_points_torch,
-    triangle_volume_bloch_wigner,
     ideal_poly_volume_via_delaunay,
+)
+from ideal_poly_volume_toolkit.optimization import (
+    negative_volume_objective as _negative_volume_objective,
+    optimize_ideal_polyhedron,
+    optimization_result_to_dict,
+    spherical_to_complex as _spherical_to_complex,
 )
 from ideal_poly_volume_toolkit.visualization import (
     plot_polyhedron_klein,
     plot_polyhedron_poincare,
     plot_delaunay_2d,
-    create_polyhedron_mesh,
 )
 from ideal_poly_volume_toolkit.rivin_holonomy import (
     Triangulation,
@@ -43,185 +47,91 @@ from ideal_poly_volume_toolkit.rivin_delaunay import (
     check_delaunay_realizability,
     optimize_hyperbolic_volume,
     realize_angles_as_points,
-    extract_boundary_vertices,
 )
 from ideal_poly_volume_toolkit.symmetry import (
     compute_symmetry_group,
     format_symmetry_report,
 )
 
-import torch
-from scipy.optimize import differential_evolution
-
-# Note: GPU is slower than CPU for this problem due to small tensor sizes
-# and transfer overhead, so we use CPU explicitly
-DEVICE = torch.device('cpu')
-
-
 # ============================================================================
 # Optimization Functions
 # ============================================================================
 
+
 def spherical_to_complex(theta, phi):
-    """Convert spherical coordinates to complex via stereographic projection."""
-    return np.tan(theta/2) * np.exp(1j * phi)
+    """Compatibility wrapper around the canonical package projection."""
+    return _spherical_to_complex(theta, phi)
 
 
 def compute_volume(params, n_vertices):
-    """Compute volume for a polyhedron with n_vertices.
-
-    Performance optimizations:
-    - Reduced series_terms to 64 (good balance of speed/accuracy)
-    - Single torch tensor conversion
-    - Parallel evaluation via differential_evolution workers
-
-    Args:
-        params: Optimization parameters (theta, phi pairs)
-        n_vertices: Total number of vertices
-
-    Returns:
-        Negative volume (for minimization)
-
-    Note:
-        The polishing step (L-BFGS-B) uses finite differences for gradients.
-        PyTorch autodiff could be used but the Delaunay triangulation is
-        not differentiable, making gradients unreliable near topology changes.
-    """
-    complex_points = [complex(0, 0), complex(1, 0)]
-    n_params = n_vertices - 3  # n_vertices includes 0, 1, ∞, plus (n_vertices-3) free
-
-    for i in range(n_params):
-        theta = params[2*i]
-        phi = params[2*i + 1]
-        z = spherical_to_complex(theta, phi)
-        complex_points.append(z)
-
-    Z_np = np.array(complex_points, dtype=np.complex128)
-
-    try:
-        idx = delaunay_triangulation_indices(Z_np)
-    except:
-        return 1000.0
-
-    # Single torch conversion (CPU is faster than GPU for small tensors)
-    Z_torch = torch.tensor(Z_np, dtype=torch.complex128, device=DEVICE)
-
-    total_volume = 0
-    for (i, j, k) in idx:
-        try:
-            # Use Bloch-Wigner dilogarithm (faster and more accurate than Lobachevsky series)
-            vol = triangle_volume_bloch_wigner(
-                Z_torch[i], Z_torch[j], Z_torch[k]
-            )
-            total_volume += vol.item()
-        except:
-            return 1000.0
-
-    return -total_volume
+    """Compatibility wrapper around the canonical package objective."""
+    return _negative_volume_objective(params, n_vertices)
 
 
 def run_optimization(n_vertices, n_trials, max_iter, pop_size, seed, progress=gr.Progress()):
-    """Run optimization with progress tracking.
-
-    Uses parallel workers (all CPU cores) for faster optimization.
-    """
-    import os
-    from functools import partial
-
-    # Validate and convert inputs
+    """Run the canonical package optimizer with GUI progress reporting."""
     try:
         n_vertices = int(n_vertices)
+        n_trials = int(n_trials)
+        max_iter = int(max_iter)
+        pop_size = int(pop_size)
+        seed = int(seed)
         if n_vertices < 4:
             return "Error: Number of vertices must be at least 4", None
         if n_vertices > 100:
             return "Error: Number of vertices limited to 100 for practical computation time", None
+        if n_trials < 1 or max_iter < 1 or pop_size < 1:
+            return "Error: Trials, iterations, and population multiplier must be positive", None
     except (ValueError, TypeError):
-        return "Error: Number of vertices must be an integer", None
+        return "Error: Optimization settings must be integers", None
 
-    n_cpus = os.cpu_count()
+    progress(0, desc="Starting vectorized optimization...")
+    effective_popsize = pop_size
 
-    # Limit workers to avoid "too many open files" error
-    # Each worker opens file descriptors for IPC
-    # Conservative limit: use at most 32 workers
-    max_workers = min(32, n_cpus) if n_cpus else 1
-
-    progress(0, desc=f"Starting optimization (using {max_workers} workers)...")
-
-    n_free_vertices = n_vertices - 3
-    n_params = n_free_vertices * 2
-    bounds = [(0.1, np.pi - 0.1), (0, 2*np.pi)] * n_free_vertices
-
-    # Adaptive settings for large vertex counts
-    # For high dimensions, reduce popsize to avoid excessive evaluations
-    adaptive_popsize = min(pop_size, max(10, 15 - (n_vertices - 7) // 3))
-
-    best_volume = 0
-    best_params = None
-    all_volumes = []
-
-    # Create picklable objective function using partial
-    # (lambdas can't be pickled for multiprocessing)
-    objective_func = partial(compute_volume, n_vertices=n_vertices)
-
-    for trial in range(n_trials):
-        progress((trial + 1) / n_trials, desc=f"Trial {trial + 1}/{n_trials}")
-
-        result = differential_evolution(
-            objective_func,
-            bounds,
-            maxiter=max_iter,
-            popsize=adaptive_popsize,
-            seed=seed + trial,
-            polish=True,
-            disp=False,
-            workers=max_workers,  # Limited to avoid file descriptor exhaustion
-            updating='deferred'  # Better for parallel workers
+    def report_trial(trial):
+        volume = "invalid" if trial.volume is None else f"{trial.volume:.6f}"
+        progress(
+            trial.trial / n_trials,
+            desc=f"Completed trial {trial.trial}/{n_trials}: {volume}",
         )
 
-        volume = -result.fun
-        all_volumes.append(volume)
+    try:
+        result = optimize_ideal_polyhedron(
+            n_vertices,
+            n_trials=n_trials,
+            maxiter=max_iter,
+            popsize=effective_popsize,
+            seed=seed,
+            workers=1,
+            trial_callback=report_trial,
+        )
+    except (ValueError, RuntimeError) as exc:
+        return f"Error: {exc}", None
 
-        if volume > best_volume:
-            best_volume = volume
-            best_params = result.x
-
-    # Reconstruct best configuration
-    complex_points = [complex(0, 0), complex(1, 0)]
-    for i in range(n_free_vertices):
-        theta = best_params[2*i]
-        phi = best_params[2*i + 1]
-        z = spherical_to_complex(theta, phi)
-        complex_points.append(z)
-
-    Z_np = np.array(complex_points, dtype=np.complex128)
-    idx = delaunay_triangulation_indices(Z_np)
-
-    # Compute statistics
-    stats = {
-        'n_vertices': n_vertices,
-        'n_faces': len(idx),
-        'best_volume': float(best_volume),
-        'mean_volume': float(np.mean(all_volumes)),
-        'std_volume': float(np.std(all_volumes)),
-        'all_volumes': [float(v) for v in all_volumes],
-    }
+    best_volume = result.best_volume
+    Z_np = result.finite_vertices
+    idx = result.finite_triangulation
+    structure = result.structure
 
     # Save result
-    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-    output_file = f"results/data/{n_vertices}vertex_optimization_{timestamp}.json"
+    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S_%f")
+    output_file = f"results/data/{n_vertices}vertex_optimization_gui_{timestamp}.json"
     Path(output_file).parent.mkdir(parents=True, exist_ok=True)
 
+    output_data = optimization_result_to_dict(
+        result,
+        source="gui",
+        settings={
+            "n_trials": n_trials,
+            "maxiter": max_iter,
+            "popsize": effective_popsize,
+            "workers": 1,
+            "seed_base": seed,
+        },
+    )
+    stats = output_data["statistics"]
     with open(output_file, 'w') as f:
-        json.dump({
-            'metadata': {'timestamp': datetime.now().isoformat()},
-            'best': {
-                'volume': stats['best_volume'],
-                'params': best_params.tolist(),
-                'vertices_real': Z_np.real.tolist(),
-                'vertices_imag': Z_np.imag.tolist(),
-            },
-            'statistics': stats,
-        }, f, indent=2)
+        json.dump(output_data, f, indent=2)
 
     # Create summary text
     summary = f"""
@@ -234,7 +144,7 @@ def run_optimization(n_vertices, n_trials, max_iter, pop_size, seed, progress=gr
 
 **Best Result:**
 - Volume: {best_volume:.8f}
-- Faces: {len(idx)}
+- Faces: {structure['n_faces']} (including {structure['n_infinity_faces']} at ∞)
 
 **Statistics over all trials:**
 - Mean: {stats['mean_volume']:.8f}
@@ -248,6 +158,7 @@ def run_optimization(n_vertices, n_trials, max_iter, pop_size, seed, progress=gr
     opt_data = {
         'vertices': Z_np,
         'triangulation': idx,
+        'boundary_triangulation': result.boundary_triangulation,
         'stats': stats
     }
 
@@ -265,7 +176,7 @@ def analyze_volume_distribution(n_vertices, n_samples, seed, progress=gr.Progres
     Finite vertices = n_vertices random + 2 fixed (0, 1) = n_vertices + 2
     Total with infinity = n_vertices + 3
     """
-    np.random.seed(seed)
+    rng = np.random.default_rng(seed)
 
     # Fixed vertices: 0, 1 (infinity is implicit in the volume computation)
     fixed_vertices = [complex(0, 0), complex(1, 0)]
@@ -275,7 +186,7 @@ def analyze_volume_distribution(n_vertices, n_samples, seed, progress=gr.Progres
     volumes = []
 
     def sample_random_vertex():
-        vec = np.random.randn(3)
+        vec = rng.standard_normal(3)
         vec = vec / np.linalg.norm(vec)
         x, y, z = vec
         if z > 0.999:
@@ -300,10 +211,12 @@ def analyze_volume_distribution(n_vertices, n_samples, seed, progress=gr.Progres
 
         try:
             vertices_np = np.array(vertices, dtype=np.complex128)
-            vol = ideal_poly_volume_via_delaunay(vertices_np, mode='fast', series_terms=96)
+            vol = ideal_poly_volume_via_delaunay(
+                vertices_np, mode="bloch_wigner"
+            )
             if np.isfinite(vol) and 0 < vol < 1000:
                 volumes.append(vol)
-        except Exception as e:
+        except Exception:
             # Silently skip failed computations
             pass
 
@@ -649,13 +562,12 @@ def generate_random_sphere_points(n_points, seed=None):
 
     Returns complex points via stereographic projection (north pole -> infinity).
     """
-    if seed is not None:
-        np.random.seed(seed)
+    rng = np.random.default_rng(seed)
 
     # Generate n uniform random points on sphere using Gaussian method
     points_3d = []
     for _ in range(n_points):
-        vec = np.random.randn(3)
+        vec = rng.standard_normal(3)
         vec = vec / np.linalg.norm(vec)
         points_3d.append(vec)
 
@@ -849,7 +761,6 @@ def batch_fixed_combinatorics_test(n_points, n_trials, seed, progress=gr.Progres
             continue
 
         # Check arithmeticity via holonomy
-        vertices = opt_data['vertices']
         triangles = opt_data['triangles']
 
         # Build holonomy structure
@@ -1001,10 +912,13 @@ def batch_fixed_combinatorics_test(n_points, n_trials, seed, progress=gr.Progres
 # Gradio Interface
 # ============================================================================
 
+APP_THEME = gr.themes.Soft()
+
+
 def create_gui():
     """Create the main Gradio interface."""
 
-    with gr.Blocks(title="Ideal Polyhedron Volume Toolkit", theme=gr.themes.Soft()) as demo:
+    with gr.Blocks(title="Ideal Polyhedron Volume Toolkit") as demo:
         # Shared state for passing optimization results to visualization
         opt_result_state = gr.State(None)
         gr.Markdown("""
@@ -1030,8 +944,14 @@ def create_gui():
                         opt_maxiter = gr.Slider(50, 500, value=150, step=50,
                                                label="Max Iterations per Trial",
                                                info="150-200 is usually sufficient")
-                        opt_popsize = gr.Slider(10, 30, value=15, step=5,
-                                               label="Population Size")
+                        opt_popsize = gr.Slider(
+                            10,
+                            30,
+                            value=15,
+                            step=5,
+                            label="Population Multiplier",
+                            info="Nominal population = multiplier × 2(N−3)",
+                        )
                         opt_seed = gr.Number(value=42, label="Random Seed")
 
                         opt_button = gr.Button("Run Optimization", variant="primary")
@@ -1250,7 +1170,7 @@ def create_gui():
             # Tab 6: About
             # ================================================================
             with gr.Tab("ℹ️ About"):
-                gr.Markdown("""
+                gr.Markdown(f"""
                 ## About This Tool
 
                 This GUI provides an interactive interface to the **Ideal Polyhedron Volume Toolkit**.
@@ -1283,12 +1203,9 @@ def create_gui():
 
                 ### Performance
 
-                - **Parallel optimization**: Uses up to 32 CPU cores automatically
-                - **7-vertex**: ~10 seconds for 10 trials
-                - **20-vertex**: ~2-3 minutes for 10 trials
-
-                **Note**: Worker limit set to 32 to avoid file descriptor exhaustion.
-                To use more cores, increase system limit: `ulimit -n 4096`
+                - Volume scoring uses the vectorized SciPy Bloch–Wigner kernel
+                - The GUI runs one worker to avoid process startup overhead
+                - The command-line optimizer offers `--workers` for larger runs
 
                 ### Documentation
 
@@ -1298,7 +1215,7 @@ def create_gui():
 
                 ---
 
-                **Version:** 0.3.0
+                **Version:** {__version__}
                 **License:** MIT
                 """)
 
@@ -1345,5 +1262,6 @@ Examples:
     demo.launch(
         share=args.share,
         server_name=args.server_name,
-        server_port=args.port
+        server_port=args.port,
+        theme=APP_THEME,
     )

@@ -17,14 +17,13 @@ vertices with maximum girth. Equivalently, maximize girth subject
 to 3-regularity and fixed vertex count.
 """
 
-import math
-from typing import List, Tuple, Optional, Any
+from typing import List, Tuple, Optional
 from collections import deque
 
 import numpy as np
 
 from ..generic import (
-    OptimizationTask, InnerOptimizer, TaskSampler, GenericOptEnv
+    OptimizationTask, InnerOptimizer, TaskSampler, GenericOptEnv, OptimizerRun
 )
 
 
@@ -67,6 +66,19 @@ def random_cubic_graph(N: int, rng: np.random.Generator) -> np.ndarray:
 
 def _fallback_cubic(N: int) -> np.ndarray:
     """Deterministic cubic graph: prism graph (two N/2-cycles + matching)."""
+    if N == 4:
+        # The two-cycle "prism" degenerates at N=4.  K4 is the unique simple
+        # cubic graph on four vertices and is therefore the correct fallback.
+        return np.array(
+            [
+                [1, 2, 3],
+                [0, 2, 3],
+                [0, 1, 3],
+                [0, 1, 2],
+            ],
+            dtype=np.int32,
+        )
+
     h = N // 2
     adj = [[] for _ in range(N)]
     for i in range(h):
@@ -236,28 +248,49 @@ class CubicGirthTask(OptimizationTask):
         return float(g) - 0.01 * n_short / max(self.N, 1)
 
     def _count_short_cycles(self, adj: np.ndarray, girth: int) -> int:
-        """Count the number of shortest cycles."""
+        """Count shortest cycles exactly using edge-deleted BFS path counts.
+
+        Removing one edge of a girth-length cycle leaves a shortest path of
+        length ``girth - 1`` between its endpoints.  Conversely, every such
+        path closes to a girth-length cycle.  Summing these path counts over
+        all edges counts every undirected cycle once per edge, hence the final
+        division by ``girth``.
+        """
         N = len(adj)
-        count = 0
-        for source in range(N):
+        if girth < 3 or girth > N:
+            return 0
+
+        target_distance = girth - 1
+        edge_cycle_memberships = 0
+        for source, target in adj_list_to_edge_set(adj):
             dist = [-1] * N
+            path_count = [0] * N
             dist[source] = 0
+            path_count[source] = 1
             queue = deque([source])
-            parent = [-1] * N
+
             while queue:
                 u = queue.popleft()
+                if dist[u] >= target_distance:
+                    continue
                 for v in adj[u]:
                     v = int(v)
+                    if (u == source and v == target) or (u == target and v == source):
+                        continue
+                    next_distance = dist[u] + 1
+                    if next_distance > target_distance:
+                        continue
                     if dist[v] == -1:
-                        dist[v] = dist[u] + 1
-                        parent[v] = u
+                        dist[v] = next_distance
+                        path_count[v] = path_count[u]
                         queue.append(v)
-                    elif v != parent[u] and dist[u] + dist[v] + 1 == girth:
-                        count += 1
-                if dist[u] >= girth // 2:
-                    break
-        # Each cycle counted multiple times
-        return count // (2 * girth)
+                    elif dist[v] == next_distance:
+                        path_count[v] += path_count[u]
+
+            if dist[target] == target_distance:
+                edge_cycle_memberships += path_count[target]
+
+        return edge_cycle_memberships // girth
 
     def perturb(self, adj: np.ndarray, radius: float,
                 rng: np.random.Generator) -> np.ndarray:
@@ -305,6 +338,13 @@ class CubicGirthTaskSampler(TaskSampler):
 # Inner optimizers for cubic graph search
 # =====================================================================
 
+def _positive_work_budget(budget: int) -> int:
+    budget = int(budget)
+    if budget < 1:
+        raise ValueError("budget must be positive")
+    return budget
+
+
 class RandomSwapOptimizer(InnerOptimizer):
     """Random edge swaps, accept if girth improves or stays same."""
 
@@ -313,15 +353,15 @@ class RandomSwapOptimizer(InnerOptimizer):
         return "rand_swap"
 
     def run(self, adj: np.ndarray, task: CubicGirthTask,
-            budget: int, rng: np.random.Generator) -> Tuple[np.ndarray, List[float]]:
+            budget: int, rng: np.random.Generator) -> OptimizerRun:
+        budget = _positive_work_budget(budget)
         adj_best = adj.copy()
         best_val = task.evaluate(adj_best)
         values = [best_val]
 
         edges = list(adj_list_to_edge_set(adj_best))
-        for _ in range(budget):
+        for _ in range(budget - 1):
             if len(edges) < 2:
-                values.append(best_val)
                 continue
             idx = rng.choice(len(edges), size=2, replace=False)
             e1, e2 = edges[idx[0]], edges[idx[1]]
@@ -329,13 +369,18 @@ class RandomSwapOptimizer(InnerOptimizer):
             result = edge_swap(adj_best, e1, e2, mode)
             if result is not None:
                 v = task.evaluate(result)
+                values.append(v)
                 if v >= best_val:
                     adj_best = result
                     best_val = v
                     edges = list(adj_list_to_edge_set(adj_best))
-            values.append(best_val)
 
-        return adj_best, values
+        return OptimizerRun(
+            solution=adj_best,
+            values=values,
+            solution_value=best_val,
+            objective_evals=len(values),
+        )
 
 
 class ShortCycleBreaker(InnerOptimizer):
@@ -346,7 +391,12 @@ class ShortCycleBreaker(InnerOptimizer):
         return "cycle_break"
 
     def _find_shortest_cycle(self, adj: np.ndarray) -> Optional[List[int]]:
-        """Find one shortest cycle, return as list of vertices."""
+        """Find one shortest cycle, returned in cyclic vertex order.
+
+        Each non-tree edge in a BFS tree closes a cycle.  The two tree paths
+        can share an arbitrary prefix, so reconstruction explicitly finds
+        their lowest common ancestor before joining the paths.
+        """
         N = len(adj)
         best_len = N + 1
         best_cycle = None
@@ -365,46 +415,46 @@ class ShortCycleBreaker(InnerOptimizer):
                         dist[v] = dist[u] + 1
                         parent[v] = u
                         queue.append(v)
-                    elif v != parent[u] and dist[u] + dist[v] + 1 < best_len:
-                        # Reconstruct cycle
-                        cycle_len = dist[u] + dist[v] + 1
-                        best_len = cycle_len
-                        # Build the cycle path
-                        path_u = []
+                    elif parent[u] != v and parent[v] != u:
+                        u_to_root = []
+                        ancestor_position = {}
                         x = u
-                        while x != source:
-                            path_u.append(x)
+                        while x != -1:
+                            ancestor_position[x] = len(u_to_root)
+                            u_to_root.append(x)
                             x = parent[x]
-                        path_u.append(source)
-                        path_u.reverse()
 
-                        path_v = []
+                        v_to_lca = []
                         x = v
-                        while x != source:
-                            path_v.append(x)
+                        while x not in ancestor_position:
+                            v_to_lca.append(x)
                             x = parent[x]
-                        path_v.append(source)
-                        path_v.reverse()
+                        lca = x
+                        u_to_lca = u_to_root[: ancestor_position[lca] + 1]
 
-                        best_cycle = path_u + path_v[-2:0:-1]
+                        # Traverse LCA -> ... -> u, cross (u, v), then
+                        # v -> ... -> child-of-LCA; the implicit closing edge
+                        # returns to LCA.
+                        cycle = list(reversed(u_to_lca)) + v_to_lca
+                        if 3 <= len(cycle) < best_len:
+                            best_len = len(cycle)
+                            best_cycle = cycle
 
-                if dist[u] >= best_len // 2:
-                    break
             if best_len == 3:
                 return best_cycle
 
         return best_cycle
 
     def run(self, adj: np.ndarray, task: CubicGirthTask,
-            budget: int, rng: np.random.Generator) -> Tuple[np.ndarray, List[float]]:
+            budget: int, rng: np.random.Generator) -> OptimizerRun:
+        budget = _positive_work_budget(budget)
         adj_best = adj.copy()
         best_val = task.evaluate(adj_best)
         values = [best_val]
 
-        for _ in range(budget):
+        for _ in range(budget - 1):
             cycle = self._find_shortest_cycle(adj_best)
             if cycle is None or len(cycle) < 3:
-                values.append(best_val)
                 continue
 
             # Try swapping each edge of the cycle with a random non-cycle edge
@@ -421,9 +471,12 @@ class ShortCycleBreaker(InnerOptimizer):
                     break
                 ne = non_cycle[rng.integers(len(non_cycle))]
                 for mode in [0, 1]:
+                    if len(values) >= budget:
+                        break
                     result = edge_swap(adj_best, ce, ne, mode)
                     if result is not None:
                         v = task.evaluate(result)
+                        values.append(v)
                         if v > best_val:
                             adj_best = result
                             best_val = v
@@ -431,10 +484,15 @@ class ShortCycleBreaker(InnerOptimizer):
                             break
                 if improved:
                     break
+            if len(values) >= budget:
+                break
 
-            values.append(best_val)
-
-        return adj_best, values
+        return OptimizerRun(
+            solution=adj_best,
+            values=values,
+            solution_value=best_val,
+            objective_evals=len(values),
+        )
 
 
 class AnnealSwapOptimizer(InnerOptimizer):
@@ -449,20 +507,20 @@ class AnnealSwapOptimizer(InnerOptimizer):
         return "anneal_swap"
 
     def run(self, adj: np.ndarray, task: CubicGirthTask,
-            budget: int, rng: np.random.Generator) -> Tuple[np.ndarray, List[float]]:
+            budget: int, rng: np.random.Generator) -> OptimizerRun:
+        budget = _positive_work_budget(budget)
         adj_curr = adj.copy()
         curr_val = task.evaluate(adj_curr)
         adj_best = adj_curr.copy()
         best_val = curr_val
         values = [best_val]
 
-        decay = (self.t_end / self.t_start) ** (1.0 / max(budget, 1))
+        decay = (self.t_end / self.t_start) ** (1.0 / max(budget - 1, 1))
         T = self.t_start
 
-        for _ in range(budget):
+        for _ in range(budget - 1):
             edges = list(adj_list_to_edge_set(adj_curr))
             if len(edges) < 2:
-                values.append(best_val)
                 continue
 
             idx = rng.choice(len(edges), size=2, replace=False)
@@ -472,6 +530,7 @@ class AnnealSwapOptimizer(InnerOptimizer):
 
             if result is not None:
                 trial_val = task.evaluate(result)
+                values.append(trial_val)
                 delta = trial_val - curr_val
                 if delta > 0 or rng.random() < np.exp(delta / max(T, 1e-10)):
                     adj_curr = result
@@ -481,9 +540,13 @@ class AnnealSwapOptimizer(InnerOptimizer):
                     best_val = curr_val
 
             T *= decay
-            values.append(best_val)
 
-        return adj_best, values
+        return OptimizerRun(
+            solution=adj_best,
+            values=values,
+            solution_value=best_val,
+            objective_evals=len(values),
+        )
 
 
 class MultiSwapOptimizer(InnerOptimizer):
@@ -497,12 +560,13 @@ class MultiSwapOptimizer(InnerOptimizer):
         return f"multi_{self.k}"
 
     def run(self, adj: np.ndarray, task: CubicGirthTask,
-            budget: int, rng: np.random.Generator) -> Tuple[np.ndarray, List[float]]:
+            budget: int, rng: np.random.Generator) -> OptimizerRun:
+        budget = _positive_work_budget(budget)
         adj_best = adj.copy()
         best_val = task.evaluate(adj_best)
         values = [best_val]
 
-        for _ in range(budget):
+        for _ in range(budget - 1):
             adj_trial = adj_best.copy()
             success = True
             for _ in range(self.k):
@@ -521,18 +585,43 @@ class MultiSwapOptimizer(InnerOptimizer):
 
             if success:
                 v = task.evaluate(adj_trial)
+                values.append(v)
                 if v > best_val:
                     adj_best = adj_trial
                     best_val = v
 
-            values.append(best_val)
-
-        return adj_best, values
+        return OptimizerRun(
+            solution=adj_best,
+            values=values,
+            solution_value=best_val,
+            objective_evals=len(values),
+        )
 
 
 # =====================================================================
-# Known constructions
+# Log-spanning-tree surrogate
 # =====================================================================
+
+def _log_spanning_tree_count(adj: np.ndarray) -> float:
+    """Return log(number of spanning trees), or -inf if disconnected."""
+    N = len(adj)
+    laplacian = np.zeros((N, N), dtype=np.float64)
+    for v in range(N):
+        for u in adj[v]:
+            u = int(u)
+            laplacian[v, u] -= 1.0
+            laplacian[v, v] += 1.0
+
+    eigvals = np.linalg.eigvalsh(laplacian)
+    near_zero = np.abs(eigvals) <= 1e-10
+    if np.count_nonzero(near_zero) != 1:
+        return -np.inf
+
+    positive = eigvals[~near_zero]
+    if len(positive) != N - 1 or np.any(positive <= 0.0):
+        return -np.inf
+    return float(np.sum(np.log(positive)) - np.log(N))
+
 
 class SpanningTreeOptimizer(InnerOptimizer):
     """Maximize log(spanning tree count) as a proxy for girth.
@@ -551,59 +640,58 @@ class SpanningTreeOptimizer(InnerOptimizer):
 
     def _log_spanning_trees(self, adj: np.ndarray) -> float:
         """Compute log(spanning tree count) from adjacency list."""
-        N = len(adj)
-        # Build Laplacian
-        L = np.zeros((N, N), dtype=np.float64)
-        for v in range(N):
-            for u in adj[v]:
-                u = int(u)
-                L[v, u] -= 1.0
-                L[v, v] += 1.0
-
-        # Eigenvalues of Laplacian
-        eigvals = np.linalg.eigvalsh(L)
-        # Sort; smallest should be ~0 (connected graph)
-        eigvals = np.sort(eigvals)
-
-        # log det' = sum of log of nonzero eigenvalues
-        # Skip the smallest eigenvalue (≈0 for connected graph)
-        nonzero = eigvals[1:]
-        nonzero = nonzero[nonzero > 1e-10]
-
-        if len(nonzero) == 0:
-            return -np.inf
-
-        return np.sum(np.log(nonzero)) - np.log(N)
+        return _log_spanning_tree_count(adj)
 
     def run(self, adj: np.ndarray, task: 'CubicGirthTask',
-            budget: int, rng: np.random.Generator) -> Tuple[np.ndarray, List[float]]:
-        N = task.N
-        adj_best = adj.copy()
-        best_log_tau = self._log_spanning_trees(adj_best)
-        best_girth_val = task.evaluate(adj_best)
+            budget: int, rng: np.random.Generator) -> OptimizerRun:
+        budget = _positive_work_budget(budget)
+        adj_current = adj.copy()
+        adj_best = adj_current.copy()
+        best_girth_val = task.evaluate(adj_current)
         values = [best_girth_val]
+        surrogate_evals = 0
+        if budget == 1:
+            return OptimizerRun(
+                solution=adj_best,
+                values=values,
+                solution_value=best_girth_val,
+                objective_evals=1,
+            )
+
+        current_log_tau = self._log_spanning_trees(adj_current)
+        surrogate_evals = 1
 
         for _ in range(budget):
-            edges = list(adj_list_to_edge_set(adj_best))
+            if len(values) + surrogate_evals + 2 > budget:
+                break
+            edges = list(adj_list_to_edge_set(adj_current))
             if len(edges) < 2:
-                values.append(best_girth_val)
                 continue
 
             idx = rng.choice(len(edges), size=2, replace=False)
             e1, e2 = edges[idx[0]], edges[idx[1]]
             mode = rng.integers(2)
-            result = edge_swap(adj_best, e1, e2, mode)
+            result = edge_swap(adj_current, e1, e2, mode)
 
             if result is not None:
                 log_tau = self._log_spanning_trees(result)
-                if log_tau > best_log_tau:
-                    adj_best = result
-                    best_log_tau = log_tau
-                    best_girth_val = task.evaluate(adj_best)
+                surrogate_evals += 1
+                if log_tau > current_log_tau:
+                    adj_current = result
+                    current_log_tau = log_tau
+                    girth_val = task.evaluate(adj_current)
+                    values.append(girth_val)
+                    if girth_val > best_girth_val:
+                        adj_best = adj_current.copy()
+                        best_girth_val = girth_val
 
-            values.append(best_girth_val)
-
-        return adj_best, values
+        return OptimizerRun(
+            solution=adj_best,
+            values=values,
+            solution_value=best_girth_val,
+            objective_evals=len(values),
+            surrogate_evals=surrogate_evals,
+        )
 
 
 class AnnealLogDetOptimizer(InnerOptimizer):
@@ -623,37 +711,36 @@ class AnnealLogDetOptimizer(InnerOptimizer):
         return "anneal_logdet"
 
     def _log_spanning_trees(self, adj: np.ndarray) -> float:
-        N = len(adj)
-        L = np.zeros((N, N), dtype=np.float64)
-        for v in range(N):
-            for u in adj[v]:
-                u = int(u)
-                L[v, u] -= 1.0
-                L[v, v] += 1.0
-        eigvals = np.sort(np.linalg.eigvalsh(L))
-        nonzero = eigvals[1:]
-        nonzero = nonzero[nonzero > 1e-10]
-        if len(nonzero) == 0:
-            return -np.inf
-        return np.sum(np.log(nonzero)) - np.log(N)
+        return _log_spanning_tree_count(adj)
 
     def run(self, adj: np.ndarray, task: 'CubicGirthTask',
-            budget: int, rng: np.random.Generator) -> Tuple[np.ndarray, List[float]]:
-        N = task.N
+            budget: int, rng: np.random.Generator) -> OptimizerRun:
+        budget = _positive_work_budget(budget)
         adj_curr = adj.copy()
-        curr_log_tau = self._log_spanning_trees(adj_curr)
         adj_best = adj_curr.copy()
         best_girth_val = task.evaluate(adj_best)
-        best_log_tau = curr_log_tau
         values = [best_girth_val]
+        surrogate_evals = 0
+        if budget == 1:
+            return OptimizerRun(
+                solution=adj_best,
+                values=values,
+                solution_value=best_girth_val,
+                objective_evals=1,
+            )
 
-        decay = (self.t_end / self.t_start) ** (1.0 / max(budget, 1))
+        curr_log_tau = self._log_spanning_trees(adj_curr)
+        surrogate_evals = 1
+        best_log_tau = curr_log_tau
+
+        decay = (self.t_end / self.t_start) ** (1.0 / max((budget - 2) // 2, 1))
         T = self.t_start
 
         for _ in range(budget):
+            if len(values) + surrogate_evals + 2 > budget:
+                break
             edges = list(adj_list_to_edge_set(adj_curr))
             if len(edges) < 2:
-                values.append(best_girth_val)
                 continue
 
             idx = rng.choice(len(edges), size=2, replace=False)
@@ -663,12 +750,14 @@ class AnnealLogDetOptimizer(InnerOptimizer):
 
             if result is not None:
                 log_tau = self._log_spanning_trees(result)
+                surrogate_evals += 1
                 delta = log_tau - curr_log_tau
                 if delta > 0 or rng.random() < np.exp(delta / max(T, 1e-10)):
                     adj_curr = result
                     curr_log_tau = log_tau
 
                 girth_val = task.evaluate(adj_curr)
+                values.append(girth_val)
                 if girth_val > best_girth_val or (
                     girth_val == best_girth_val and curr_log_tau > best_log_tau
                 ):
@@ -677,9 +766,14 @@ class AnnealLogDetOptimizer(InnerOptimizer):
                     best_log_tau = curr_log_tau
 
             T *= decay
-            values.append(best_girth_val)
 
-        return adj_best, values
+        return OptimizerRun(
+            solution=adj_best,
+            values=values,
+            solution_value=best_girth_val,
+            objective_evals=len(values),
+            surrogate_evals=surrogate_evals,
+        )
 
 
 class HybridGirthLogDetOptimizer(InnerOptimizer):
@@ -695,19 +789,7 @@ class HybridGirthLogDetOptimizer(InnerOptimizer):
         return "hybrid"
 
     def _log_spanning_trees(self, adj: np.ndarray) -> float:
-        N = len(adj)
-        L = np.zeros((N, N), dtype=np.float64)
-        for v in range(N):
-            for u in adj[v]:
-                u = int(u)
-                L[v, u] -= 1.0
-                L[v, v] += 1.0
-        eigvals = np.sort(np.linalg.eigvalsh(L))
-        nonzero = eigvals[1:]
-        nonzero = nonzero[nonzero > 1e-10]
-        if len(nonzero) == 0:
-            return -np.inf
-        return np.sum(np.log(nonzero)) - np.log(N)
+        return _log_spanning_tree_count(adj)
 
     def _find_shortest_cycle_edge(self, adj, rng):
         """Find an edge on a shortest cycle."""
@@ -738,19 +820,28 @@ class HybridGirthLogDetOptimizer(InnerOptimizer):
         return best_edge, best_len
 
     def run(self, adj: np.ndarray, task: 'CubicGirthTask',
-            budget: int, rng: np.random.Generator) -> Tuple[np.ndarray, List[float]]:
+            budget: int, rng: np.random.Generator) -> OptimizerRun:
+        budget = _positive_work_budget(budget)
         adj_best = adj.copy()
         best_girth_val = task.evaluate(adj_best)
         values = [best_girth_val]
-
-        # Split budget: 60% log-det, 40% cycle-breaking
-        logdet_budget = int(budget * 0.6)
-        girth_budget = budget - logdet_budget
+        surrogate_evals = 0
+        if budget == 1:
+            return OptimizerRun(
+                solution=adj_best,
+                values=values,
+                solution_value=best_girth_val,
+                objective_evals=1,
+            )
 
         # Phase 1: log-det maximization
         adj_curr = adj_best.copy()
         curr_log_tau = self._log_spanning_trees(adj_curr)
-        for _ in range(logdet_budget):
+        surrogate_evals = 1
+        phase_one_limit = 2 + int((budget - 2) * 0.6)
+        for _ in range(budget):
+            if len(values) + surrogate_evals + 2 > phase_one_limit:
+                break
             edges = list(adj_list_to_edge_set(adj_curr))
             if len(edges) < 2:
                 break
@@ -758,21 +849,23 @@ class HybridGirthLogDetOptimizer(InnerOptimizer):
             result = edge_swap(adj_curr, edges[idx[0]], edges[idx[1]], rng.integers(2))
             if result is not None:
                 log_tau = self._log_spanning_trees(result)
+                surrogate_evals += 1
                 if log_tau > curr_log_tau:
                     adj_curr = result
                     curr_log_tau = log_tau
             gv = task.evaluate(adj_curr)
+            values.append(gv)
             if gv > best_girth_val:
                 adj_best = adj_curr.copy()
                 best_girth_val = gv
-            values.append(best_girth_val)
 
         # Phase 2: cycle breaking from best log-det graph
         adj_curr = adj_best.copy()
-        for _ in range(girth_budget):
+        for _ in range(budget):
+            if len(values) + surrogate_evals >= budget:
+                break
             cycle_edge, girth = self._find_shortest_cycle_edge(adj_curr, rng)
             if cycle_edge is None:
-                values.append(best_girth_val)
                 continue
 
             # Try swapping the cycle edge with random non-adjacent edges
@@ -783,9 +876,12 @@ class HybridGirthLogDetOptimizer(InnerOptimizer):
                 if ne == cycle_edge or (ne[1], ne[0]) == cycle_edge:
                     continue
                 for mode in [0, 1]:
+                    if len(values) + surrogate_evals >= budget:
+                        break
                     result = edge_swap(adj_curr, cycle_edge, ne, mode)
                     if result is not None:
                         gv = task.evaluate(result)
+                        values.append(gv)
                         if gv > best_girth_val:
                             adj_curr = result
                             adj_best = result.copy()
@@ -794,9 +890,19 @@ class HybridGirthLogDetOptimizer(InnerOptimizer):
                             break
                 if improved:
                     break
-            values.append(best_girth_val)
 
-        return adj_best, values
+        return OptimizerRun(
+            solution=adj_best,
+            values=values,
+            solution_value=best_girth_val,
+            objective_evals=len(values),
+            surrogate_evals=surrogate_evals,
+        )
+
+
+# =====================================================================
+# Known constructions
+# =====================================================================
 
 
 class KnownCageOptimizer(InnerOptimizer):
@@ -829,24 +935,35 @@ class KnownCageOptimizer(InnerOptimizer):
         return np.array([sorted(a)[:3] for a in adj], dtype=np.int32)
 
     def run(self, adj: np.ndarray, task: CubicGirthTask,
-            budget: int, rng: np.random.Generator) -> Tuple[np.ndarray, List[float]]:
+            budget: int, rng: np.random.Generator) -> OptimizerRun:
+        budget = _positive_work_budget(budget)
         N = task.N
         best = adj.copy()
         best_val = task.evaluate(best)
+        values = [best_val]
 
         # Try known constructions if N matches
-        if N == 10:
+        if N == 10 and len(values) < budget:
             H = self._petersen()
             v = task.evaluate(H)
+            values.append(v)
             if v > best_val:
-                best = H; best_val = v
-        elif N == 14:
+                best = H
+                best_val = v
+        elif N == 14 and len(values) < budget:
             H = self._heawood()
             v = task.evaluate(H)
+            values.append(v)
             if v > best_val:
-                best = H; best_val = v
+                best = H
+                best_val = v
 
-        return best, [best_val] * budget
+        return OptimizerRun(
+            solution=best,
+            values=values,
+            solution_value=best_val,
+            objective_evals=len(values),
+        )
 
 
 # =====================================================================

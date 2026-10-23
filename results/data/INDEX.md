@@ -1,5 +1,29 @@
 # Benchmark & Challenge Index
 
+## Data status and provenance
+
+The following source datasets are canonical, required inputs. They are stored
+as ordinary Git text so a reviewer can inspect them without Git LFS:
+
+| Path | Size (bytes) | SHA-256 |
+|---|---:|---|
+| `optimal_d4_symmetry_analysis.json` | 126922 | `0bea03b4ddd6a91897ee9e9c3cdc4c5362d1a658a9a9de96911345edca2e29b5` |
+| `optimal_d5_d6_symmetry_analysis.json` | 101617 | `d50056f9dbc2d5ad2bb8bec1d0a0543700b0dcc92d150fdbbfbdccc61ae7e702` |
+
+`results/data/` contains both canonical inputs and derived benchmark products.
+The timestamped files under `bin/results/data/` are historical optimization
+outputs; current CLI and GUI writers use `results/data/`. Loose corrected and
+uncorrected historical artifacts remain in place pending an approved ownership
+migration.
+
+GitHub `origin/main` is the authoritative code and data history. The Hugging
+Face remote is a deployment branch that may intentionally lag and must not be
+treated as a repository backup. Run `python3 scripts/check_data_integrity.py`
+to verify LFS objects, JSON payloads, attributes, the schema-v1
+`results/manifest.json` inventory, and canonical hashes; CI additionally
+requires every LFS payload to be materialized. The manifest contract is
+published at `docs/schemas/result-manifest-v1.schema.json`.
+
 ## LLM Benchmarks
 
 ### 1. Inscribed 4-Polytope Reconstruction (`llm_challenges/`, `llm_challenges_random/`)
@@ -34,8 +58,24 @@ Delaunay triangulation. If yes, produce point coordinates. If no, say None.
 
 ### 3. Arithmetic Ideal Polyhedra (`llm_challenges_arithmetic/`)
 
-**Task**: Construct pairwise non-isometric convex ideal polyhedra in H^3
-whose surface is given by an arithmetic Fuchsian group.
+**Status: superseded / invalid as ground truth.** The checked-in 50- and
+100-vertex files predate coordinate-derived shear validation, treat a finite
+Delaunay disk as the full spherical boundary, and do not pass the current
+certificate. They are retained only for provenance and must not support
+publication claims.
+
+The replacement producer is
+`scripts/generate_arithmeticity_benchmark.py`, which writes schema
+`ideal-poly-arithmetic-corpus/1`. It uses total-vertex semantics, includes the
+explicit infinity vertex and its complete fan, records exact integer
+zero-shear holonomy separately from floating coordinate residuals, validates
+closed-sphere topology, deduplicates combinatorial types, and checkpoints
+atomically. Mutable runs live under `results/data/arithmetic_corpora/` and are
+not canonical until a completed file has passed schema/semantic validation and
+is deliberately added to `results/manifest.json` with an immutable hash.
+
+**Historical task**: Construct pairwise non-isometric convex ideal polyhedra
+in H^3 whose surface is given by an arithmetic Fuchsian group.
 
 - `care_package.zip` — self-contained benchmark (14K):
   prompts at N=50 (25 configs) and N=100 (10 configs), standalone

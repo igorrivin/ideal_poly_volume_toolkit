@@ -1,0 +1,610 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/igorrivin/ideal_poly_volume_toolkit/schemas/arithmetic-corpus-v1.schema.json",
+  "title": "Certified arithmetic ideal-polyhedron corpus v1",
+  "description": "A checkpointable corpus with exact total-vertex semantics, an explicit infinity vertex, complete closed-sphere faces, coordinate shear audits, and exact abstract zero-shear PSL(2,Z) certificates.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "protocol_version",
+    "generator",
+    "status",
+    "created_at",
+    "updated_at",
+    "run_config",
+    "run_config_sha256",
+    "provenance",
+    "prompt",
+    "next_attempt_index",
+    "counters",
+    "attempts",
+    "configurations",
+    "summary",
+    "timings"
+  ],
+  "properties": {
+    "schema_version": {"const": "ideal-poly-arithmetic-corpus/1"},
+    "protocol_version": {"const": "strict-zero-shear-psl2z/1"},
+    "generator": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "version", "source_sha256"],
+      "properties": {
+        "name": {"const": "scripts/generate_arithmeticity_benchmark.py"},
+        "version": {"type": "string", "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$"},
+        "source_sha256": {"$ref": "#/$defs/sha256"}
+      }
+    },
+    "status": {"enum": ["in_progress", "complete", "exhausted"]},
+    "created_at": {"type": "string", "minLength": 1},
+    "updated_at": {"type": "string", "minLength": 1},
+    "run_config": {"$ref": "#/$defs/run_config"},
+    "run_config_sha256": {"$ref": "#/$defs/sha256"},
+    "provenance": {"$ref": "#/$defs/provenance"},
+    "prompt": {"type": "string", "minLength": 1},
+    "next_attempt_index": {"type": "integer", "minimum": 0},
+    "counters": {"$ref": "#/$defs/counters"},
+    "attempts": {
+      "type": "array",
+      "items": {"$ref": "#/$defs/attempt"}
+    },
+    "configurations": {
+      "type": "array",
+      "items": {"$ref": "#/$defs/configuration"}
+    },
+    "summary": {"$ref": "#/$defs/summary"},
+    "timings": {"$ref": "#/$defs/campaign_timings"}
+  },
+  "$defs": {
+    "sha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "nullable_string": {"type": ["string", "null"]},
+    "nonnegative_number": {"type": "number", "minimum": 0},
+    "positive_number": {"type": "number", "exclusiveMinimum": 0},
+    "decimal_integer": {
+      "type": "string",
+      "pattern": "^-?(0|[1-9][0-9]*)$"
+    },
+    "nonnegative_decimal_integer": {
+      "type": "string",
+      "pattern": "^(0|[1-9][0-9]*)$"
+    },
+    "run_config": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mode",
+        "vertex_semantics",
+        "n_vertices",
+        "target_count",
+        "max_attempts",
+        "max_wall_seconds",
+        "workers",
+        "base_seed",
+        "blas_threads_per_worker",
+        "max_flips",
+        "shear_tolerance",
+        "margin_tolerance",
+        "constraint_tolerance",
+        "qhull_audit"
+      ],
+      "properties": {
+        "mode": {"enum": ["layered-ring", "legalized"]},
+        "vertex_semantics": {"const": "total-including-explicit-infinity"},
+        "n_vertices": {"type": "integer", "minimum": 4},
+        "target_count": {"type": "integer", "minimum": 1},
+        "max_attempts": {"type": "integer", "minimum": 1},
+        "max_wall_seconds": {"$ref": "#/$defs/positive_number"},
+        "workers": {"type": "integer", "minimum": 1, "maximum": 8},
+        "base_seed": {"type": "integer", "minimum": 0},
+        "blas_threads_per_worker": {"type": "integer", "minimum": 1, "maximum": 8},
+        "max_flips": {"type": "integer", "minimum": 0},
+        "shear_tolerance": {"$ref": "#/$defs/nonnegative_number"},
+        "margin_tolerance": {"$ref": "#/$defs/nonnegative_number"},
+        "constraint_tolerance": {"$ref": "#/$defs/nonnegative_number"},
+        "qhull_audit": {"type": "boolean"}
+      }
+    },
+    "provenance": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "invocation",
+        "python",
+        "python_implementation",
+        "platform",
+        "git_commit",
+        "git_dirty",
+        "dependency_versions",
+        "thread_environment",
+        "source_files",
+        "deduplication_backend",
+        "legacy_dataset_policy"
+      ],
+      "properties": {
+        "invocation": {
+          "type": "array",
+          "minItems": 1,
+          "items": {"type": "string"}
+        },
+        "python": {"type": "string", "minLength": 1},
+        "python_implementation": {"type": "string", "minLength": 1},
+        "platform": {"type": "string", "minLength": 1},
+        "git_commit": {
+          "type": ["string", "null"],
+          "pattern": "^[0-9a-f]{7,64}$"
+        },
+        "git_dirty": {"type": ["boolean", "null"]},
+        "dependency_versions": {
+          "type": "object",
+          "additionalProperties": {"type": ["string", "null"]}
+        },
+        "thread_environment": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "IDEAL_POLY_ARITHMETIC_BLAS_THREADS",
+            "OPENBLAS_NUM_THREADS",
+            "OMP_NUM_THREADS",
+            "MKL_NUM_THREADS",
+            "NUMEXPR_NUM_THREADS"
+          ],
+          "properties": {
+            "IDEAL_POLY_ARITHMETIC_BLAS_THREADS": {"type": ["string", "null"]},
+            "OPENBLAS_NUM_THREADS": {"type": ["string", "null"]},
+            "OMP_NUM_THREADS": {"type": ["string", "null"]},
+            "MKL_NUM_THREADS": {"type": ["string", "null"]},
+            "NUMEXPR_NUM_THREADS": {"type": ["string", "null"]}
+          }
+        },
+        "source_files": {
+          "type": "object",
+          "minProperties": 4,
+          "additionalProperties": {"$ref": "#/$defs/sha256"}
+        },
+        "deduplication_backend": {
+          "enum": [
+            "pynauty-canonical-certificate-v1",
+            "networkx-exact-isomorphism-v1"
+          ]
+        },
+        "legacy_dataset_policy": {"type": "string", "minLength": 1}
+      }
+    },
+    "counters": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "attempted",
+        "accepted",
+        "rejected",
+        "duplicates",
+        "errors",
+        "timed_out"
+      ],
+      "properties": {
+        "attempted": {"type": "integer", "minimum": 0},
+        "accepted": {"type": "integer", "minimum": 0},
+        "rejected": {"type": "integer", "minimum": 0},
+        "duplicates": {"type": "integer", "minimum": 0},
+        "errors": {"type": "integer", "minimum": 0},
+        "timed_out": {"type": "integer", "minimum": 0}
+      }
+    },
+    "attempt": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "attempt_index",
+        "candidate_key",
+        "seed",
+        "started_at",
+        "finished_at",
+        "elapsed_seconds",
+        "status",
+        "reason",
+        "message",
+        "error_type",
+        "configuration_id",
+        "diagnostics"
+      ],
+      "properties": {
+        "attempt_index": {"type": "integer", "minimum": 0},
+        "candidate_key": {"type": "string", "minLength": 1},
+        "seed": {"type": ["integer", "null"], "minimum": 0},
+        "started_at": {"type": "string", "minLength": 1},
+        "finished_at": {"type": "string", "minLength": 1},
+        "elapsed_seconds": {"$ref": "#/$defs/nonnegative_number"},
+        "status": {"enum": ["accepted", "rejected", "duplicate", "error", "timed_out"]},
+        "reason": {"type": "string", "minLength": 1},
+        "message": {"type": "string", "minLength": 1},
+        "error_type": {"$ref": "#/$defs/nullable_string"},
+        "configuration_id": {
+          "type": ["string", "null"],
+          "pattern": "^arithmetic-[0-9]{6}$"
+        },
+        "diagnostics": {"type": "object"}
+      }
+    },
+    "summary": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "target_count",
+        "produced_count",
+        "remaining_count",
+        "all_arithmetic",
+        "n_vertices"
+      ],
+      "properties": {
+        "target_count": {"type": "integer", "minimum": 1},
+        "produced_count": {"type": "integer", "minimum": 0},
+        "remaining_count": {"type": "integer", "minimum": 0},
+        "all_arithmetic": {"type": "boolean"},
+        "n_vertices": {"type": "integer", "minimum": 4}
+      }
+    },
+    "campaign_timings": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["cumulative_active_seconds", "last_invocation_seconds"],
+      "properties": {
+        "cumulative_active_seconds": {"$ref": "#/$defs/nonnegative_number"},
+        "last_invocation_seconds": {"$ref": "#/$defs/nonnegative_number"}
+      }
+    },
+    "vertex": {
+      "oneOf": [
+        {
+          "type": "array",
+          "prefixItems": [{"type": "number"}, {"type": "number"}],
+          "items": false,
+          "minItems": 2,
+          "maxItems": 2
+        },
+        {"type": "null"}
+      ]
+    },
+    "triangle": {
+      "type": "array",
+      "prefixItems": [
+        {"type": "integer", "minimum": 0},
+        {"type": "integer", "minimum": 0},
+        {"type": "integer", "minimum": 0}
+      ],
+      "items": false,
+      "minItems": 3,
+      "maxItems": 3
+    },
+    "triangulation": {
+      "type": "array",
+      "minItems": 1,
+      "items": {"$ref": "#/$defs/triangle"}
+    },
+    "configuration": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "attempt_index",
+        "construction_id",
+        "generation_method",
+        "seed",
+        "input",
+        "construction",
+        "ground_truth",
+        "certificate",
+        "diagnostics",
+        "deduplication",
+        "timings"
+      ],
+      "properties": {
+        "id": {"type": "string", "pattern": "^arithmetic-[0-9]{6}$"},
+        "attempt_index": {"type": "integer", "minimum": 0},
+        "construction_id": {"type": "string", "minLength": 1},
+        "generation_method": {"enum": ["layered-ring-exact", "legalized-rivin"]},
+        "seed": {"type": ["integer", "null"], "minimum": 0},
+        "input": {"$ref": "#/$defs/configuration_input"},
+        "construction": {"$ref": "#/$defs/construction"},
+        "ground_truth": {"$ref": "#/$defs/ground_truth"},
+        "certificate": {"$ref": "#/$defs/certificate"},
+        "diagnostics": {"$ref": "#/$defs/diagnostics"},
+        "deduplication": {"$ref": "#/$defs/deduplication"},
+        "timings": {
+          "type": "object",
+          "minProperties": 2,
+          "additionalProperties": {"$ref": "#/$defs/nonnegative_number"}
+        }
+      }
+    },
+    "configuration_input": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "coordinate_model",
+        "vertex_semantics",
+        "vertices",
+        "infinity_index",
+        "n_vertices",
+        "n_finite_vertices",
+        "triangles",
+        "finite_triangulation",
+        "n_triangles",
+        "n_finite_triangles"
+      ],
+      "properties": {
+        "coordinate_model": {"const": "upper-half-space-boundary-complex-plus-infinity"},
+        "vertex_semantics": {"const": "total-including-explicit-infinity"},
+        "vertices": {
+          "type": "array",
+          "minItems": 4,
+          "items": {"$ref": "#/$defs/vertex"}
+        },
+        "infinity_index": {"type": "integer", "minimum": 3},
+        "n_vertices": {"type": "integer", "minimum": 4},
+        "n_finite_vertices": {"type": "integer", "minimum": 3},
+        "triangles": {"$ref": "#/$defs/triangulation"},
+        "finite_triangulation": {"$ref": "#/$defs/triangulation"},
+        "n_triangles": {"type": "integer", "minimum": 4},
+        "n_finite_triangles": {"type": "integer", "minimum": 1}
+      }
+    },
+    "construction": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["family", "face_source", "parameters"],
+      "properties": {
+        "family": {"enum": ["layered-ring-zero-shear", "seeded-rivin-legalization"]},
+        "face_source": {"type": "string", "minLength": 1},
+        "parameters": {"type": "object", "minProperties": 1}
+      }
+    },
+    "ground_truth": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "is_arithmetic",
+        "classification",
+        "proof_basis",
+        "volume",
+        "volume_method",
+        "description"
+      ],
+      "properties": {
+        "is_arithmetic": {"const": true},
+        "classification": {"const": "zero-shear-psl2z"},
+        "proof_basis": {
+          "enum": [
+            "closed-form-layered-ring-zero-shear-identity",
+            "strict-interior-rivin-maximum-with-numerical-realization"
+          ]
+        },
+        "volume": {"$ref": "#/$defs/positive_number"},
+        "volume_method": {"const": "analytic-finite-faces-vectorized-bloch-wigner"},
+        "description": {"type": "string", "minLength": 1}
+      }
+    },
+    "topology": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "vertex_labels",
+        "n_vertices",
+        "n_edges",
+        "n_faces",
+        "euler_characteristic"
+      ],
+      "properties": {
+        "vertex_labels": {
+          "type": "array",
+          "minItems": 4,
+          "items": {"type": "integer", "minimum": 0},
+          "uniqueItems": true
+        },
+        "n_vertices": {"type": "integer", "minimum": 4},
+        "n_edges": {"type": "integer", "minimum": 6},
+        "n_faces": {"type": "integer", "minimum": 4},
+        "euler_characteristic": {"const": 2}
+      }
+    },
+    "coordinate_zero_shear": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "n_edges",
+        "all_finite",
+        "max_abs",
+        "rms",
+        "tolerance",
+        "within_tolerance"
+      ],
+      "properties": {
+        "n_edges": {"type": "integer", "minimum": 1},
+        "all_finite": {"const": true},
+        "max_abs": {"$ref": "#/$defs/nonnegative_number"},
+        "rms": {"$ref": "#/$defs/nonnegative_number"},
+        "tolerance": {"$ref": "#/$defs/nonnegative_number"},
+        "within_tolerance": {"const": true}
+      }
+    },
+    "exact_token": {
+      "oneOf": [
+        {"type": "string"},
+        {
+          "type": "array",
+          "prefixItems": [
+            {"type": "string"},
+            {"type": "integer"},
+            {"type": "integer"}
+          ],
+          "items": false,
+          "minItems": 3,
+          "maxItems": 3
+        }
+      ]
+    },
+    "integer_row": {
+      "type": "array",
+      "prefixItems": [
+        {"$ref": "#/$defs/decimal_integer"},
+        {"$ref": "#/$defs/decimal_integer"}
+      ],
+      "items": false,
+      "minItems": 2,
+      "maxItems": 2
+    },
+    "integer_matrix": {
+      "type": "array",
+      "prefixItems": [
+        {"$ref": "#/$defs/integer_row"},
+        {"$ref": "#/$defs/integer_row"}
+      ],
+      "items": false,
+      "minItems": 2,
+      "maxItems": 2
+    },
+    "exact_generator": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "source_triangle",
+        "target_triangle",
+        "tokens",
+        "matrix",
+        "trace",
+        "determinant"
+      ],
+      "properties": {
+        "source_triangle": {"type": "integer", "minimum": 0},
+        "target_triangle": {"type": "integer", "minimum": 0},
+        "tokens": {
+          "type": "array",
+          "items": {"$ref": "#/$defs/exact_token"}
+        },
+        "matrix": {"$ref": "#/$defs/integer_matrix"},
+        "trace": {"$ref": "#/$defs/decimal_integer"},
+        "determinant": {"const": 1}
+      }
+    },
+    "exact_zero_shear": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "certificate_type",
+        "scope",
+        "topology",
+        "root_triangle",
+        "psl2z_index",
+        "generators",
+        "traces",
+        "all_determinants_one",
+        "all_traces_integral",
+        "is_arithmetic"
+      ],
+      "properties": {
+        "certificate_type": {"const": "exact-zero-shear-psl2z-v1"},
+        "scope": {"const": "abstract-zero-shear-structure"},
+        "topology": {"$ref": "#/$defs/topology"},
+        "root_triangle": {"type": "integer", "minimum": 0},
+        "psl2z_index": {"type": "integer", "minimum": 1},
+        "generators": {
+          "type": "array",
+          "items": {"$ref": "#/$defs/exact_generator"}
+        },
+        "traces": {
+          "type": "array",
+          "items": {"$ref": "#/$defs/decimal_integer"}
+        },
+        "all_determinants_one": {"const": true},
+        "all_traces_integral": {"const": true},
+        "is_arithmetic": {"const": true}
+      }
+    },
+    "exact_trace_summary": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "n_traces",
+        "max_abs_trace",
+        "max_abs_trace_decimal_digits",
+        "float_integrality_test_used"
+      ],
+      "properties": {
+        "n_traces": {"type": "integer", "minimum": 0},
+        "max_abs_trace": {"$ref": "#/$defs/nonnegative_decimal_integer"},
+        "max_abs_trace_decimal_digits": {"type": "integer", "minimum": 1},
+        "float_integrality_test_used": {"const": false}
+      }
+    },
+    "certificate_checks": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "closed_sphere",
+        "exact_total_vertex_count",
+        "coordinate_zero_shear",
+        "exact_determinants_one",
+        "exact_integral_traces",
+        "accepted"
+      ],
+      "properties": {
+        "closed_sphere": {"const": true},
+        "exact_total_vertex_count": {"const": true},
+        "coordinate_zero_shear": {"const": true},
+        "exact_determinants_one": {"const": true},
+        "exact_integral_traces": {"const": true},
+        "accepted": {"const": true}
+      }
+    },
+    "certificate": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "protocol_version",
+        "topology",
+        "coordinate_zero_shear",
+        "exact_zero_shear",
+        "exact_trace_summary",
+        "checks"
+      ],
+      "properties": {
+        "protocol_version": {"const": "strict-zero-shear-psl2z/1"},
+        "topology": {"$ref": "#/$defs/topology"},
+        "coordinate_zero_shear": {"$ref": "#/$defs/coordinate_zero_shear"},
+        "exact_zero_shear": {"$ref": "#/$defs/exact_zero_shear"},
+        "exact_trace_summary": {"$ref": "#/$defs/exact_trace_summary"},
+        "checks": {"$ref": "#/$defs/certificate_checks"}
+      }
+    },
+    "diagnostics": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["qhull_audit", "legalization", "realization"],
+      "properties": {
+        "qhull_audit": {"type": ["object", "null"]},
+        "legalization": {"type": ["object", "null"]},
+        "realization": {"type": ["object", "null"]}
+      }
+    },
+    "deduplication": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["method", "topology_id"],
+      "properties": {
+        "method": {
+          "enum": [
+            "pynauty-canonical-certificate-v1",
+            "networkx-exact-isomorphism-v1"
+          ]
+        },
+        "topology_id": {
+          "type": "string",
+          "pattern": "^(pynauty-sha256:[0-9a-f]{64}|networkx-wl:[0-9a-f]+)$"
+        }
+      }
+    }
+  }
+}

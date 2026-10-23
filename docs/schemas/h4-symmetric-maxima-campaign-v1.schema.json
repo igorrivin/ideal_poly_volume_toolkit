@@ -1,0 +1,470 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://ideal-poly-volume-toolkit.invalid/schemas/h4-symmetric-maxima-campaign-v1.schema.json",
+  "title": "H4 symmetric-maxima campaign v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "protocol_version",
+    "generator",
+    "status",
+    "created_at",
+    "updated_at",
+    "run_config",
+    "run_config_sha256",
+    "provenance",
+    "planned_task_count",
+    "calibration",
+    "tasks",
+    "summary",
+    "timings"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": "ideal-poly-h4-symmetric-maxima-campaign/1"
+    },
+    "protocol_version": {
+      "const": "h4-unconstrained-symmetric-maxima-mining/1"
+    },
+    "generator": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "version", "source_sha256"],
+      "properties": {
+        "name": {"const": "scripts/mine_h4_symmetric_maxima.py"},
+        "version": {"type": "string", "minLength": 1},
+        "source_sha256": {"$ref": "#/$defs/sha256"}
+      }
+    },
+    "status": {
+      "enum": ["in_progress", "complete", "failed", "timed_out"]
+    },
+    "created_at": {"$ref": "#/$defs/timestamp"},
+    "updated_at": {"$ref": "#/$defs/timestamp"},
+    "run_config": {"$ref": "#/$defs/run_config"},
+    "run_config_sha256": {"$ref": "#/$defs/sha256"},
+    "provenance": {"$ref": "#/$defs/provenance"},
+    "planned_task_count": {"type": "integer", "minimum": 0},
+    "calibration": {"$ref": "#/$defs/calibration"},
+    "tasks": {
+      "type": "array",
+      "items": {"$ref": "#/$defs/task"}
+    },
+    "summary": {"$ref": "#/$defs/summary"},
+    "timings": {"$ref": "#/$defs/campaign_timings"}
+  },
+  "$defs": {
+    "sha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "timestamp": {
+      "type": "string",
+      "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}T.+(?:Z|[+-][0-9]{2}:[0-9]{2})$"
+    },
+    "nullable_number": {
+      "type": ["number", "null"]
+    },
+    "coordinates": {
+      "type": "array",
+      "minItems": 5,
+      "items": {
+        "type": "array",
+        "minItems": 4,
+        "maxItems": 4,
+        "items": {"type": "number"}
+      }
+    },
+    "run_config": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "n_vertices",
+        "starts",
+        "base_seed",
+        "budget",
+        "optimizer",
+        "max_wall_seconds",
+        "local_max_on_shortlist",
+        "retain_all_coordinates",
+        "calibrate_16_cell",
+        "workers",
+        "blas_threads"
+      ],
+      "properties": {
+        "n_vertices": {"type": "integer", "minimum": 8, "maximum": 40},
+        "starts": {"type": "integer", "minimum": 0, "maximum": 100000},
+        "base_seed": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9223372036854775807
+        },
+        "budget": {"type": "integer", "minimum": 1},
+        "optimizer": {"enum": ["powell", "fresh_topology_ad"]},
+        "max_wall_seconds": {"type": "number", "exclusiveMinimum": 0},
+        "local_max_on_shortlist": {"type": "boolean"},
+        "retain_all_coordinates": {"type": "boolean"},
+        "calibrate_16_cell": {"type": "boolean"},
+        "workers": {"const": 1},
+        "blas_threads": {"const": 1}
+      },
+      "allOf": [
+        {
+          "if": {"properties": {"starts": {"const": 0}}},
+          "then": {"properties": {"calibrate_16_cell": {"const": true}}}
+        }
+      ]
+    },
+    "provenance": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "invocation",
+        "git_commit",
+        "git_dirty",
+        "python",
+        "python_implementation",
+        "platform",
+        "dependency_versions",
+        "thread_environment",
+        "source_files"
+      ],
+      "properties": {
+        "invocation": {
+          "type": "array",
+          "items": {"type": "string"}
+        },
+        "git_commit": {
+          "oneOf": [
+            {"type": "null"},
+            {"type": "string", "pattern": "^[0-9a-f]{40}$"}
+          ]
+        },
+        "git_dirty": {"type": ["boolean", "null"]},
+        "python": {"type": "string", "minLength": 1},
+        "python_implementation": {"type": "string", "minLength": 1},
+        "platform": {"type": "string", "minLength": 1},
+        "dependency_versions": {
+          "type": "object",
+          "additionalProperties": {"type": ["string", "null"]}
+        },
+        "thread_environment": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "OPENBLAS_NUM_THREADS",
+            "OMP_NUM_THREADS",
+            "MKL_NUM_THREADS",
+            "NUMEXPR_NUM_THREADS"
+          ],
+          "properties": {
+            "OPENBLAS_NUM_THREADS": {"const": "1"},
+            "OMP_NUM_THREADS": {"const": "1"},
+            "MKL_NUM_THREADS": {"const": "1"},
+            "NUMEXPR_NUM_THREADS": {"const": "1"}
+          }
+        },
+        "source_files": {
+          "type": "object",
+          "minProperties": 14,
+          "additionalProperties": {"$ref": "#/$defs/sha256"}
+        }
+      }
+    },
+    "optimization": {
+      "type": "object",
+      "required": [
+        "dimension",
+        "n_vertices",
+        "seed",
+        "budget",
+        "initial_coordinate_sha256",
+        "scores",
+        "work",
+        "timing",
+        "optimizer"
+      ],
+      "properties": {
+        "dimension": {"const": 4},
+        "n_vertices": {"type": "integer", "minimum": 8, "maximum": 40},
+        "seed": {"type": "integer", "minimum": 0},
+        "budget": {"type": "integer", "minimum": 1},
+        "initial_coordinate_sha256": {"$ref": "#/$defs/sha256"},
+        "scores": {"type": "object"},
+        "work": {"type": "object"},
+        "timing": {"type": "object"},
+        "optimizer": {
+          "type": "object",
+          "required": ["selector"],
+          "properties": {
+            "selector": {"enum": ["powell", "fresh_topology_ad"]}
+          }
+        }
+      }
+    },
+    "symmetry": {
+      "type": "object",
+      "required": [
+        "valid_geometry",
+        "full_group_certified",
+        "certified_nontrivial_symmetry",
+        "geometric_group_order",
+        "combinatorial_generator_count",
+        "geometric_generator_count",
+        "orbit_sizes"
+      ],
+      "properties": {
+        "valid_geometry": {"type": "boolean"},
+        "full_group_certified": {"type": "boolean"},
+        "certified_nontrivial_symmetry": {"type": "boolean"},
+        "geometric_group_order": {
+          "type": ["integer", "null"],
+          "minimum": 1
+        },
+        "combinatorial_generator_count": {"type": "integer", "minimum": 0},
+        "geometric_generator_count": {"type": "integer", "minimum": 0},
+        "orbit_sizes": {
+          "type": "array",
+          "items": {"type": "integer", "minimum": 1}
+        }
+      }
+    },
+    "pole_audit": {
+      "type": "object",
+      "required": [
+        "all_poles_requested",
+        "requested_count",
+        "within_tolerance",
+        "spread",
+        "successful_count",
+        "failure_count"
+      ],
+      "properties": {
+        "all_poles_requested": {"type": "boolean"},
+        "requested_count": {"type": ["integer", "null"], "minimum": 0},
+        "within_tolerance": {"type": ["boolean", "null"]},
+        "spread": {"$ref": "#/$defs/nullable_number"},
+        "successful_count": {"type": ["integer", "null"], "minimum": 0},
+        "failure_count": {"type": ["integer", "null"], "minimum": 0}
+      }
+    },
+    "local_audit": {
+      "type": "object",
+      "required": ["requested", "performed", "status"],
+      "properties": {
+        "requested": {"type": "boolean"},
+        "performed": {"type": "boolean"},
+        "status": {"type": "string", "minLength": 1}
+      }
+    },
+    "audit": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "dimension",
+        "n_vertices",
+        "classification",
+        "independent_classification",
+        "classification_basis",
+        "fully_certified_nontrivial_geometric_symmetry",
+        "symmetry",
+        "pole_volume_audit",
+        "local_maximum_audit"
+      ],
+      "properties": {
+        "dimension": {"const": 4},
+        "n_vertices": {"type": "integer", "minimum": 5, "maximum": 40},
+        "classification": {"type": "string", "minLength": 1},
+        "independent_classification": {"type": "string", "minLength": 1},
+        "classification_basis": {"type": "object"},
+        "fully_certified_nontrivial_geometric_symmetry": {"type": "boolean"},
+        "symmetry": {"$ref": "#/$defs/symmetry"},
+        "pole_volume_audit": {"$ref": "#/$defs/pole_audit"},
+        "local_maximum_audit": {"$ref": "#/$defs/local_audit"}
+      }
+    },
+    "task": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "protocol_version",
+        "task_index",
+        "task_id",
+        "n_vertices",
+        "seed",
+        "budget",
+        "optimizer",
+        "status",
+        "reason",
+        "message",
+        "elapsed_wall_seconds",
+        "process_cpu_seconds",
+        "optimization",
+        "audit",
+        "coordinate_sha256",
+        "coordinates_retained",
+        "vertices"
+      ],
+      "properties": {
+        "protocol_version": {
+          "const": "h4-unconstrained-symmetric-maxima-mining/1"
+        },
+        "task_index": {"type": "integer", "minimum": 0},
+        "task_id": {
+          "type": "string",
+          "pattern": "^h4-start-[0-9]{6}-[0-9a-f]{12}$"
+        },
+        "n_vertices": {"type": "integer", "minimum": 8, "maximum": 40},
+        "seed": {"type": "integer", "minimum": 0},
+        "budget": {"type": "integer", "minimum": 1},
+        "optimizer": {"enum": ["powell", "fresh_topology_ad"]},
+        "status": {"enum": ["completed", "failed"]},
+        "reason": {"type": "string"},
+        "message": {"type": ["string", "null"]},
+        "elapsed_wall_seconds": {"type": "number", "minimum": 0},
+        "process_cpu_seconds": {"type": "number", "minimum": 0},
+        "optimization": {
+          "oneOf": [
+            {"type": "null"},
+            {"$ref": "#/$defs/optimization"}
+          ]
+        },
+        "audit": {
+          "oneOf": [
+            {"type": "null"},
+            {"$ref": "#/$defs/audit"}
+          ]
+        },
+        "coordinate_sha256": {
+          "oneOf": [
+            {"type": "null"},
+            {"$ref": "#/$defs/sha256"}
+          ]
+        },
+        "coordinates_retained": {"type": "boolean"},
+        "vertices": {
+          "oneOf": [
+            {"type": "null"},
+            {"$ref": "#/$defs/coordinates"}
+          ]
+        }
+      },
+      "allOf": [
+        {
+          "if": {"properties": {"status": {"const": "completed"}}},
+          "then": {
+            "properties": {
+              "optimization": {"$ref": "#/$defs/optimization"},
+              "audit": {"$ref": "#/$defs/audit"},
+              "coordinate_sha256": {"$ref": "#/$defs/sha256"}
+            }
+          }
+        },
+        {
+          "if": {"properties": {"coordinates_retained": {"const": true}}},
+          "then": {"properties": {"vertices": {"$ref": "#/$defs/coordinates"}}},
+          "else": {"properties": {"vertices": {"type": "null"}}}
+        }
+      ]
+    },
+    "calibration": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "requested",
+        "status",
+        "passes",
+        "expected_geometric_group_order",
+        "coordinate_sha256",
+        "audit",
+        "message",
+        "elapsed_wall_seconds",
+        "process_cpu_seconds"
+      ],
+      "properties": {
+        "requested": {"type": "boolean"},
+        "status": {"enum": ["not_requested", "pending", "completed", "failed"]},
+        "passes": {"type": "boolean"},
+        "expected_geometric_group_order": {"const": 384},
+        "coordinate_sha256": {
+          "oneOf": [
+            {"type": "null"},
+            {"$ref": "#/$defs/sha256"}
+          ]
+        },
+        "audit": {
+          "oneOf": [
+            {"type": "null"},
+            {"$ref": "#/$defs/audit"}
+          ]
+        },
+        "message": {"type": ["string", "null"]},
+        "elapsed_wall_seconds": {"type": "number", "minimum": 0},
+        "process_cpu_seconds": {"type": "number", "minimum": 0}
+      },
+      "allOf": [
+        {
+          "if": {"properties": {"status": {"const": "completed"}}},
+          "then": {
+            "properties": {
+              "requested": {"const": true},
+              "passes": {"const": true},
+              "coordinate_sha256": {"$ref": "#/$defs/sha256"},
+              "audit": {
+                "allOf": [
+                  {"$ref": "#/$defs/audit"},
+                  {
+                    "properties": {
+                      "symmetry": {
+                        "properties": {
+                          "valid_geometry": {"const": true},
+                          "full_group_certified": {"const": true},
+                          "certified_nontrivial_symmetry": {"const": true},
+                          "geometric_group_order": {"const": 384}
+                        }
+                      }
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        }
+      ]
+    },
+    "summary": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "planned",
+        "finished",
+        "completed",
+        "failed",
+        "pending",
+        "certified_nontrivial_symmetry",
+        "local_maximum_audits_performed",
+        "coordinates_retained"
+      ],
+      "properties": {
+        "planned": {"type": "integer", "minimum": 0},
+        "finished": {"type": "integer", "minimum": 0},
+        "completed": {"type": "integer", "minimum": 0},
+        "failed": {"type": "integer", "minimum": 0},
+        "pending": {"type": "integer", "minimum": 0},
+        "certified_nontrivial_symmetry": {"type": "integer", "minimum": 0},
+        "local_maximum_audits_performed": {"type": "integer", "minimum": 0},
+        "coordinates_retained": {"type": "integer", "minimum": 0}
+      }
+    },
+    "campaign_timings": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["cumulative_active_seconds", "last_invocation_seconds"],
+      "properties": {
+        "cumulative_active_seconds": {"type": "number", "minimum": 0},
+        "last_invocation_seconds": {"type": "number", "minimum": 0}
+      }
+    }
+  }
+}

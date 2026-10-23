@@ -16,7 +16,7 @@ on:
   workflow_dispatch:  # Allow manual trigger
 
 env:
-  PYTHON_VERSION: "3.12"
+  PYTHON_VERSION: "3.14"
 
 jobs:
   test-latest-deps:
@@ -35,10 +35,8 @@ jobs:
       - name: Install latest dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install pytest pytest-cov
-
           # Install with --upgrade to get latest versions
-          pip install --upgrade -e .
+          pip install --upgrade -e '.[dev]'
 
           # Force upgrade all dependencies to latest
           pip list --outdated --format=json | python -c "
@@ -95,8 +93,7 @@ jobs:
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install pytest
-          pip install --upgrade -e .
+          pip install --upgrade -e '.[dev]'
 
       - name: Set up Node.js
         uses: actions/setup-node@v4

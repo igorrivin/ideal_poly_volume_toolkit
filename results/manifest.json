@@ -1,0 +1,90 @@
+{
+  "schema_version": 1,
+  "repository": "ideal_poly_volume_toolkit",
+  "artifacts": [
+    {
+      "path": "results/data/optimal_d4_symmetry_analysis.json",
+      "sha256": "0bea03b4ddd6a91897ee9e9c3cdc4c5362d1a658a9a9de96911345edca2e29b5",
+      "size_bytes": 126922,
+      "media_type": "application/json",
+      "role": "canonical_input",
+      "status": "canonical",
+      "schema": null,
+      "producer": {
+        "name": "historical d4 symmetry optimization pipeline",
+        "command": null
+      },
+      "input_checksums": {},
+      "parameters": {},
+      "seed": null,
+      "git_commit": null,
+      "dirty": null,
+      "python": null,
+      "platform": null,
+      "numerical_mode": "Euclidean inscribed-polytope optimization",
+      "supersedes": [],
+      "notes": "Recovered from the research checkout; exact original run metadata is unavailable. Values were cross-checked against the tracked volume-lower-bound ground truth."
+    },
+    {
+      "path": "results/data/optimal_d5_d6_symmetry_analysis.json",
+      "sha256": "d50056f9dbc2d5ad2bb8bec1d0a0543700b0dcc92d150fdbbfbdccc61ae7e702",
+      "size_bytes": 101617,
+      "media_type": "application/json",
+      "role": "canonical_input",
+      "status": "canonical",
+      "schema": null,
+      "producer": {
+        "name": "historical d5/d6 symmetry optimization pipeline",
+        "command": null
+      },
+      "input_checksums": {},
+      "parameters": {},
+      "seed": null,
+      "git_commit": null,
+      "dirty": null,
+      "python": null,
+      "platform": null,
+      "numerical_mode": "Euclidean inscribed-polytope optimization",
+      "supersedes": [],
+      "notes": "Recovered from the research checkout; exact original run metadata is unavailable. Values were cross-checked against the tracked volume-lower-bound ground truth."
+    }
+  ],
+  "collections": [
+    {
+      "path_glob": "bin/results/data/*.json",
+      "role": "optimization_result",
+      "status": "historical",
+      "notes": "Legacy optimizer namespace. Current CLI and GUI writers use results/data."
+    },
+    {
+      "path_glob": "results/*.json",
+      "role": "research_artifact",
+      "status": "historical",
+      "notes": "Mixed loose artifacts retained in place until the staged ownership migration classifies and moves them."
+    },
+    {
+      "path_glob": "results/data/arithmeticity_benchmark.json",
+      "role": "arithmeticity_benchmark",
+      "status": "superseded",
+      "notes": "Legacy output predating coordinate-aware shear checks, exact total-vertex semantics, and full infinity-fan topology. It must not be used as arithmetic ground truth."
+    },
+    {
+      "path_glob": "results/data/20vertex_arithmetic_analysis.json",
+      "role": "arithmeticity_analysis",
+      "status": "superseded",
+      "notes": "Legacy analysis predating the strict zero-shear PSL(2,Z) certificate. Retained only for provenance."
+    },
+    {
+      "path_glob": "results/data/llm_challenges_arithmetic/**",
+      "role": "llm_arithmeticity_benchmark",
+      "status": "superseded",
+      "notes": "The 50- and 100-vertex challenge corpus fails the current coordinate-aware shear and closed-boundary checks. Retained as legacy-invalid research history, not publishable ground truth."
+    },
+    {
+      "path_glob": "results/data/*vertex_optimization_*.json",
+      "role": "optimization_result",
+      "status": "derived",
+      "notes": "Curated and timestamped optimizer outputs; schema-v1 writers identify their source explicitly."
+    }
+  ]
+}

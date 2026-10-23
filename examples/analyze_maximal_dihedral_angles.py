@@ -12,15 +12,24 @@ Strategy:
 4. Report special angles with small denominators
 """
 
+import json
 import sys
+import warnings
 from pathlib import Path
-sys.path.insert(0, str(Path(__file__).parent.parent))
 
 import numpy as np
-from fractions import Fraction
-from ideal_poly_volume_toolkit.rivin_delaunay import check_delaunay_realizability
-import json
-import glob
+
+sys.path.insert(0, str(Path(__file__).parent.parent))
+
+from ideal_poly_volume_toolkit.rivin_delaunay import (  # noqa: E402
+    check_delaunay_realizability,
+)
+
+
+REPO_ROOT = Path(__file__).resolve().parent.parent
+CANONICAL_RESULTS_DIRECTORY = REPO_ROOT / "results" / "data"
+LEGACY_RESULTS_DIRECTORY = REPO_ROOT / "bin" / "results" / "data"
+OPTIMIZATION_RESULT_PATTERN = "*vertex_optimization_*.json"
 
 
 def continued_fraction_convergents(x, max_terms=20):
@@ -158,19 +167,52 @@ def analyze_dihedral_angles(triangles, name="triangulation"):
     }
 
 
-def load_maximal_volume_results(directory='bin/results/data'):
+def find_optimization_result_files(
+    directory: str | Path | None = None,
+) -> tuple[list[Path], Path]:
+    """Find result files, preferring the canonical data directory.
+
+    An explicitly supplied directory is authoritative and never triggers an
+    implicit fallback. Without one, the historical ``bin/results`` directory
+    is consulted only when the canonical directory has no matching files.
+    """
+
+    if directory is not None:
+        selected = Path(directory)
+        return sorted(selected.glob(OPTIMIZATION_RESULT_PATTERN)), selected
+
+    canonical = sorted(CANONICAL_RESULTS_DIRECTORY.glob(OPTIMIZATION_RESULT_PATTERN))
+    if canonical:
+        return canonical, CANONICAL_RESULTS_DIRECTORY
+
+    legacy = sorted(LEGACY_RESULTS_DIRECTORY.glob(OPTIMIZATION_RESULT_PATTERN))
+    if legacy:
+        warnings.warn(
+            "No canonical optimization results were found in "
+            f"{CANONICAL_RESULTS_DIRECTORY}; using historical results from "
+            f"{LEGACY_RESULTS_DIRECTORY}.",
+            RuntimeWarning,
+            stacklevel=2,
+        )
+        return legacy, LEGACY_RESULTS_DIRECTORY
+
+    return [], CANONICAL_RESULTS_DIRECTORY
+
+
+def load_maximal_volume_results(directory: str | Path | None = None):
     """Load optimization results and extract maximal volume configurations."""
     from scipy.spatial import Delaunay
     results = []
 
-    pattern = str(Path(directory) / '*vertex_optimization_*.json')
-    files = glob.glob(pattern)
+    files, selected_directory = find_optimization_result_files(directory)
 
-    print(f"Found {len(files)} optimization result files")
+    print(
+        f"Found {len(files)} optimization result files in {selected_directory}"
+    )
 
     for filepath in sorted(files)[:10]:  # Limit to first 10 for now
         try:
-            with open(filepath, 'r') as f:
+            with filepath.open(encoding="utf-8") as f:
                 data = json.load(f)
 
             # Check if we have vertex positions in the "best" field
@@ -193,7 +235,7 @@ def load_maximal_volume_results(directory='bin/results/data'):
                     'points': points,
                 })
         except Exception as e:
-            print(f"  Warning: Could not load {Path(filepath).name}: {e}")
+            print(f"  Warning: Could not load {filepath.name}: {e}")
 
     return results
 
@@ -202,7 +244,14 @@ if __name__ == '__main__':
     import argparse
 
     parser = argparse.ArgumentParser(description='Analyze dihedral angles in maximal volume triangulations')
-    parser.add_argument('--data-dir', default='bin/results/data', help='Directory with optimization results')
+    parser.add_argument(
+        '--data-dir',
+        default=None,
+        help=(
+            'Directory with optimization results (default: canonical '
+            'results/data, with explicit legacy fallback)'
+        ),
+    )
     parser.add_argument('--max-denominator', type=int, default=100, help='Maximum denominator for rational approximation')
     parser.add_argument('--tolerance', type=float, default=1e-6, help='Error tolerance for rational match')
 
@@ -255,7 +304,7 @@ if __name__ == '__main__':
 
         # Show all dihedral angles with their best rational approximations
         if len(dihedrals) <= 20:  # Only if not too many
-            print(f"\nAll dihedral angles:")
+            print("\nAll dihedral angles:")
             for d in dihedrals:
                 if 'rational' in d:
                     print(f"  {d['edge']}: {d['angle_deg']:7.3f}° ≈ {d['rational']} "
@@ -275,13 +324,13 @@ if __name__ == '__main__':
         from collections import Counter
         q_counts = Counter(d['q'] for d in all_special_angles)
 
-        print(f"\nDistribution by denominator:")
+        print("\nDistribution by denominator:")
         for q in sorted(q_counts.keys()):
             print(f"  q={q:2d}: {q_counts[q]} angles")
 
         # Most common patterns
         pattern_counts = Counter(d['rational'] for d in all_special_angles)
-        print(f"\nMost common patterns:")
+        print("\nMost common patterns:")
         for pattern, count in pattern_counts.most_common(10):
             print(f"  {pattern}: {count} occurrences")
 

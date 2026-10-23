@@ -10,29 +10,43 @@ Usage:
 """
 
 import argparse
+import inspect
 import json
+from multiprocessing import Pool, cpu_count
+from numbers import Integral
 import numpy as np
 import matplotlib.pyplot as plt
 from datetime import datetime
 from pathlib import Path
 import sys
 from scipy import stats
-from multiprocessing import Pool, cpu_count
+from scipy.spatial import QhullError
 
-from ideal_poly_volume_toolkit.geometry import (
-    delaunay_triangulation_indices,
-    ideal_poly_volume_via_delaunay,
-)
+from ideal_poly_volume_toolkit.geometry import ideal_poly_volume_via_delaunay
 
 
-def sample_random_vertex():
+# Sampling is divided independently of the process count.  Consequently the
+# same seed and request produce the same ordered stream even when ``n_jobs``
+# changes.  The retry bounds keep pathological or monkey-patched samplers from
+# looping forever while still making under-filled requests explicit.
+LOGICAL_BATCH_SIZE = 256
+MAX_AUTOMATIC_WORKERS = 16
+MAX_VERTEX_DRAW_ATTEMPTS = 100
+MAX_CONFIGURATION_ATTEMPTS_PER_SAMPLE = 20
+KNOWN_NUMERICAL_EXCEPTIONS = (QhullError, FloatingPointError, np.linalg.LinAlgError)
+
+
+def sample_random_vertex(rng: np.random.Generator):
     """
     Sample a uniform random point on the unit sphere and project to complex plane.
     Uses stereographic projection from north pole.
     """
     # Sample uniform point on sphere using Gaussian method
-    vec = np.random.randn(3)
-    vec = vec / np.linalg.norm(vec)
+    vec = rng.standard_normal(3)
+    norm = np.linalg.norm(vec)
+    if not np.isfinite(norm) or norm == 0.0:
+        return None
+    vec = vec / norm
     x, y, z = vec
 
     # Skip near north pole (maps to infinity)
@@ -44,50 +58,92 @@ def sample_random_vertex():
     return w
 
 
+def _draw_finite_configuration(n_vertices, rng):
+    """Draw one finite configuration and return it with draw counters.
+
+    Each required random vertex gets at most
+    :data:`MAX_VERTEX_DRAW_ATTEMPTS` attempts.  Rejected pole-adjacent,
+    non-finite, and near-duplicate draws are counted rather than causing the
+    whole configuration to be silently short.
+    """
+    vertices = [complex(0, 0), complex(1, 0)]
+    n_draws = 0
+    n_rejected_draws = 0
+
+    for _ in range(n_vertices - 3):
+        for _ in range(MAX_VERTEX_DRAW_ATTEMPTS):
+            n_draws += 1
+            vertex = sample_random_vertex(rng)
+            if vertex is None or not np.isfinite(vertex):
+                n_rejected_draws += 1
+                continue
+            if any(abs(vertex - existing) < 0.01 for existing in vertices):
+                n_rejected_draws += 1
+                continue
+            vertices.append(vertex)
+            break
+        else:
+            return None, n_draws, n_rejected_draws
+
+    return np.asarray(vertices, dtype=np.complex128), n_draws, n_rejected_draws
+
+
 def _worker_sample_volumes(args):
-    """Worker function for parallel volume sampling."""
-    n_vertices, n_samples_chunk, seed_offset, series_terms = args
-
-    np.random.seed(seed_offset)
-
-    fixed_vertices = [complex(0, 0), complex(1, 0)]
-    n_random = n_vertices - 3
+    """Produce one deterministic logical batch and its rejection counters."""
+    n_vertices, target_samples, seed, batch_index, _series_terms = args
+    rng = np.random.default_rng(np.random.SeedSequence([seed, batch_index]))
+    max_configuration_attempts = (
+        target_samples * MAX_CONFIGURATION_ATTEMPTS_PER_SAMPLE
+    )
     volumes = []
+    counters = {
+        "n_vertex_draws": 0,
+        "n_rejected_vertex_draws": 0,
+        "n_configurations_attempted": 0,
+        "n_rejected_configurations": 0,
+        "n_vertex_generation_failures": 0,
+        "n_numerical_evaluation_failures": 0,
+        "n_invalid_volume_evaluations": 0,
+    }
 
-    for i in range(n_samples_chunk):
-        vertices = fixed_vertices.copy()
+    while (
+        len(volumes) < target_samples
+        and counters["n_configurations_attempted"] < max_configuration_attempts
+    ):
+        counters["n_configurations_attempted"] += 1
+        vertices, n_draws, n_rejected_draws = _draw_finite_configuration(
+            n_vertices, rng
+        )
+        counters["n_vertex_draws"] += n_draws
+        counters["n_rejected_vertex_draws"] += n_rejected_draws
 
-        # Add random vertices
-        for _ in range(n_random):
-            v = sample_random_vertex()
-            if v is None:
-                continue
-
-            too_close = False
-            for existing in vertices:
-                if abs(v - existing) < 0.01:
-                    too_close = True
-                    break
-            if too_close:
-                continue
-
-            vertices.append(v)
-
-        if len(vertices) != n_vertices - 1:
+        if vertices is None:
+            counters["n_vertex_generation_failures"] += 1
+            counters["n_rejected_configurations"] += 1
             continue
 
         try:
-            vertices_np = np.array(vertices, dtype=np.complex128)
-            vol = ideal_poly_volume_via_delaunay(
-                vertices_np, mode='fast', series_terms=series_terms
+            volume = ideal_poly_volume_via_delaunay(
+                vertices, mode="bloch_wigner"
             )
+        except KNOWN_NUMERICAL_EXCEPTIONS:
+            counters["n_numerical_evaluation_failures"] += 1
+            counters["n_rejected_configurations"] += 1
+            continue
 
-            if vol > 0 and vol < 1000:
-                volumes.append(vol)
-        except:
-            pass
+        if not np.isfinite(volume) or not 0.0 < volume < 1000.0:
+            counters["n_invalid_volume_evaluations"] += 1
+            counters["n_rejected_configurations"] += 1
+            continue
 
-    return volumes
+        volumes.append(float(volume))
+
+    return {
+        "batch_index": batch_index,
+        "target_samples": target_samples,
+        "volumes": np.asarray(volumes, dtype=np.float64),
+        **counters,
+    }
 
 
 def analyze_distribution(n_vertices, n_samples, seed=42, series_terms=96, n_jobs=None):
@@ -95,74 +151,140 @@ def analyze_distribution(n_vertices, n_samples, seed=42, series_terms=96, n_jobs
     Analyze volume distribution for n_vertices polyhedra.
 
     Args:
-        n_vertices: Number of vertices (must be >= 3)
+        n_vertices: Number of vertices (must be >= 4)
         n_samples: Number of random configurations to sample
         seed: Random seed
-        series_terms: Number of terms for Lobachevsky function approximation
-        n_jobs: Number of parallel jobs (default: use all CPUs)
+        series_terms: Deprecated compatibility argument; the vectorized
+            Bloch--Wigner kernel does not use a truncated series.
+        n_jobs: Number of parallel jobs. The automatic default uses at most
+            16 processes and never more processes than logical batches.
 
     Returns:
         dict with volumes and statistics
     """
-    if n_vertices - 3 < 0:
-        raise ValueError("Need at least 3 vertices (including infinity)")
+    if not isinstance(n_vertices, Integral) or isinstance(n_vertices, bool):
+        raise TypeError("n_vertices must be an integer")
+    if n_vertices < 4:
+        raise ValueError("Need at least 4 vertices (including infinity)")
+    if not isinstance(n_samples, Integral) or isinstance(n_samples, bool):
+        raise TypeError("n_samples must be an integer")
+    if n_samples < 1:
+        raise ValueError("n_samples must be positive")
+    if not isinstance(seed, Integral) or isinstance(seed, bool) or seed < 0:
+        raise ValueError("seed must be a non-negative integer")
+
+    n_vertices = int(n_vertices)
+    n_samples = int(n_samples)
+    seed = int(seed)
+    n_logical_batches = (n_samples + LOGICAL_BATCH_SIZE - 1) // LOGICAL_BATCH_SIZE
 
     # Determine number of parallel jobs
     if n_jobs is None:
-        n_jobs = cpu_count()
-    elif n_jobs <= 0:
-        n_jobs = 1  # Serial execution
+        effective_workers = min(
+            MAX_AUTOMATIC_WORKERS,
+            cpu_count() or 1,
+            n_logical_batches,
+        )
+    else:
+        if not isinstance(n_jobs, Integral) or isinstance(n_jobs, bool):
+            raise TypeError("n_jobs must be an integer or None")
+        if n_jobs < 1:
+            raise ValueError("n_jobs must be positive")
+        effective_workers = min(int(n_jobs), n_logical_batches)
 
     print(f"Sampling {n_samples} random {n_vertices}-vertex configurations...")
-    print(f"Using {n_jobs} parallel workers")
+    print(
+        f"Using {effective_workers} worker(s) across "
+        f"{n_logical_batches} deterministic batch(es)"
+    )
 
-    if n_jobs == 1:
-        # Serial execution (original code path)
-        np.random.seed(seed)
-        volumes = _worker_sample_volumes((n_vertices, n_samples, seed, series_terms))
+    work_batches = []
+    for batch_index, start in enumerate(range(0, n_samples, LOGICAL_BATCH_SIZE)):
+        target_samples = min(LOGICAL_BATCH_SIZE, n_samples - start)
+        work_batches.append(
+            (n_vertices, target_samples, seed, batch_index, series_terms)
+        )
+
+    if effective_workers == 1:
+        batch_results = [_worker_sample_volumes(batch) for batch in work_batches]
     else:
-        # Parallel execution
-        # Split work across workers
-        samples_per_worker = n_samples // n_jobs
-        remainder = n_samples % n_jobs
+        with Pool(processes=effective_workers) as pool:
+            # Pool.map preserves logical-batch order.
+            batch_results = pool.map(_worker_sample_volumes, work_batches)
 
-        # Create work chunks with different seeds
-        work_chunks = []
-        for i in range(n_jobs):
-            chunk_size = samples_per_worker + (1 if i < remainder else 0)
-            seed_offset = seed + i * 1000  # Different seed for each worker
-            work_chunks.append((n_vertices, chunk_size, seed_offset, series_terms))
-
-        # Run in parallel
-        with Pool(processes=n_jobs) as pool:
-            results = pool.map(_worker_sample_volumes, work_chunks)
-
-        # Combine results from all workers
-        volumes = []
-        for worker_volumes in results:
-            volumes.extend(worker_volumes)
-        volumes = np.array(volumes)
-
-    if len(volumes) == 0:
-        raise ValueError("No valid configurations found!")
+    volumes = np.concatenate(
+        [batch["volumes"] for batch in batch_results]
+    ).astype(np.float64, copy=False)
+    counter_names = (
+        "n_vertex_draws",
+        "n_rejected_vertex_draws",
+        "n_configurations_attempted",
+        "n_rejected_configurations",
+        "n_vertex_generation_failures",
+        "n_numerical_evaluation_failures",
+        "n_invalid_volume_evaluations",
+    )
+    counters = {
+        name: sum(int(batch[name]) for batch in batch_results)
+        for name in counter_names
+    }
+    complete = len(volumes) == n_samples
+    status = "complete" if complete else "attempt_limit_reached"
 
     print(f"\nSuccessfully analyzed {len(volumes)} valid configurations")
+    print(
+        "Rejected "
+        f"{counters['n_rejected_vertex_draws']} vertex draw(s), "
+        f"{counters['n_rejected_configurations']} configuration(s), and "
+        f"encountered {counters['n_numerical_evaluation_failures']} known "
+        "numerical evaluation failure(s)."
+    )
+    if not complete:
+        print(
+            "WARNING: finite retry limits were reached; "
+            f"{n_samples - len(volumes)} requested sample(s) are missing."
+        )
 
-    return {
+    result = {
         'volumes': volumes,
         'n_samples_requested': n_samples,
         'n_valid': len(volumes),
-        'mean': np.mean(volumes),
-        'median': np.median(volumes),
-        'std': np.std(volumes),
-        'min': np.min(volumes),
-        'max': np.max(volumes),
-        'q25': np.percentile(volumes, 25),
-        'q75': np.percentile(volumes, 75),
+        'n_missing': n_samples - len(volumes),
+        'complete': complete,
+        'status': status,
+        'effective_workers': effective_workers,
+        'logical_batch_size': LOGICAL_BATCH_SIZE,
+        'n_logical_batches': n_logical_batches,
+        'max_vertex_draw_attempts': MAX_VERTEX_DRAW_ATTEMPTS,
+        'max_configuration_attempts_per_sample': (
+            MAX_CONFIGURATION_ATTEMPTS_PER_SAMPLE
+        ),
+        **counters,
     }
+    if len(volumes):
+        result.update({
+            'mean': np.mean(volumes),
+            'median': np.median(volumes),
+            'std': np.std(volumes),
+            'min': np.min(volumes),
+            'max': np.max(volumes),
+            'q25': np.percentile(volumes, 25),
+            'q75': np.percentile(volumes, 75),
+        })
+    else:
+        result.update({name: float("nan") for name in (
+            "mean", "median", "std", "min", "max", "q25", "q75"
+        )})
+    return result
 
 
-def fit_distribution(volumes, dist_name='beta', n_bootstrap=1000, confidence_level=0.95):
+def fit_distribution(
+    volumes,
+    dist_name='beta',
+    n_bootstrap=1000,
+    confidence_level=0.95,
+    seed=42,
+):
     """
     Fit a distribution to the volume data with confidence intervals.
 
@@ -171,16 +293,34 @@ def fit_distribution(volumes, dist_name='beta', n_bootstrap=1000, confidence_lev
         dist_name: Name of distribution to fit ('beta', 'gamma', 'lognorm', etc.)
         n_bootstrap: Number of bootstrap samples for confidence intervals
         confidence_level: Confidence level for intervals (default: 0.95)
+        seed: Non-negative seed for the function-local bootstrap generator
 
     Returns:
         dict with fitted parameters, confidence intervals, and goodness-of-fit statistics
     """
+    if not isinstance(n_bootstrap, Integral) or isinstance(n_bootstrap, bool):
+        raise TypeError("n_bootstrap must be an integer")
+    if n_bootstrap < 1:
+        raise ValueError("n_bootstrap must be positive")
+    if not 0.0 < confidence_level < 1.0:
+        raise ValueError("confidence_level must be between 0 and 1")
+    if not isinstance(seed, Integral) or isinstance(seed, bool) or seed < 0:
+        raise ValueError("seed must be a non-negative integer")
+
+    volumes = np.asarray(volumes, dtype=np.float64)
+    if volumes.ndim != 1 or volumes.size == 0:
+        raise ValueError("volumes must be a non-empty one-dimensional array")
+    if not np.all(np.isfinite(volumes)):
+        raise ValueError("volumes must contain only finite values")
+
     # Normalize data to [0,1] for beta distribution
     if dist_name == 'beta':
         # Beta requires data in (0,1), so normalize
         data_min = np.min(volumes)
         data_max = np.max(volumes)
         data_range = data_max - data_min
+        if data_range == 0.0:
+            raise ValueError("beta fitting requires at least two distinct volumes")
         normalized_data = (volumes - data_min) / data_range
         # Shift slightly away from 0 and 1 to avoid numerical issues
         epsilon = 1e-10
@@ -197,32 +337,55 @@ def fit_distribution(volumes, dist_name='beta', n_bootstrap=1000, confidence_lev
     params = dist.fit(fit_data)
 
     # Kolmogorov-Smirnov goodness-of-fit test
-    ks_statistic, ks_pvalue = stats.kstest(fit_data, dist_name, args=params)
+    # Passing the distribution name triggers a SciPy 1.18 fast path that can
+    # forward ``loc`` and ``scale`` directly to a one-argument special
+    # function (for example ``ndtr`` for the normal distribution).  Bind the
+    # fitted parameters through the public distribution object instead; this
+    # is stable across the supported SciPy/Python combinations.
+    def fitted_cdf(values):
+        return dist.cdf(values, *params)
 
-    # Anderson-Darling test (if available for this distribution)
-    try:
-        ad_result = stats.anderson(fit_data, dist=dist_name if dist_name in ['norm', 'expon'] else 'norm')
-        ad_statistic = ad_result.statistic
-    except:
-        ad_statistic = None
+    ks_statistic, ks_pvalue = stats.kstest(fit_data, fitted_cdf)
+
+    # SciPy's Anderson implementation supports only a fixed set of families;
+    # use its normal diagnostic for the other CLI-supported fits.
+    ad_distribution = dist_name if dist_name in ['norm', 'expon'] else 'norm'
+    anderson_kwargs = {}
+    if "method" in inspect.signature(stats.anderson).parameters:
+        # SciPy >= 1.17 requires an explicit p-value method.  We retain only
+        # the statistic, so interpolation preserves the inexpensive legacy
+        # diagnostic and avoids the pending SciPy 1.19 API transition.
+        anderson_kwargs["method"] = "interpolate"
+    ad_statistic = stats.anderson(
+        fit_data,
+        dist=ad_distribution,
+        **anderson_kwargs,
+    ).statistic
 
     # Bootstrap for confidence intervals
     print(f"Computing confidence intervals via bootstrap ({n_bootstrap} samples)...")
     bootstrap_params = []
+    rng = np.random.default_rng(np.random.SeedSequence(int(seed)))
+    progress_interval = max(1, n_bootstrap // 10)
+    n_bootstrap_failures = 0
 
     for i in range(n_bootstrap):
-        if (i + 1) % (n_bootstrap // 10) == 0:
+        if (i + 1) % progress_interval == 0 or i + 1 == n_bootstrap:
             print(f"  Bootstrap progress: {i + 1}/{n_bootstrap} ({100*(i+1)/n_bootstrap:.0f}%)")
 
         # Resample with replacement
-        resampled = np.random.choice(fit_data, size=len(fit_data), replace=True)
+        resampled = rng.choice(fit_data, size=len(fit_data), replace=True)
         try:
             bootstrap_params.append(dist.fit(resampled))
-        except:
-            # If fit fails, skip this bootstrap sample
+        except (stats.FitError, FloatingPointError):
+            # These are known numerical fit failures. Unexpected exceptions
+            # propagate so programming errors are not mistaken for bad draws.
+            n_bootstrap_failures += 1
             continue
 
-    bootstrap_params = np.array(bootstrap_params)
+    if not bootstrap_params:
+        raise RuntimeError("all bootstrap distribution fits failed")
+    bootstrap_params = np.asarray(bootstrap_params, dtype=np.float64)
 
     # Calculate confidence intervals for each parameter
     alpha = 1 - confidence_level
@@ -265,7 +428,13 @@ def fit_distribution(volumes, dist_name='beta', n_bootstrap=1000, confidence_lev
                 'ks_statistic': ks_statistic,
                 'ks_pvalue': ks_pvalue,
                 'ad_statistic': ad_statistic
-            }
+            },
+            'bootstrap': {
+                'seed': int(seed),
+                'n_requested': int(n_bootstrap),
+                'n_successful': len(bootstrap_params),
+                'n_failures': n_bootstrap_failures,
+            },
         }
     else:
         result = {
@@ -277,7 +446,13 @@ def fit_distribution(volumes, dist_name='beta', n_bootstrap=1000, confidence_lev
                 'ks_statistic': ks_statistic,
                 'ks_pvalue': ks_pvalue,
                 'ad_statistic': ad_statistic
-            }
+            },
+            'bootstrap': {
+                'seed': int(seed),
+                'n_requested': int(n_bootstrap),
+                'n_successful': len(bootstrap_params),
+                'n_failures': n_bootstrap_failures,
+            },
         }
 
     return result
@@ -353,7 +528,7 @@ Examples:
     )
 
     parser.add_argument('--vertices', '-v', type=int, required=True,
-                        help='Number of vertices (must be >= 3)')
+                        help='Number of vertices (must be >= 4)')
     parser.add_argument('--samples', '-n', type=int, default=10000,
                         help='Number of random samples (default: 10000)')
     parser.add_argument('--seed', '-s', type=int, default=42,
@@ -365,7 +540,7 @@ Examples:
     parser.add_argument('--reference', '-r', type=float, default=None,
                         help='Reference volume to mark on plot (optional)')
     parser.add_argument('--series-terms', type=int, default=96,
-                        help='Number of series terms for Lobachevsky function (default: 96)')
+                        help='Deprecated compatibility option (ignored by the Bloch-Wigner kernel)')
     parser.add_argument('--fit', '-f', type=str, default=None,
                         choices=['beta', 'gamma', 'lognorm', 'norm'],
                         help='Fit a distribution and compute confidence intervals (default: None)')
@@ -374,12 +549,18 @@ Examples:
     parser.add_argument('--confidence', '-c', type=float, default=0.95,
                         help='Confidence level for intervals (default: 0.95)')
     parser.add_argument('--jobs', '-j', type=int, default=None,
-                        help='Number of parallel jobs (default: use all CPUs)')
+                        help='Number of parallel jobs (automatic default: up to 16)')
 
     args = parser.parse_args()
 
-    if args.vertices < 3:
-        print("Error: Number of vertices must be at least 3")
+    if args.vertices < 4:
+        print("Error: Number of vertices must be at least 4")
+        sys.exit(1)
+    if args.samples < 1:
+        print("Error: Number of samples must be positive")
+        sys.exit(1)
+    if args.bootstrap < 1:
+        print("Error: Number of bootstrap samples must be positive")
         sys.exit(1)
 
     # Setup output files
@@ -426,6 +607,14 @@ Examples:
     print("STATISTICS:")
     print("=" * 70)
     print(f"Valid configs:  {results['n_valid']:,} / {results['n_samples_requested']:,}")
+    print(f"Sampling status: {results['status']}")
+    print(f"Workers used:    {results['effective_workers']}")
+    print(f"Rejected draws:  {results['n_rejected_vertex_draws']:,}")
+    print(f"Rejected configs:{results['n_rejected_configurations']:>10,}")
+    print(
+        "Numerical fails: "
+        f"{results['n_numerical_evaluation_failures']:,}"
+    )
     print(f"Mean volume:    {results['mean']:.8f}")
     print(f"Median volume:  {results['median']:.8f}")
     print(f"Std deviation:  {results['std']:.8f}")
@@ -441,7 +630,7 @@ Examples:
 
     # Fit distribution if requested
     fit_result = None
-    if args.fit is not None:
+    if args.fit is not None and results['n_valid']:
         print("\n" + "=" * 70)
         print("DISTRIBUTION FITTING:")
         print("=" * 70)
@@ -449,7 +638,8 @@ Examples:
             results['volumes'],
             dist_name=args.fit,
             n_bootstrap=args.bootstrap,
-            confidence_level=args.confidence
+            confidence_level=args.confidence,
+            seed=args.seed,
         )
 
         # Print fitted parameters with confidence intervals
@@ -461,7 +651,7 @@ Examples:
                   f"({100*ci_info['ci_level']:.0f}% CI)")
 
         # Print goodness-of-fit statistics
-        print(f"\nGoodness of fit:")
+        print("\nGoodness of fit:")
         print("-" * 70)
         gof = fit_result['goodness_of_fit']
         print(f"Kolmogorov-Smirnov statistic: {gof['ks_statistic']:.6f}")
@@ -473,15 +663,20 @@ Examples:
         if gof['ad_statistic'] is not None:
             print(f"Anderson-Darling statistic:   {gof['ad_statistic']:.6f}")
 
-    # Create plot
-    plot_distribution(
-        results['volumes'],
-        results,
-        args.vertices,
-        plot_file,
-        reference_volume=args.reference,
-        fit_result=fit_result
-    )
+    # Histograms and fitted distributions are undefined for an empty result.
+    # Preserve the diagnostics/data output instead of failing after a bounded
+    # sampler has correctly reported complete underfill.
+    if results['n_valid']:
+        plot_distribution(
+            results['volumes'],
+            results,
+            args.vertices,
+            plot_file,
+            reference_volume=args.reference,
+            fit_result=fit_result
+        )
+    else:
+        print("No valid configurations were produced; plot and fit skipped.")
 
     # Save data if requested
     if args.data is not None:
@@ -491,17 +686,35 @@ Examples:
                 'n_vertices': args.vertices,
                 'n_samples_requested': args.samples,
                 'n_valid': results['n_valid'],
+                'n_missing': results['n_missing'],
+                'complete': results['complete'],
+                'status': results['status'],
                 'seed': args.seed,
+                'effective_workers': results['effective_workers'],
+                'logical_batch_size': results['logical_batch_size'],
+                'n_logical_batches': results['n_logical_batches'],
+                'max_vertex_draw_attempts': results['max_vertex_draw_attempts'],
+                'max_configuration_attempts_per_sample': results[
+                    'max_configuration_attempts_per_sample'
+                ],
+                'n_vertex_draws': results['n_vertex_draws'],
+                'n_rejected_vertex_draws': results['n_rejected_vertex_draws'],
+                'n_configurations_attempted': results['n_configurations_attempted'],
+                'n_rejected_configurations': results['n_rejected_configurations'],
+                'n_vertex_generation_failures': results['n_vertex_generation_failures'],
+                'n_numerical_evaluation_failures': results['n_numerical_evaluation_failures'],
+                'n_invalid_volume_evaluations': results['n_invalid_volume_evaluations'],
                 'series_terms': args.series_terms,
+                'series_terms_ignored': True,
+                'volume_mode': 'bloch_wigner',
             },
             'statistics': {
-                'mean': float(results['mean']),
-                'median': float(results['median']),
-                'std': float(results['std']),
-                'min': float(results['min']),
-                'max': float(results['max']),
-                'q25': float(results['q25']),
-                'q75': float(results['q75']),
+                name: (
+                    float(results[name])
+                    if np.isfinite(results[name])
+                    else None
+                )
+                for name in ('mean', 'median', 'std', 'min', 'max', 'q25', 'q75')
             },
             'volumes': results['volumes'].tolist(),
         }
@@ -527,7 +740,8 @@ Examples:
                     'ks_pvalue': float(fit_result['goodness_of_fit']['ks_pvalue']),
                     'ad_statistic': float(fit_result['goodness_of_fit']['ad_statistic'])
                                    if fit_result['goodness_of_fit']['ad_statistic'] is not None else None
-                }
+                },
+                'bootstrap': dict(fit_result['bootstrap']),
             }
             if 'normalization' in fit_result:
                 fit_data['normalization'] = {
@@ -538,7 +752,8 @@ Examples:
             output_data['distribution_fit'] = fit_data
 
         with open(data_file, 'w') as f:
-            json.dump(output_data, f, indent=2)
+            # Reject accidental NaN/Infinity so saved data remains strict JSON.
+            json.dump(output_data, f, indent=2, allow_nan=False)
 
         print(f"\nData saved to: {data_file}")
 

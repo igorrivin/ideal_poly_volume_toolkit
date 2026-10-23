@@ -14,7 +14,7 @@ from typing import Callable, Iterable, List, Optional, Union
 
 import numpy as np
 
-from .generic import GenericOptEnv, InnerOptimizer
+from .generic import GenericOptEnv, InnerOptimizer, OptimizerRun
 
 
 # =====================================================================
@@ -139,28 +139,89 @@ def compare_with_baseline(
 
     If `baselines` is None, the env's own `inner_optimizers` are used.
 
-    Returns `{baseline_name: {mean_value, std_value, max_value}, ...}`.
+    Optimizers that do not support a sampled task are skipped.  The returned
+    ``n_trials`` is therefore the completed count (with
+    ``n_trials_requested`` retaining the requested count), which matters for
+    mixed-dimension samplers.
+
+    ``budget_per_trial`` is a strict cap on optimizer-reported work.  A legacy
+    result without a cached canonical value is scored only when room remains
+    inside that cap.  The result records actual work in ``evals_per_trial``.
+
+    Returns `{baseline_name: {mean_value, std_value, max_value, ...}, ...}`.
     """
+    budget_per_trial = int(budget_per_trial)
+    if budget_per_trial < 1:
+        raise ValueError("budget_per_trial must be at least 1")
+
     env = env_factory()
     baseline_list = list(baselines) if baselines is not None else list(env.inner_optimizers)
 
     summary: dict = {}
     for opt in baseline_list:
         per_trial = []
+        evals_per_trial: list[int] = []
         for trial in range(n_trials):
             env = env_factory()
             env.reset(seed=seed + trial)
             task = env.task
+            if not opt.supports(task):
+                continue
             start_sol = task.copy_solution(env.root.best_solution)
             rng = np.random.default_rng(seed + 1_000_000 + trial)
-            best_sol, values = opt.run(start_sol, task, budget_per_trial, rng)
-            final = task.evaluate(best_sol)
+            raw_result = opt.run(start_sol, task, budget_per_trial, rng)
+            if isinstance(raw_result, OptimizerRun):
+                run = raw_result
+            else:
+                best_sol, values = raw_result
+                run = OptimizerRun(
+                    solution=best_sol,
+                    values=list(values),
+                    objective_evals=len(values),
+                )
+
+            actual_work = run.n_evals
+            if actual_work > budget_per_trial:
+                raise RuntimeError(
+                    f"baseline {opt.name!r} exceeded its work budget: "
+                    f"{actual_work} > {budget_per_trial}"
+                )
+            if run.solution_value is None:
+                if actual_work >= budget_per_trial:
+                    raise RuntimeError(
+                        f"baseline {opt.name!r} used its full budget without "
+                        "a canonical solution_value"
+                    )
+                final = float(task.evaluate(run.solution))
+                actual_work += 1
+            else:
+                if run.objective_evals < 1:
+                    raise RuntimeError(
+                        f"baseline {opt.name!r} returned an uncounted "
+                        "canonical solution_value"
+                    )
+                final = float(run.solution_value)
+
+            if actual_work > budget_per_trial:  # defensive for future changes
+                raise RuntimeError(
+                    f"baseline {opt.name!r} exceeded its work budget: "
+                    f"{actual_work} > {budget_per_trial}"
+                )
             per_trial.append(final)
+            evals_per_trial.append(actual_work)
         arr = np.array(per_trial, dtype=float)
         summary[opt.name] = {
-            "mean_value": float(arr.mean()),
-            "std_value": float(arr.std()),
-            "max_value": float(arr.max()),
-            "n_trials": int(n_trials),
+            "mean_value": float(arr.mean()) if len(arr) else float("nan"),
+            "std_value": float(arr.std()) if len(arr) else float("nan"),
+            "max_value": float(arr.max()) if len(arr) else float("nan"),
+            "n_trials": len(per_trial),
+            "n_trials_requested": int(n_trials),
+            "budget_per_trial": budget_per_trial,
+            "mean_evals": (
+                float(np.mean(evals_per_trial))
+                if evals_per_trial else float("nan")
+            ),
+            "max_evals": max(evals_per_trial, default=0),
+            "evals_per_trial": evals_per_trial,
         }
     return summary

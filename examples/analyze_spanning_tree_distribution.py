@@ -4,19 +4,50 @@ Analyze the distribution of spanning trees and identify what makes
 some triangulations "vastly more forested" than others.
 """
 
+import json
 import sys
+import warnings
 from pathlib import Path
+
+import matplotlib.pyplot as plt
+import numpy as np
+
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-import json
-import numpy as np
-import matplotlib.pyplot as plt
-from collections import Counter
 
-def analyze_distribution(data_file: str):
+REPO_ROOT = Path(__file__).resolve().parent.parent
+CORRECTED_DATA_PATH = REPO_ROOT / "results" / "spanning_trees_n10_CORRECTED.json"
+LEGACY_DATA_PATH = REPO_ROOT / "results" / "spanning_trees_n10.json"
+
+
+def resolve_spanning_tree_data_path(data_file: str | Path | None = None) -> Path:
+    """Resolve the corrected dataset, warning before a historical fallback."""
+
+    if data_file is not None:
+        requested = Path(data_file)
+        if not requested.is_file():
+            raise FileNotFoundError(f"spanning-tree data file not found: {requested}")
+        return requested
+
+    if CORRECTED_DATA_PATH.is_file():
+        return CORRECTED_DATA_PATH
+    if LEGACY_DATA_PATH.is_file():
+        warnings.warn(
+            f"Corrected spanning-tree data is absent; using historical {LEGACY_DATA_PATH}.",
+            RuntimeWarning,
+            stacklevel=2,
+        )
+        return LEGACY_DATA_PATH
+    raise FileNotFoundError(
+        "neither corrected nor historical spanning-tree data is available"
+    )
+
+
+def analyze_distribution(data_file: str | Path | None = None):
     """Analyze spanning tree distribution in detail."""
 
-    with open(data_file, 'r') as f:
+    resolved_data_file = resolve_spanning_tree_data_path(data_file)
+    with resolved_data_file.open(encoding="utf-8") as f:
         data = json.load(f)
 
     tris = data['raw_data']['triangulations']
@@ -47,23 +78,23 @@ def analyze_distribution(data_file: str):
     print("="*70)
 
     print("\n--- STANDARD REALIZABILITY ---")
-    print(f"Realizable:")
+    print("Realizable:")
     print(f"  Log mean: {np.mean(np.log1p(st_standard_real)):.3f}")
     print(f"  Log median: {np.median(np.log1p(st_standard_real)):.3f}")
     print(f"  Log std: {np.std(np.log1p(st_standard_real)):.3f}")
 
-    print(f"\nNon-realizable:")
+    print("\nNon-realizable:")
     print(f"  Log mean: {np.mean(np.log1p(st_standard_nonreal)):.3f}")
     print(f"  Log median: {np.median(np.log1p(st_standard_nonreal)):.3f}")
     print(f"  Log std: {np.std(np.log1p(st_standard_nonreal)):.3f}")
 
     print("\n--- STRICT REALIZABILITY ---")
-    print(f"Strict realizable:")
+    print("Strict realizable:")
     print(f"  Log mean: {np.mean(np.log1p(st_strict_real)):.3f}")
     print(f"  Log median: {np.median(np.log1p(st_strict_real)):.3f}")
     print(f"  Log std: {np.std(np.log1p(st_strict_real)):.3f}")
 
-    print(f"\nStrict non-realizable:")
+    print("\nStrict non-realizable:")
     print(f"  Log mean: {np.mean(np.log1p(st_strict_nonreal)):.3f}")
     print(f"  Log median: {np.median(np.log1p(st_strict_nonreal)):.3f}")
     print(f"  Log std: {np.std(np.log1p(st_strict_nonreal)):.3f}")
@@ -129,11 +160,11 @@ def analyze_distribution(data_file: str):
     corr_log_vertices = np.corrcoef(log_spanning_trees, vertices)[0, 1]
     corr_log_edges = np.corrcoef(log_spanning_trees, edges)[0, 1]
 
-    print(f"\nPearson correlation (raw):")
+    print("\nPearson correlation (raw):")
     print(f"  Spanning trees vs vertices: {corr_vertices:.4f}")
     print(f"  Spanning trees vs edges: {corr_edges:.4f}")
 
-    print(f"\nPearson correlation (log-transformed):")
+    print("\nPearson correlation (log-transformed):")
     print(f"  log(spanning trees) vs vertices: {corr_log_vertices:.4f}")
     print(f"  log(spanning trees) vs edges: {corr_log_edges:.4f}")
 
@@ -250,8 +281,11 @@ if __name__ == '__main__':
 
     parser = argparse.ArgumentParser(description='Analyze spanning tree distribution')
     parser.add_argument('--data', type=str,
-                       default='results/spanning_trees_n10.json',
-                       help='Path to spanning trees data JSON')
+                       default=None,
+                       help=(
+                           'Path to spanning trees data JSON (default: corrected '
+                           'artifact, with explicit historical fallback)'
+                       ))
 
     args = parser.parse_args()
 

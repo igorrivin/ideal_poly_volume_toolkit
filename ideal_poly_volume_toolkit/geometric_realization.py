@@ -6,7 +6,6 @@ Construct Euclidean point positions from triangle angles using rigid constructio
 
 import numpy as np
 from typing import List, Tuple, Dict, Set, Optional
-import networkx as nx
 
 
 def realize_from_angles_rigid(
@@ -129,7 +128,7 @@ def realize_from_angles_rigid(
     if r1 + r2 < d or r1 + d < r2 or r2 + d < r1:
         return {
             'success': False,
-            'message': f'Triangle inequality violated for first triangle',
+            'message': 'Triangle inequality violated for first triangle',
             'points': None,
             'vertex_list': vertex_list,
         }

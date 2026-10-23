@@ -41,6 +41,7 @@ sys.path.insert(0, str(REPO_ROOT / "ideal_poly_volume_toolkit"))
 
 from ideal_poly_volume_toolkit.rivin_holonomy import (  # noqa: E402
     check_arithmeticity,
+    check_arithmeticity_from_vertices,
     compute_shears_from_vertices,
 )
 import pointset_to_fuchsian as pf  # noqa: E402
@@ -166,10 +167,10 @@ def test_require_interior_early_tie_rejection():
     assert not interior_on.get("rejected_tie", False)
 
 
-def test_interior_optimum_is_arithmetic_end_to_end():
+def test_interior_optimum_zero_shear_diagnostic_is_not_an_open_certificate():
     """End-to-end: a combinatorial type whose volume maximum is interior
-    to the Delaunay polytope (no cocircular ties) must realize with ~zero
-    shears and all-integral holonomy traces."""
+    to the Delaunay polytope realizes with ~zero shears, but its finite
+    Delaunay disk must not be mislabeled an arithmetic closed surface."""
     from ideal_poly_volume_toolkit.rivin_delaunay import (
         check_delaunay_realizability,
         optimize_hyperbolic_volume,
@@ -191,6 +192,15 @@ def test_interior_optimum_is_arithmetic_end_to_end():
     vc = np.zeros(N, dtype=complex)
     for i, v in enumerate(real["vertex_list"]):
         vc[v] = complex(real["points"][i, 0], real["points"][i, 1])
-    res = check_arithmeticity(tris, vertices_complex=vc, tolerance=1e-6)
-    assert res["is_arithmetic"]
-    assert max(abs(s) for s in res["shears"].values()) < 1e-10
+    open_shears = compute_shears_from_vertices(tris, vc)
+    assert max(abs(s) for s in open_shears.values()) < 1e-10
+
+    with pytest.raises(ValueError, match="incidence 1"):
+        check_arithmeticity(tris, vertices_complex=vc, tolerance=1e-6)
+
+    closed = check_arithmeticity_from_vertices(vc, tolerance=1e-6)
+    assert closed["topology"]["n_vertices"] == N
+    assert closed["topology"]["n_faces"] == 2 * N - 4
+    assert closed["n_generators"] == N - 1
+    assert not closed["is_arithmetic"]
+    assert closed["arithmeticity_status"] == "not_certified"

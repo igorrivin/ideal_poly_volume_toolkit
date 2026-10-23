@@ -16,8 +16,290 @@ Outputs:
 """
 
 import math
-from collections import deque, defaultdict
-from typing import Dict, List, Tuple, Optional, Any
+from collections import defaultdict, deque
+from collections.abc import Mapping
+from dataclasses import dataclass
+from numbers import Integral, Real
+from typing import Any, Dict, Iterable, List, Optional, Sequence, Tuple
+
+
+HolonomyToken = str | tuple[str, int, int]
+ExactMatrix2x2 = tuple[tuple[int, int], tuple[int, int]]
+
+
+@dataclass(frozen=True)
+class ClosedSphereTriangulationSummary:
+    """Combinatorial invariants of a validated triangulated 2-sphere."""
+
+    vertex_labels: tuple[int, ...]
+    n_vertices: int
+    n_edges: int
+    n_faces: int
+    euler_characteristic: int
+
+    def as_dict(self) -> dict[str, Any]:
+        """Return a JSON-serializable representation."""
+        return {
+            "vertex_labels": list(self.vertex_labels),
+            "n_vertices": self.n_vertices,
+            "n_edges": self.n_edges,
+            "n_faces": self.n_faces,
+            "euler_characteristic": self.euler_characteristic,
+        }
+
+
+@dataclass(frozen=True)
+class ExactZeroShearGenerator:
+    """One holonomy generator evaluated exactly at shear zero."""
+
+    source_triangle: int
+    target_triangle: int
+    tokens: tuple[HolonomyToken, ...]
+    matrix: ExactMatrix2x2
+
+    @property
+    def trace(self) -> int:
+        return self.matrix[0][0] + self.matrix[1][1]
+
+    @property
+    def determinant(self) -> int:
+        return (
+            self.matrix[0][0] * self.matrix[1][1]
+            - self.matrix[0][1] * self.matrix[1][0]
+        )
+
+    def as_dict(self) -> dict[str, Any]:
+        """Return a JSON-serializable representation."""
+        tokens = [
+            list(token) if isinstance(token, tuple) else token
+            for token in self.tokens
+        ]
+        return {
+            "source_triangle": self.source_triangle,
+            "target_triangle": self.target_triangle,
+            "tokens": tokens,
+            "matrix": [list(row) for row in self.matrix],
+            "trace": self.trace,
+            "determinant": self.determinant,
+        }
+
+
+@dataclass(frozen=True)
+class ExactZeroShearCertificate:
+    """Exact PSL(2,Z) certificate for a declared zero-shear structure.
+
+    This certificate concerns the abstract zero-shear structure on the supplied
+    closed triangulation.  It does not assert that unrelated floating-point
+    coordinates realize those zero shears; callers with coordinates must verify
+    that geometric premise independently with ``compute_shears_from_vertices``.
+    """
+
+    topology: ClosedSphereTriangulationSummary
+    root_triangle: int
+    psl2z_index: int
+    generators: tuple[ExactZeroShearGenerator, ...]
+    certificate_type: str = "exact-zero-shear-psl2z-v1"
+    scope: str = "abstract-zero-shear-structure"
+
+    @property
+    def traces(self) -> tuple[int, ...]:
+        return tuple(generator.trace for generator in self.generators)
+
+    @property
+    def all_determinants_one(self) -> bool:
+        return all(generator.determinant == 1 for generator in self.generators)
+
+    @property
+    def all_traces_integral(self) -> bool:
+        # The exact evaluator constructs Python integers throughout.  Keep this
+        # explicit predicate in the serialized certificate for downstream gates.
+        return all(isinstance(trace, int) for trace in self.traces)
+
+    @property
+    def is_arithmetic(self) -> bool:
+        return self.all_determinants_one and self.all_traces_integral
+
+    def as_dict(self) -> dict[str, Any]:
+        """Return a JSON-serializable representation."""
+        return {
+            "certificate_type": self.certificate_type,
+            "scope": self.scope,
+            "topology": self.topology.as_dict(),
+            "root_triangle": self.root_triangle,
+            "psl2z_index": self.psl2z_index,
+            "generators": [generator.as_dict() for generator in self.generators],
+            "traces": list(self.traces),
+            "all_determinants_one": self.all_determinants_one,
+            "all_traces_integral": self.all_traces_integral,
+            "is_arithmetic": self.is_arithmetic,
+        }
+
+
+def _materialize_integer_faces(
+    triangles: Iterable[Sequence[int]],
+) -> tuple[tuple[int, int, int], ...]:
+    """Materialize and strictly validate the local syntax of triangle faces."""
+    faces: list[tuple[int, int, int]] = []
+    seen_faces: set[tuple[int, int, int]] = set()
+
+    for face_index, triangle in enumerate(triangles):
+        face = tuple(triangle)
+        if len(face) != 3:
+            raise ValueError(
+                f"face {face_index} must contain exactly three vertices"
+            )
+        if any(
+            not isinstance(vertex, Integral) or isinstance(vertex, bool)
+            for vertex in face
+        ):
+            raise TypeError(
+                f"face {face_index} vertex labels must be non-negative integers"
+            )
+
+        normalized_face = tuple(int(vertex) for vertex in face)
+        if any(vertex < 0 for vertex in normalized_face):
+            raise ValueError(
+                f"face {face_index} vertex labels must be non-negative"
+            )
+        if len(set(normalized_face)) != 3:
+            raise ValueError(f"face {face_index} has repeated vertices")
+
+        unoriented_face = tuple(sorted(normalized_face))
+        if unoriented_face in seen_faces:
+            raise ValueError(
+                f"face {face_index} duplicates an existing unoriented face"
+            )
+        seen_faces.add(unoriented_face)
+        faces.append(normalized_face)
+
+    if not faces:
+        raise ValueError("a closed sphere triangulation must contain faces")
+    return tuple(faces)
+
+
+def _analyze_closed_sphere_triangulation(
+    triangles: Iterable[Sequence[int]],
+) -> tuple[
+    tuple[tuple[int, int, int], ...],
+    ClosedSphereTriangulationSummary,
+]:
+    """Return coherently oriented faces and invariants after strict checks."""
+    faces = _materialize_integer_faces(triangles)
+    edge_occurrences: dict[
+        tuple[int, int], list[tuple[int, int, int]]
+    ] = defaultdict(list)
+    vertex_links: dict[int, list[tuple[int, int]]] = defaultdict(list)
+
+    for face_index, (a, b, c) in enumerate(faces):
+        for u, v in ((a, b), (b, c), (c, a)):
+            edge_occurrences[tuple(sorted((u, v)))].append(
+                (face_index, u, v)
+            )
+        vertex_links[a].append((b, c))
+        vertex_links[b].append((c, a))
+        vertex_links[c].append((a, b))
+
+    for edge, occurrences in edge_occurrences.items():
+        if len(occurrences) != 2:
+            raise ValueError(
+                f"edge {edge} has incidence {len(occurrences)}; expected 2"
+            )
+
+    # Propagate face flips across the dual graph.  This simultaneously checks
+    # connectedness and orientability, then supplies coherent cyclic orders to
+    # the holonomy evaluator without requiring callers to pre-orient faces.
+    dual_constraints: dict[int, list[tuple[int, int]]] = defaultdict(list)
+    for edge, occurrences in edge_occurrences.items():
+        (face_a, u_a, v_a), (face_b, u_b, v_b) = occurrences
+        direction_a = 1 if (u_a, v_a) == edge else -1
+        direction_b = 1 if (u_b, v_b) == edge else -1
+        relative_flip = -direction_a * direction_b
+        dual_constraints[face_a].append((face_b, relative_flip))
+        dual_constraints[face_b].append((face_a, relative_flip))
+
+    face_sign = {0: 1}
+    queue = deque([0])
+    while queue:
+        face_index = queue.popleft()
+        for neighbor, relative_flip in dual_constraints[face_index]:
+            required_sign = face_sign[face_index] * relative_flip
+            if neighbor not in face_sign:
+                face_sign[neighbor] = required_sign
+                queue.append(neighbor)
+            elif face_sign[neighbor] != required_sign:
+                raise ValueError("triangulation is not orientable")
+    if len(face_sign) != len(faces):
+        raise ValueError("face adjacency graph is disconnected")
+
+    # In a simplicial closed surface, the link of every vertex is one cycle.
+    # Merely checking edge incidence misses pinched vertices with several link
+    # components, so enforce the full local-manifold condition explicitly.
+    for vertex, link_edges in vertex_links.items():
+        link_adjacency: dict[int, list[int]] = defaultdict(list)
+        for u, v in link_edges:
+            link_adjacency[u].append(v)
+            link_adjacency[v].append(u)
+        bad_neighbors = [
+            neighbor
+            for neighbor, adjacent in link_adjacency.items()
+            if len(adjacent) != 2
+        ]
+        if bad_neighbors:
+            raise ValueError(
+                f"link of vertex {vertex} is not a cycle: "
+                f"degree is not 2 at {bad_neighbors[0]}"
+            )
+        link_seen: set[int] = set()
+        link_queue = deque([next(iter(link_adjacency))])
+        while link_queue:
+            neighbor = link_queue.popleft()
+            if neighbor in link_seen:
+                continue
+            link_seen.add(neighbor)
+            link_queue.extend(link_adjacency[neighbor])
+        if len(link_seen) != len(link_adjacency):
+            raise ValueError(
+                f"link of vertex {vertex} has more than one component"
+            )
+
+    vertex_labels = tuple(sorted(vertex_links))
+    n_vertices = len(vertex_labels)
+    n_edges = len(edge_occurrences)
+    n_faces = len(faces)
+    euler_characteristic = n_vertices - n_edges + n_faces
+    if euler_characteristic != 2:
+        raise ValueError(
+            "closed connected triangulation is not a 2-sphere: "
+            f"Euler characteristic is {euler_characteristic}, expected 2"
+        )
+
+    oriented_faces = tuple(
+        face if face_sign[index] == 1 else (face[0], face[2], face[1])
+        for index, face in enumerate(faces)
+    )
+    summary = ClosedSphereTriangulationSummary(
+        vertex_labels=vertex_labels,
+        n_vertices=n_vertices,
+        n_edges=n_edges,
+        n_faces=n_faces,
+        euler_characteristic=euler_characteristic,
+    )
+    return oriented_faces, summary
+
+
+def validate_closed_sphere_triangulation(
+    triangles: Iterable[Sequence[int]],
+) -> ClosedSphereTriangulationSummary:
+    """Strictly validate a finite simplicial triangulation of the 2-sphere.
+
+    The check rejects malformed or duplicate faces, non-integral or repeated
+    vertex labels, boundary/non-manifold edges, disconnected or non-orientable
+    face gluings, singular vertex links, and closed surfaces whose Euler
+    characteristic is not two.  Input faces need not already have coherent
+    orientations.
+    """
+    _, summary = _analyze_closed_sphere_triangulation(triangles)
+    return summary
 
 def matmul(A, B):
     return [[A[0][0]*B[0][0] + A[0][1]*B[1][0], A[0][0]*B[0][1] + A[0][1]*B[1][1]],
@@ -80,23 +362,30 @@ def path_in_tree(parent, v, u):
     Pv = []
     x = v
     while x is not None:
-        Pv.append(x); x = parent[x]
+        Pv.append(x)
+        x = parent[x]
     Pu = []
     x = u
     while x is not None:
-        Pu.append(x); x = parent[x]
-    i = len(Pv)-1; j = len(Pu)-1
-    while i>=0 and j>=0 and Pv[i]==Pu[j]:
-        i -= 1; j -= 1
+        Pu.append(x)
+        x = parent[x]
+    i = len(Pv) - 1
+    j = len(Pu) - 1
+    while i >= 0 and j >= 0 and Pv[i] == Pu[j]:
+        i -= 1
+        j -= 1
     up = Pv[:i+1]
     down = list(reversed(Pu[:j+1]))
     return up + [Pv[i+1]] + down
 
 def turn(order, side_in, side_out):
-    i = order.index(side_in); j = order.index(side_out)
+    i = order.index(side_in)
+    j = order.index(side_out)
     d = (j - i) % 3
-    if d == 1: return 'L'
-    if d == 2: return 'R'
+    if d == 1:
+        return 'L'
+    if d == 2:
+        return 'R'
     raise ValueError("Degenerate turn inside triangle")
 
 def tokens_for_path(T: Triangulation, parent, parent_edge, path):
@@ -116,9 +405,12 @@ def tokens_for_path(T: Triangulation, parent, parent_edge, path):
         if side_in_prev is not None:
             tokens.append(('T', a, side_in_prev, side_in_a))
         (tf, sf), (tt, st) = T.Ori[eid]
-        if (tf == a and tt == b): sign = +1
-        elif (tf == b and tt == a): sign = -1
-        else: raise RuntimeError("Edge orientation inconsistent with step")
+        if tf == a and tt == b:
+            sign = +1
+        elif tf == b and tt == a:
+            sign = -1
+        else:
+            raise RuntimeError("Edge orientation inconsistent with step")
         tokens.append(('X', eid, sign))
         side_in_prev = side_in_b
     return _resolve_turns(T, tokens)
@@ -134,6 +426,14 @@ def _resolve_turns(T: Triangulation, tokens):
     return resolved
 
 def tokens_to_matrix(tokens, Z):
+    """Evaluate a resolved dual path using its unoriented edge shears.
+
+    The final field in an ``X`` token records which way the path crosses the
+    chosen dual-edge orientation, but it does not negate the shear.  Indeed,
+    ``X(z) @ X(z) == -I``, so ``X(z)`` is its own inverse in ``PSL(2, R)``.
+    Using ``X(-z)`` for the reverse crossing would make an immediate
+    backtrack nontrivial.
+    """
     M = matI()
     for tok in tokens:
         if tok == 'L':
@@ -141,25 +441,30 @@ def tokens_to_matrix(tokens, Z):
         elif tok == 'R':
             M = matmul(M, matR())
         else:
-            _, eid, sign = tok
+            _, eid, _crossing_direction = tok
             z = Z.get(eid, 0.0)
-            if sign < 0: z = -z
             M = matmul(M, matX(z))
     return M
 
-def generators_from_triangulation(T: Triangulation, Z, root=0):
-    """
-    Compute a generating set for the holonomy:
-      one generator per non-tree dual edge.
-    Returns: list of (u, v, tokens, matrix)
-    """
+
+def _generator_token_paths(T: Triangulation, root=0):
+    """Return closed holonomy words for every non-tree dual edge."""
+    if not isinstance(root, Integral) or isinstance(root, bool):
+        raise TypeError("root must be an integer triangle index")
+    root = int(root)
+    if root < 0 or root >= T.F:
+        raise ValueError(f"root must be in [0, {T.F})")
+
     G = T.dual_graph()
     parent, parent_edge = bfs_spanning_tree(G, root=root)
+    if len(parent) != T.F:
+        raise ValueError("triangulation dual graph is disconnected")
 
-    tree_edges = set()
-    for v, p in parent.items():
-        if p is None: continue
-        tree_edges.add(tuple(sorted((v, p))))
+    tree_edge_ids = {
+        parent_edge[vertex][0]
+        for vertex, parent_vertex in parent.items()
+        if parent_vertex is not None
+    }
 
     all_edges = set()
     for v, lst in G.items():
@@ -167,27 +472,182 @@ def generators_from_triangulation(T: Triangulation, Z, root=0):
             if v < w:
                 all_edges.add((v, w, eid))
 
-    gens = []
-    for (u, v, eid) in all_edges:
-        if tuple(sorted((u, v))) in tree_edges:
+    def tree_crossings(path):
+        crossings = []
+        for triangle_a, triangle_b in zip(path, path[1:]):
+            if parent[triangle_b] == triangle_a:
+                eid, side_b, side_a = parent_edge[triangle_b]
+            elif parent[triangle_a] == triangle_b:
+                eid, side_a, side_b = parent_edge[triangle_a]
+            else:
+                raise RuntimeError("non-tree step in spanning-tree path")
+            crossings.append(
+                (triangle_a, triangle_b, eid, side_a, side_b)
+            )
+        return crossings
+
+    paths = []
+    for (u, v, eid) in sorted(all_edges):
+        if eid in tree_edge_ids:
             continue
         path_u = path_in_tree(parent, root, u)
         path_v = path_in_tree(parent, root, v)
 
-        tok1 = tokens_for_path(T, parent, parent_edge, path_u)          # root -> u
-        (tf, sf), (tt, st) = T.Ori[eid]
-        if (tf == u and tt == v): sign = +1
-        elif (tf == v and tt == u): sign = -1
-        else: raise RuntimeError("Orientation mismatch on non-tree edge")
-        tok_mid = [('X', eid, sign)]
-        tok2 = tokens_for_path(T, parent, parent_edge, list(reversed(path_v)))  # v -> root
+        middle = next(
+            (
+                (u, v, edge_id, side_u, side_v)
+                for neighbor, side_u, side_v, edge_id in G[u]
+                if neighbor == v and edge_id == eid
+            ),
+            None,
+        )
+        if middle is None:
+            raise RuntimeError("non-tree edge is absent from adjacency")
 
-        tokens = tok1 + tok_mid + tok2
+        crossings = (
+            tree_crossings(path_u)
+            + [middle]
+            + tree_crossings(list(reversed(path_v)))
+        )
+        tokens: list[HolonomyToken] = []
+        root_reference_side = T.Order[root][0]
+        first_outgoing_side = crossings[0][3]
+        if root_reference_side != first_outgoing_side:
+            tokens.append(
+                turn(
+                    T.Order[root],
+                    root_reference_side,
+                    first_outgoing_side,
+                )
+            )
+
+        for index, (triangle_a, triangle_b, edge_id, side_a, side_b) in enumerate(
+            crossings
+        ):
+            (from_triangle, _), (to_triangle, _) = T.Ori[edge_id]
+            if from_triangle == triangle_a and to_triangle == triangle_b:
+                sign = 1
+            elif from_triangle == triangle_b and to_triangle == triangle_a:
+                sign = -1
+            else:
+                raise RuntimeError("edge orientation is inconsistent with path")
+            tokens.append(("X", edge_id, sign))
+
+            if index + 1 < len(crossings):
+                next_crossing = crossings[index + 1]
+                if triangle_b != next_crossing[0]:
+                    raise RuntimeError("dual cycle is not continuous")
+                next_side = next_crossing[3]
+                if side_b != next_side:
+                    tokens.append(turn(T.Order[triangle_b], side_b, next_side))
+
+        final_incoming_side = crossings[-1][4]
+        if final_incoming_side != root_reference_side:
+            tokens.append(
+                turn(
+                    T.Order[root],
+                    final_incoming_side,
+                    root_reference_side,
+                )
+            )
+
+        paths.append((u, v, tokens))
+    return paths
+
+
+def generators_from_triangulation(T: Triangulation, Z, root=0):
+    """
+    Compute a generating set for the holonomy:
+      one generator per non-tree dual edge.
+    Returns: list of (u, v, tokens, matrix)
+    """
+    gens = []
+    for u, v, tokens in _generator_token_paths(T, root=root):
         M = tokens_to_matrix(tokens, Z)
         gens.append((u, v, tokens, M))
     return gens
 
-def triangulation_from_faces(triangles: List[Tuple[int, int, int]]) -> Tuple[Triangulation, Dict[int, float]]:
+
+_EXACT_IDENTITY: ExactMatrix2x2 = ((1, 0), (0, 1))
+_EXACT_LEFT: ExactMatrix2x2 = ((0, -1), (1, 1))
+_EXACT_RIGHT: ExactMatrix2x2 = ((1, 1), (-1, 0))
+_EXACT_ZERO_CROSSING: ExactMatrix2x2 = ((0, -1), (1, 0))
+
+
+def _exact_matmul(
+    matrix_a: ExactMatrix2x2,
+    matrix_b: ExactMatrix2x2,
+) -> ExactMatrix2x2:
+    return (
+        (
+            matrix_a[0][0] * matrix_b[0][0]
+            + matrix_a[0][1] * matrix_b[1][0],
+            matrix_a[0][0] * matrix_b[0][1]
+            + matrix_a[0][1] * matrix_b[1][1],
+        ),
+        (
+            matrix_a[1][0] * matrix_b[0][0]
+            + matrix_a[1][1] * matrix_b[1][0],
+            matrix_a[1][0] * matrix_b[0][1]
+            + matrix_a[1][1] * matrix_b[1][1],
+        ),
+    )
+
+
+def _tokens_to_exact_zero_shear_matrix(
+    tokens: Iterable[HolonomyToken],
+) -> ExactMatrix2x2:
+    matrix = _EXACT_IDENTITY
+    for token in tokens:
+        if token == "L":
+            factor = _EXACT_LEFT
+        elif token == "R":
+            factor = _EXACT_RIGHT
+        elif (
+            isinstance(token, tuple)
+            and len(token) == 3
+            and token[0] == "X"
+        ):
+            # Crossing direction is informational: X(z) is a PSL involution.
+            factor = _EXACT_ZERO_CROSSING
+        else:
+            raise ValueError(f"invalid resolved holonomy token: {token!r}")
+        matrix = _exact_matmul(matrix, factor)
+    return matrix
+
+
+def exact_zero_shear_generators(
+    triangulation: Triangulation,
+    root: int = 0,
+) -> tuple[ExactZeroShearGenerator, ...]:
+    """Evaluate zero-shear holonomy generators using integer arithmetic.
+
+    Unlike :func:`generators_from_triangulation`, this function has no
+    floating-point or exponential step: each word is a product of the three
+    integral matrices ``L``, ``R``, and ``X(0)``.  It certifies the declared
+    abstract zero-shear structure, not shears inferred from coordinates.
+    """
+    generators = []
+    for source, target, token_list in _generator_token_paths(
+        triangulation, root=root
+    ):
+        tokens = tuple(token_list)
+        matrix = _tokens_to_exact_zero_shear_matrix(tokens)
+        generator = ExactZeroShearGenerator(
+            source_triangle=source,
+            target_triangle=target,
+            tokens=tokens,
+            matrix=matrix,
+        )
+        if generator.determinant != 1:
+            raise RuntimeError("internal error: holonomy generator left SL(2,Z)")
+        generators.append(generator)
+    return tuple(generators)
+
+
+def triangulation_from_faces(
+    triangles: List[Tuple[int, int, int]],
+) -> Tuple[Triangulation, Dict[int, float]]:
     """
     Build a Triangulation object from a list of triangle faces.
 
@@ -197,58 +657,140 @@ def triangulation_from_faces(triangles: List[Tuple[int, int, int]]) -> Tuple[Tri
     Returns:
         Tuple of (Triangulation, Z) where Z is zero shear dict
     """
-    F = len(triangles)
+    faces = [tuple(triangle) for triangle in triangles]
+    F = len(faces)
     adjacency = {}
     edge_id_map = {}
-    edge_id = 0
+    edge_occurrences = {}
 
-    for i, tri_i in enumerate(triangles):
-        for side_i in range(3):
-            v1_i, v2_i = tri_i[side_i], tri_i[(side_i + 1) % 3]
-            edge = tuple(sorted([v1_i, v2_i]))
+    # One pass over face sides replaces the former all-face/all-side scan.
+    # Dictionary insertion order preserves the historical first-occurrence
+    # edge-id assignment used by compute_shears_from_vertices.
+    for face_index, face in enumerate(faces):
+        if len(face) != 3:
+            raise ValueError("every face must contain exactly three vertices")
+        for side in range(3):
+            u, v = face[side], face[(side + 1) % 3]
+            edge = tuple(sorted((u, v)))
+            edge_occurrences.setdefault(edge, []).append((face_index, side))
 
-            for j, tri_j in enumerate(triangles):
-                if i == j:
-                    continue
-                for side_j in range(3):
-                    v1_j, v2_j = tri_j[side_j], tri_j[(side_j + 1) % 3]
-                    if set([v1_j, v2_j]) == set([v1_i, v2_i]):
-                        if (i, side_i) not in adjacency:
-                            if edge not in edge_id_map:
-                                edge_id_map[edge] = edge_id
-                                edge_id += 1
-                            adjacency[(i, side_i)] = (j, side_j, edge_id_map[edge])
+    orientation = {}
+    for edge, occurrences in edge_occurrences.items():
+        if len(occurrences) == 1:
+            continue
+        if len(occurrences) != 2 or occurrences[0][0] == occurrences[1][0]:
+            raise ValueError(
+                f"edge {edge} must occur in at most two distinct faces"
+            )
+        eid = len(edge_id_map)
+        edge_id_map[edge] = eid
+        (face_a, side_a), (face_b, side_b) = occurrences
+        adjacency[(face_a, side_a)] = (face_b, side_b, eid)
+        adjacency[(face_b, side_b)] = (face_a, side_a, eid)
+        orientation[eid] = ((face_a, side_a), (face_b, side_b))
 
     order = {t: [0, 1, 2] for t in range(F)}
-    orientation = {}
-    for edge, eid in edge_id_map.items():
-        for (t, s), (u, su, e) in adjacency.items():
-            if e == eid:
-                orientation[eid] = ((t, s), (u, su))
-                break
 
     T = Triangulation(F, adjacency, order, orientation)
-    Z = {eid: 0.0 for eid in range(edge_id)}
+    Z = {eid: 0.0 for eid in range(len(edge_id_map))}
 
     return T, Z
+
+
+def certify_exact_zero_shear_structure(
+    triangles: Iterable[Sequence[int]],
+    root: int = 0,
+) -> ExactZeroShearCertificate:
+    """Certify a closed sphere's abstract zero-shear structure exactly.
+
+    The faces are first subjected to strict closed-sphere validation and are
+    coherently oriented internally.  Holonomy words are then evaluated over
+    the integers, proving that their matrices lie in ``SL(2, Z)`` and hence
+    define elements of ``PSL(2, Z)``.  The modular-group index follows from
+    hyperbolic area: each ideal triangle has area pi while a modular
+    fundamental domain has area pi/3, so the index is three times the number
+    of faces.
+
+    This API deliberately accepts no coordinates.  Its certificate applies to
+    the zero-shear structure declared on the abstract triangulation; it does
+    not prove that a separate numerical realization has zero shear.
+    """
+    oriented_faces, topology = _analyze_closed_sphere_triangulation(triangles)
+    triangulation, _ = triangulation_from_faces(list(oriented_faces))
+    generators = exact_zero_shear_generators(triangulation, root=root)
+    certificate = ExactZeroShearCertificate(
+        topology=topology,
+        root_triangle=int(root),
+        psl2z_index=3 * topology.n_faces,
+        generators=generators,
+    )
+    if not certificate.all_determinants_one:
+        raise RuntimeError("internal error: exact certificate left SL(2,Z)")
+    return certificate
+
+
+def _validated_shear_mapping(
+    triangulation: Triangulation,
+    shears: Mapping[int, Real],
+) -> dict[int, float]:
+    """Require one finite real shear for every triangulation edge."""
+    if not isinstance(shears, Mapping):
+        raise TypeError("shears must be a mapping from edge ids to real values")
+
+    invalid_keys = [
+        key
+        for key in shears
+        if not isinstance(key, Integral) or isinstance(key, bool)
+    ]
+    if invalid_keys:
+        raise TypeError("shear edge ids must be integers")
+
+    normalized_keys = {int(key) for key in shears}
+    expected_keys = set(triangulation.Ori)
+    missing = sorted(expected_keys - normalized_keys)
+    extra = sorted(normalized_keys - expected_keys)
+    if missing or extra:
+        details = []
+        if missing:
+            details.append(f"missing edge ids {missing}")
+        if extra:
+            details.append(f"unexpected edge ids {extra}")
+        raise ValueError(
+            "shears must cover exactly the triangulation's interior edges: "
+            + "; ".join(details)
+        )
+
+    normalized = {}
+    for edge_id, value in shears.items():
+        if not isinstance(value, Real) or isinstance(value, bool):
+            raise TypeError(f"shear {edge_id} must be a finite real number")
+        numeric_value = float(value)
+        if not math.isfinite(numeric_value):
+            raise ValueError(f"shear {edge_id} must be finite")
+        normalized[int(edge_id)] = numeric_value
+    return normalized
 
 
 def check_arithmeticity(triangles: List[Tuple[int, int, int]],
                         shears: Optional[Dict[int, float]] = None,
                         vertices_complex=None,
                         tolerance: float = 0.01,
-                        verbose: bool = False) -> Dict[str, Any]:
+                        verbose: bool = False,
+                        shear_tolerance: float = 1e-9) -> Dict[str, Any]:
     """
-    Certify arithmeticity via the zero-shear / PSL(2,Z) criterion.
+    Evaluate holonomy diagnostics and, when declared exactly, certify zero shear.
 
-    The check passes when every Penner-Rivin holonomy generator trace is an
-    integer.  At the zero-shear configuration all generator matrices are
-    integral (products of L, R, X(0)), so the holonomy group lies in
-    PSL(2,Z) and is arithmetic; integer traces of a cofinite Fuchsian
-    group likewise certify arithmeticity (Takeuchi's trace criterion).
-    The certificate is SUFFICIENT, not necessary, for group-theoretic
-    arithmeticity: an arithmetic group can fail it (e.g. traces that are
-    algebraic integers of a larger trace field).
+    Near-integrality of the traces of one chosen generating set is exposed as
+    ``passes_generator_trace_diagnostic`` only.  It is not Takeuchi's
+    criterion and is not an arithmeticity proof: traces of products and the
+    invariant trace field are not checked.
+
+    ``is_arithmetic`` is true only when the caller supplies a complete shear
+    mapping whose values are all exactly zero.  In that case the separately
+    implemented exact evaluator proves that every holonomy generator has
+    integral matrix entries and the group is a finite-index subgroup of
+    PSL(2,Z).  Zero shears merely inferred from floating-point coordinates are
+    reported as a numerical diagnostic, never promoted to an exact proof.
 
     The certificate REQUIRES the actual geometry: pass either the shear
     parameters (`shears`, keyed by edge id as assigned by
@@ -257,24 +799,25 @@ def check_arithmeticity(triangles: List[Tuple[int, int, int]],
     infinity), from which shears are computed via
     compute_shears_from_vertices.
 
-    Earlier versions silently defaulted to the zero-shear structure
-    (Z = 0), for which every holonomy matrix is integral, making the
-    certificate vacuously true regardless of the coordinates.  That
-    default is deliberately gone: calling this without geometry raises
-    ValueError.  (To interrogate the idealized zero-shear structure
-    explicitly, pass `shears={eid: 0.0 for eid in range(n_edges)}`.)
+    The face complex must be a coherently oriented closed triangulated sphere.
+    Shear mappings must cover exactly all edge ids and contain only finite real
+    values; missing entries are never silently replaced by zero.
 
     Args:
         triangles: List of triangles as (v0, v1, v2) tuples
-        shears: Dict edge_id -> shear value (mutually optional with
-            vertices_complex; at least one is required)
+        shears: Complete Dict edge_id -> shear value, mutually exclusive with
+            vertices_complex
         vertices_complex: sequence of complex vertex coordinates
         tolerance: Maximum distance from nearest integer to count as integral
         verbose: If True, print detailed trace information
+        shear_tolerance: Maximum absolute shear for the numerical zero-shear
+            diagnostic; this never creates an exact certificate
 
     Returns:
         Dict with keys:
-        - 'is_arithmetic': bool, True if all traces are integers
+        - 'is_arithmetic': bool, True only for declared exact zero shear
+        - 'passes_generator_trace_diagnostic': bool, heuristic only
+        - 'passes_zero_shear_diagnostic': bool, numerical diagnostic only
         - 'n_generators': int, number of holonomy generators
         - 'n_integral': int, number of generators with integral traces
         - 'traces': list of trace values
@@ -287,11 +830,30 @@ def check_arithmeticity(triangles: List[Tuple[int, int, int]],
             "`shears` or `vertices_complex`. (A geometry-free call would "
             "silently certify the idealized zero-shear structure, which is "
             "integral for ANY triangulation — a vacuous certificate.)")
+    if shears is not None and vertices_complex is not None:
+        raise ValueError("pass either `shears` or `vertices_complex`, not both")
+    if not math.isfinite(tolerance) or tolerance <= 0:
+        raise ValueError("tolerance must be finite and positive")
+    if not math.isfinite(shear_tolerance) or shear_tolerance < 0:
+        raise ValueError("shear_tolerance must be finite and non-negative")
 
-    T, _Z_zero = triangulation_from_faces(triangles)
+    input_faces = _materialize_integer_faces(triangles)
+    oriented_faces, topology = _analyze_closed_sphere_triangulation(input_faces)
+    if oriented_faces != input_faces:
+        raise ValueError(
+            "faces must have coherent cyclic orientations for shear holonomy"
+        )
+
+    triangulation, _ = triangulation_from_faces(list(input_faces))
+    geometry_source = "declared_shears" if shears is not None else "coordinates"
     if shears is None:
-        shears = compute_shears_from_vertices(triangles, vertices_complex)
-    gens = generators_from_triangulation(T, shears, root=0)
+        shears = compute_shears_from_vertices(
+            list(input_faces), vertices_complex
+        )
+    validated_shears = _validated_shear_mapping(triangulation, shears)
+    gens = generators_from_triangulation(
+        triangulation, validated_shears, root=0
+    )
 
     trace_details = []
     integral_count = 0
@@ -300,7 +862,7 @@ def check_arithmeticity(triangles: List[Tuple[int, int, int]],
         trace = M[0][0] + M[1][1]
         nearest_int = round(trace)
         distance = abs(trace - nearest_int)
-        is_integral = distance < tolerance
+        is_integral = distance <= tolerance
 
         if is_integral:
             integral_count += 1
@@ -315,19 +877,50 @@ def check_arithmeticity(triangles: List[Tuple[int, int, int]],
         trace_details.append(detail)
 
         if verbose:
-            status = "INTEGRAL" if is_integral else ""
+            status = "NEAR-INTEGER" if is_integral else ""
             print(f"  Generator {u}-{v}: trace = {trace:.6f}, "
                   f"nearest int = {nearest_int}, dist = {distance:.6f} {status}")
 
-    is_arithmetic = (integral_count == len(gens)) if len(gens) > 0 else True
+    passes_generator_trace_diagnostic = integral_count == len(gens)
+    max_abs_shear = max(map(abs, validated_shears.values()), default=0.0)
+    passes_zero_shear_diagnostic = max_abs_shear <= shear_tolerance
+    has_exact_zero_shears = all(
+        value == 0.0 for value in validated_shears.values()
+    )
+
+    is_arithmetic = geometry_source == "declared_shears" and has_exact_zero_shears
+    if is_arithmetic:
+        # This checks topology again intentionally: the public exact API is the
+        # authority for the proof represented by the compatibility field.
+        certify_exact_zero_shear_structure(input_faces)
+        arithmeticity_status = "certified_declared_exact_zero_shear"
+        arithmeticity_reason = (
+            "exact integral zero-shear matrices place the finite-covolume "
+            "holonomy group in PSL(2,Z)"
+        )
+    else:
+        arithmeticity_status = "not_certified"
+        arithmeticity_reason = (
+            "generator-trace and floating zero-shear checks are diagnostics, "
+            "not arithmeticity proofs"
+        )
 
     return {
         'is_arithmetic': is_arithmetic,
+        'is_arithmetic_certified': is_arithmetic,
+        'arithmeticity_status': arithmeticity_status,
+        'arithmeticity_reason': arithmeticity_reason,
+        'geometry_source': geometry_source,
+        'passes_generator_trace_diagnostic': passes_generator_trace_diagnostic,
+        'passes_zero_shear_diagnostic': passes_zero_shear_diagnostic,
+        'has_exact_zero_shears': has_exact_zero_shears,
+        'max_abs_shear': max_abs_shear,
         'n_generators': len(gens),
         'n_integral': integral_count,
         'traces': [d['trace'] for d in trace_details],
         'trace_details': trace_details,
-        'shears': shears
+        'shears': validated_shears,
+        'topology': topology.as_dict(),
     }
 
 
@@ -342,6 +935,14 @@ def compute_shears_from_vertices(triangles: List[Tuple[int, int, int]],
 
         shear = log |CR(a, x; b, y)|,   CR = M(a)/M(b),  M(z) = (z-x)/(z-y)
               = log |(a-x)(b-y) / ((a-y)(b-x))|.
+
+    A shear is stored once per unoriented primal edge.  Its sign comes from
+    the cyclic surface orientation of the first incident face, not from the
+    direction in which a dual path later crosses that edge.  Swapping the two
+    coherently oriented incident faces leaves the value unchanged; reversing
+    the orientation of the whole surface negates every shear and swaps left
+    and right turns.  In either dual crossing direction the transition is the
+    same projective involution X(shear).
 
     This vanishes exactly on Rivin/Delaunay-balanced (zero-shear)
     configurations — e.g. the regular ideal octahedron {0, +-1, +-i, INF}
@@ -364,23 +965,32 @@ def compute_shears_from_vertices(triangles: List[Tuple[int, int, int]],
         triangulation_from_faces: first-occurrence order over interior
         edges)
     """
-    import numpy as np
+    def _log_distance(z, w):
+        distance = abs(z - w)
+        if distance == 0.0 or not math.isfinite(distance):
+            raise ValueError("cross-ratio contains a zero or non-finite distance")
+        return math.log(distance)
 
-    def _std_cross_ratio(a, x, b, y):
-        """CR(a, x; b, y) = (a-x)(b-y)/((a-y)(b-x)) with None = infinity."""
+    def _log_cross_ratio_modulus(a, x, b, y):
+        """Stable log|CR(a,x;b,y)|, with None denoting infinity."""
         if x is None and y is None:
             raise ValueError("Degenerate edge: both endpoints at infinity")
         if x is None:
-            return (b - y) / (a - y)
+            return _log_distance(b, y) - _log_distance(a, y)
         if y is None:
-            return (a - x) / (b - x)
+            return _log_distance(a, x) - _log_distance(b, x)
         if a is None and b is None:
-            return complex(1.0)
+            return 0.0
         if a is None:
-            return (b - y) / (b - x)
+            return _log_distance(b, y) - _log_distance(b, x)
         if b is None:
-            return (a - x) / (a - y)
-        return ((a - x) * (b - y)) / ((a - y) * (b - x))
+            return _log_distance(a, x) - _log_distance(a, y)
+        return (
+            _log_distance(a, x)
+            + _log_distance(b, y)
+            - _log_distance(a, y)
+            - _log_distance(b, x)
+        )
 
     # Build edge adjacency structure
     edge_triangles = {}  # edge -> list of (tri_idx, opposite_vertex)
@@ -401,7 +1011,14 @@ def compute_shears_from_vertices(triangles: List[Tuple[int, int, int]],
 
     def _coord(idx):
         v = vertices_complex[idx]
-        return None if v is None else complex(v)
+        if v is None:
+            return None
+        coordinate = complex(v)
+        if not math.isfinite(coordinate.real) or not math.isfinite(
+            coordinate.imag
+        ):
+            raise ValueError(f"vertex {idx} has a non-finite coordinate")
+        return coordinate
 
     for edge, tri_list in edge_triangles.items():
         if len(tri_list) == 2:  # Interior edge
@@ -414,8 +1031,14 @@ def compute_shears_from_vertices(triangles: List[Tuple[int, int, int]],
             y = _coord(e2)
             b = _coord(opp2)
 
-            cr = _std_cross_ratio(a, x, b, y)
-            shear = math.log(abs(cr)) if abs(cr) > 1e-10 else 0.0
+            try:
+                shear = _log_cross_ratio_modulus(a, x, b, y)
+            except (OverflowError, ZeroDivisionError, ValueError) as error:
+                raise ValueError(
+                    f"cannot compute a finite shear for edge {edge}: {error}"
+                ) from error
+            if not math.isfinite(shear):
+                raise ValueError(f"non-finite shear for edge {edge}")
 
             shears[edge_id] = shear
             edge_id += 1
@@ -423,86 +1046,181 @@ def compute_shears_from_vertices(triangles: List[Tuple[int, int, int]],
     return shears
 
 
+def _closed_delaunay_sphere_from_vertices(vertices_complex):
+    """Build a closed N-vertex sphere via an existing vertex at infinity."""
+    import numpy as np
+    from scipy.spatial import ConvexHull, Delaunay, QhullError
+
+    raw_vertices = list(vertices_complex)
+    if len(raw_vertices) < 4:
+        raise ValueError("at least four vertices are required for a sphere")
+
+    infinity_indices = [
+        index for index, vertex in enumerate(raw_vertices) if vertex is None
+    ]
+    if len(infinity_indices) > 1:
+        raise ValueError("at most one vertex may be the point at infinity")
+
+    finite_vertices: dict[int, complex] = {}
+    for index, vertex in enumerate(raw_vertices):
+        if vertex is None:
+            continue
+        coordinate = complex(vertex)
+        if not math.isfinite(coordinate.real) or not math.isfinite(
+            coordinate.imag
+        ):
+            raise ValueError(f"vertex {index} has a non-finite coordinate")
+        finite_vertices[index] = coordinate
+    if len(set(finite_vertices.values())) != len(finite_vertices):
+        raise ValueError("vertex coordinates must be pairwise distinct")
+
+    if infinity_indices:
+        pole_candidates = infinity_indices
+    else:
+        # Trying several existing vertices makes the construction robust to a
+        # numerically unfortunate choice of Mobius pole without adding a new
+        # ideal vertex.
+        pole_candidates = list(reversed(range(len(raw_vertices))))
+
+    for pole in pole_candidates:
+        pole_coordinate = raw_vertices[pole]
+        projected: dict[int, complex] = {}
+        try:
+            for index, coordinate in finite_vertices.items():
+                if index == pole:
+                    continue
+                if pole_coordinate is None:
+                    projected[index] = coordinate
+                else:
+                    projected[index] = 1.0 / (
+                        coordinate - complex(pole_coordinate)
+                    )
+        except ZeroDivisionError:
+            continue
+
+        center = sum(projected.values()) / len(projected)
+        scale = max(abs(value - center) for value in projected.values())
+        if scale == 0.0 or not math.isfinite(scale):
+            continue
+        normalized = {
+            index: (value - center) / scale
+            for index, value in projected.items()
+        }
+        if any(
+            not math.isfinite(value.real) or not math.isfinite(value.imag)
+            for value in normalized.values()
+        ):
+            continue
+
+        finite_indices = list(normalized)
+        points = np.array(
+            [
+                [normalized[index].real, normalized[index].imag]
+                for index in finite_indices
+            ],
+            dtype=float,
+        )
+        try:
+            delaunay = Delaunay(points)
+            hull = ConvexHull(points)
+        except QhullError:
+            continue
+
+        faces: list[tuple[int, int, int]] = []
+        for simplex in delaunay.simplices:
+            local_a, local_b, local_c = map(int, simplex)
+            point_a, point_b, point_c = points[[local_a, local_b, local_c]]
+            signed_area = (
+                (point_b[0] - point_a[0]) * (point_c[1] - point_a[1])
+                - (point_b[1] - point_a[1]) * (point_c[0] - point_a[0])
+            )
+            if signed_area < 0:
+                local_b, local_c = local_c, local_b
+            faces.append(
+                (
+                    finite_indices[local_a],
+                    finite_indices[local_b],
+                    finite_indices[local_c],
+                )
+            )
+
+        hull_cycle = [finite_indices[int(local)] for local in hull.vertices]
+        hull_area = sum(
+            normalized[current].real * normalized[following].imag
+            - normalized[current].imag * normalized[following].real
+            for current, following in zip(
+                hull_cycle, hull_cycle[1:] + hull_cycle[:1]
+            )
+        )
+        if hull_area < 0:
+            hull_cycle.reverse()
+        for current, following in zip(
+            hull_cycle, hull_cycle[1:] + hull_cycle[:1]
+        ):
+            faces.append((pole, following, current))
+
+        projected_vertices: list[complex | None] = [None] * len(raw_vertices)
+        for index, coordinate in normalized.items():
+            projected_vertices[index] = coordinate
+
+        try:
+            oriented_faces, _ = _analyze_closed_sphere_triangulation(faces)
+        except (TypeError, ValueError):
+            continue
+        if oriented_faces != tuple(faces):
+            continue
+        return faces, projected_vertices, pole
+
+    raise ValueError(
+        "vertices do not admit a nondegenerate closed Delaunay triangulation"
+    )
+
+
 def check_arithmeticity_from_vertices(vertices_complex, tolerance: float = 0.01,
-                                      verbose: bool = False) -> Dict[str, Any]:
+                                      verbose: bool = False,
+                                      shear_tolerance: float = 1e-9,
+                                      ) -> Dict[str, Any]:
     """
-    Certify arithmeticity (zero-shear / PSL(2,Z) criterion) from complex
-    vertex coordinates.
+    Compute non-vacuous holonomy diagnostics from complex vertex coordinates.
 
-    Computes the Delaunay triangulation and checks holonomy traces using
-    the actual shear parameters derived from the geometry.  The
-    certificate is sufficient, not necessary, for group-theoretic
-    arithmeticity (see check_arithmeticity).
+    One existing vertex is mapped to infinity, the remaining N-1 vertices are
+    Delaunay triangulated, and an infinity fan closes the complex using that
+    same pole.  Thus the analysis is on a closed sphere with exactly the input
+    N vertices, rather than the former finite Delaunay disk whose dual graph
+    could be a tree and make the generator diagnostic vacuous.
 
-    For random vertex positions, shears are non-zero and traces
-    typically fail the certificate.
-
-    For Rivin volume-maximized positions whose maximum is INTERIOR to
-    the admissible angle polytope (no cocircular ties), shears are zero
-    and traces are integers; at boundary maxima the certificate
-    genuinely fails.
+    Coordinate-derived results are numerical diagnostics only;
+    ``is_arithmetic`` remains false.  Use
+    :func:`certify_exact_zero_shear_structure` for an exact abstract
+    zero-shear certificate.
 
     Args:
         vertices_complex: Array of complex numbers (vertex positions)
         tolerance: Maximum distance from nearest integer to count as integral
         verbose: If True, print detailed trace information
+        shear_tolerance: Numerical zero-shear diagnostic tolerance
 
     Returns:
-        Same as check_arithmeticity(), plus 'shears' key with computed shears
+        Same as check_arithmeticity(), plus the closed faces and pole index
     """
-    import numpy as np
-    from scipy.spatial import Delaunay
-
-    # Compute Delaunay triangulation
-    pts = np.column_stack([np.real(vertices_complex), np.imag(vertices_complex)])
-    tri = Delaunay(pts)
-    triangles = [tuple(simplex) for simplex in tri.simplices]
-
-    # Build triangulation structure
-    T, Z_zero = triangulation_from_faces(triangles)
-
-    # Compute actual shears from geometry
-    shears = compute_shears_from_vertices(triangles, vertices_complex)
-
-    # Use actual shears for holonomy computation
-    gens = generators_from_triangulation(T, shears, root=0)
-
-    trace_details = []
-    integral_count = 0
-
-    for u, v, tokens, M in gens:
-        trace = M[0][0] + M[1][1]
-        nearest_int = round(trace)
-        distance = abs(trace - nearest_int)
-        is_integral = distance < tolerance
-
-        if is_integral:
-            integral_count += 1
-
-        detail = {
-            'generator': (u, v),
-            'trace': trace,
-            'nearest_int': nearest_int,
-            'distance': distance,
-            'is_integral': is_integral
+    triangles, projected_vertices, pole = _closed_delaunay_sphere_from_vertices(
+        vertices_complex
+    )
+    result = check_arithmeticity(
+        triangles,
+        vertices_complex=projected_vertices,
+        tolerance=tolerance,
+        verbose=verbose,
+        shear_tolerance=shear_tolerance,
+    )
+    result.update(
+        {
+            "triangles": triangles,
+            "pole_vertex": pole,
+            "triangulation_source": "mobius-pole-delaunay-with-infinity-fan",
         }
-        trace_details.append(detail)
-
-        if verbose:
-            status = "INTEGRAL" if is_integral else ""
-            print(f"  Generator {u}-{v}: trace = {trace:.6f}, "
-                  f"nearest int = {nearest_int}, dist = {distance:.6f} {status}")
-
-    is_arithmetic = (integral_count == len(gens)) if len(gens) > 0 else True
-
-    return {
-        'is_arithmetic': is_arithmetic,
-        'n_generators': len(gens),
-        'n_integral': integral_count,
-        'traces': [d['trace'] for d in trace_details],
-        'trace_details': trace_details,
-        'shears': shears,
-    }
+    )
+    return result
 
 
 if __name__ == "__main__":
@@ -511,7 +1229,7 @@ if __name__ == "__main__":
     import sys
 
     parser = argparse.ArgumentParser(
-        description="Check arithmeticity of an ideal polyhedron via Penner-Rivin holonomy.",
+        description="Evaluate Penner-Rivin holonomy arithmeticity diagnostics.",
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
 Examples:
@@ -529,8 +1247,8 @@ JSON file format:
   }
 
 Output:
-  ARITHMETIC    - All holonomy traces are integers (exit code 0)
-  NON-ARITHMETIC - Some traces are not integers (exit code 1)
+  ARITHMETIC CERTIFIED - Declared exact zero-shear certificate (exit code 0)
+  NOT CERTIFIED        - Diagnostics alone do not prove arithmeticity (exit code 1)
         """
     )
     parser.add_argument('input', nargs='?', help='JSON file with configuration')
@@ -542,11 +1260,11 @@ Output:
     args = parser.parse_args()
 
     if args.input is None:
-        print("Penner-Rivin Holonomy Arithmeticity Checker")
+        print("Penner-Rivin Holonomy Arithmeticity Diagnostics")
         print("=" * 50)
         print()
-        print("This module checks if an ideal polyhedron is arithmetic by computing")
-        print("the holonomy generators and verifying that all traces are integers.")
+        print("This module computes holonomy diagnostics. Generator-trace")
+        print("integrality alone is not an arithmeticity certificate.")
         print()
         print("Usage:")
         print("  python -m ideal_poly_volume_toolkit.rivin_holonomy config.json")
@@ -589,8 +1307,8 @@ Output:
     print(f"Integral traces: {result['n_integral']}/{result['n_generators']}")
 
     if result['is_arithmetic']:
-        print("Result: ARITHMETIC")
+        print("Result: ARITHMETIC CERTIFIED")
         sys.exit(0)
     else:
-        print("Result: NON-ARITHMETIC")
+        print("Result: NOT CERTIFIED")
         sys.exit(1)

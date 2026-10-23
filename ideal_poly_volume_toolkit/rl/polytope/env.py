@@ -3,8 +3,8 @@ Factory for the polytope RL environment.
 
 Replaces the old `IdealPolytopeOptEnv` by composing a
 `GenericOptEnv` with an `IdealPolytopeTaskSampler` and the polytope's
-inner optimizers (CMA-ES on the surrogate + LBFGS-on-hyperbolic per
-dimension).
+inner optimizers (CMA-ES on the surrogate plus a dimension-specific Powell or
+projected-Adam method).
 """
 
 from __future__ import annotations

@@ -1,0 +1,1010 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://ideal-poly-volume-toolkit.local/schemas/rivin-zero-shear-comparison-v1.schema.json",
+  "title": "Rivin fixed-combinatorics zero-shear method comparison v1",
+  "description": "A deterministic, independently audited comparison of angle realization, pole-link Tutte direct solving, and angle-to-coordinate polishing.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "protocol_version",
+    "generator",
+    "status",
+    "created_at",
+    "finished_at",
+    "input",
+    "run_config",
+    "run_config_sha256",
+    "fairness",
+    "provenance",
+    "cases",
+    "summary",
+    "timings"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": "ideal-poly-rivin-zero-shear-comparison/1"
+    },
+    "protocol_version": {
+      "const": "fixed-combinatorics-three-method-comparison/1"
+    },
+    "generator": {
+      "$ref": "#/$defs/generator"
+    },
+    "status": {
+      "$ref": "#/$defs/runStatus"
+    },
+    "created_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "finished_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "input": {
+      "$ref": "#/$defs/input"
+    },
+    "run_config": {
+      "$ref": "#/$defs/runConfig"
+    },
+    "run_config_sha256": {
+      "$ref": "#/$defs/sha256"
+    },
+    "fairness": {
+      "$ref": "#/$defs/fairness"
+    },
+    "provenance": {
+      "$ref": "#/$defs/provenance"
+    },
+    "cases": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "$ref": "#/$defs/case"
+      }
+    },
+    "summary": {
+      "$ref": "#/$defs/runSummary"
+    },
+    "timings": {
+      "$ref": "#/$defs/wallCpuTiming"
+    }
+  },
+  "$defs": {
+    "sha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "nonnegativeNumber": {
+      "type": "number",
+      "minimum": 0
+    },
+    "positiveNumber": {
+      "type": "number",
+      "exclusiveMinimum": 0
+    },
+    "nullableNumber": {
+      "type": [
+        "number",
+        "null"
+      ]
+    },
+    "nullableString": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "integerLabel": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "face": {
+      "type": "array",
+      "minItems": 3,
+      "maxItems": 3,
+      "uniqueItems": true,
+      "items": {
+        "$ref": "#/$defs/integerLabel"
+      }
+    },
+    "coordinate": {
+      "type": "array",
+      "minItems": 2,
+      "maxItems": 2,
+      "items": {
+        "type": "number"
+      }
+    },
+    "cp1Coordinates": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "oneOf": [
+          {
+            "$ref": "#/$defs/coordinate"
+          },
+          {
+            "type": "null"
+          }
+        ]
+      }
+    },
+    "wallCpuTiming": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "wall_seconds",
+        "process_cpu_seconds"
+      ],
+      "properties": {
+        "wall_seconds": {
+          "$ref": "#/$defs/nonnegativeNumber"
+        },
+        "process_cpu_seconds": {
+          "$ref": "#/$defs/nonnegativeNumber"
+        }
+      }
+    },
+    "generator": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "version",
+        "source_sha256"
+      ],
+      "properties": {
+        "name": {
+          "const": "scripts/compare_rivin_zero_shear_methods.py"
+        },
+        "version": {
+          "type": "string",
+          "minLength": 1
+        },
+        "source_sha256": {
+          "$ref": "#/$defs/sha256"
+        }
+      }
+    },
+    "runStatus": {
+      "enum": [
+        "complete",
+        "partial_failure",
+        "failed"
+      ]
+    },
+    "input": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "path",
+        "sha256",
+        "kind",
+        "schema_version",
+        "selected_case_ids"
+      ],
+      "properties": {
+        "path": {
+          "type": "string",
+          "minLength": 1
+        },
+        "sha256": {
+          "$ref": "#/$defs/sha256"
+        },
+        "kind": {
+          "enum": [
+            "arithmetic_corpus",
+            "strict_answer_key",
+            "simple_faces",
+            "simple_face_list"
+          ]
+        },
+        "schema_version": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "selected_case_ids": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      }
+    },
+    "runConfig": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "selected_case_ids",
+        "max_nfev",
+        "lm_polish_steps",
+        "x_scale",
+        "shear_tolerance",
+        "support_tolerance",
+        "bending_tolerance",
+        "ftol",
+        "xtol",
+        "gtol",
+        "include_coordinates",
+        "include_face_tutte"
+      ],
+      "properties": {
+        "selected_case_ids": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "max_nfev": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "lm_polish_steps": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "x_scale": {
+          "enum": [
+            "unit",
+            "jacobian"
+          ]
+        },
+        "shear_tolerance": {
+          "$ref": "#/$defs/positiveNumber"
+        },
+        "support_tolerance": {
+          "$ref": "#/$defs/nonnegativeNumber"
+        },
+        "bending_tolerance": {
+          "$ref": "#/$defs/positiveNumber"
+        },
+        "ftol": {
+          "$ref": "#/$defs/positiveNumber"
+        },
+        "xtol": {
+          "$ref": "#/$defs/positiveNumber"
+        },
+        "gtol": {
+          "$ref": "#/$defs/positiveNumber"
+        },
+        "include_coordinates": {
+          "type": "boolean"
+        },
+        "include_face_tutte": {
+          "type": "boolean"
+        }
+      }
+    },
+    "fairness": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "single_process",
+        "blas_threads",
+        "shared_labeled_faces",
+        "shared_distinguished_face",
+        "shared_direct_solver_settings",
+        "direct_solver_gauge",
+        "direct_solver_x_scale",
+        "direct_solver_lm_polish_steps",
+        "hybrid_reuses_angle_initialization",
+        "hybrid_reports_reused_dependency_time",
+        "independent_strict_audit_per_endpoint",
+        "input_reference_coordinates_diagnostic_only",
+        "maximality_requires_strict_audit",
+        "timings_are_single_run_operational_observations",
+        "speed_claim_requires_external_warmups_and_repeats",
+        "time_ratios_include_core_and_independent_audits",
+        "time_ratio_scope",
+        "verification_scope"
+      ],
+      "properties": {
+        "single_process": {
+          "const": true
+        },
+        "blas_threads": {
+          "const": 1
+        },
+        "shared_labeled_faces": {
+          "const": true
+        },
+        "shared_distinguished_face": {
+          "const": true
+        },
+        "shared_direct_solver_settings": {
+          "const": true
+        },
+        "direct_solver_gauge": {
+          "const": "standard_upper_half_plane"
+        },
+        "direct_solver_x_scale": {
+          "enum": [
+            "unit",
+            "jacobian"
+          ]
+        },
+        "direct_solver_lm_polish_steps": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "hybrid_reuses_angle_initialization": {
+          "const": true
+        },
+        "hybrid_reports_reused_dependency_time": {
+          "const": true
+        },
+        "independent_strict_audit_per_endpoint": {
+          "const": true
+        },
+        "input_reference_coordinates_diagnostic_only": {
+          "const": true
+        },
+        "maximality_requires_strict_audit": {
+          "const": true
+        },
+        "timings_are_single_run_operational_observations": {
+          "const": true
+        },
+        "speed_claim_requires_external_warmups_and_repeats": {
+          "const": true
+        },
+        "time_ratios_include_core_and_independent_audits": {
+          "const": true
+        },
+        "time_ratio_scope": {
+          "const": "single-run-end-to-end-implementation-including-core-and-independent-audits"
+        },
+        "verification_scope": {
+          "const": "double-precision-numerical-not-formal"
+        }
+      }
+    },
+    "provenance": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "invocation",
+        "git_commit",
+        "git_dirty",
+        "python",
+        "python_implementation",
+        "platform",
+        "dependency_versions",
+        "thread_environment",
+        "source_files"
+      ],
+      "properties": {
+        "invocation": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "git_commit": {
+          "oneOf": [
+            {
+              "type": "string",
+              "pattern": "^[0-9a-f]{40}$"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "git_dirty": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "python": {
+          "type": "string",
+          "minLength": 1
+        },
+        "python_implementation": {
+          "type": "string",
+          "minLength": 1
+        },
+        "platform": {
+          "type": "string",
+          "minLength": 1
+        },
+        "dependency_versions": {
+          "type": "object",
+          "additionalProperties": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        },
+        "thread_environment": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "OPENBLAS_NUM_THREADS",
+            "OMP_NUM_THREADS",
+            "MKL_NUM_THREADS",
+            "NUMEXPR_NUM_THREADS"
+          ],
+          "properties": {
+            "OPENBLAS_NUM_THREADS": {
+              "const": "1"
+            },
+            "OMP_NUM_THREADS": {
+              "const": "1"
+            },
+            "MKL_NUM_THREADS": {
+              "const": "1"
+            },
+            "NUMEXPR_NUM_THREADS": {
+              "const": "1"
+            }
+          }
+        },
+        "source_files": {
+          "type": "object",
+          "minProperties": 5,
+          "additionalProperties": {
+            "$ref": "#/$defs/sha256"
+          },
+          "required": [
+            "scripts/compare_rivin_zero_shear_methods.py",
+            "docs/schemas/rivin-zero-shear-comparison-v1.schema.json",
+            "docs/schemas/arithmetic-corpus-v1.schema.json",
+            "ideal_poly_volume_toolkit/rivin_zero_shear.py",
+            "ideal_poly_volume_toolkit/rivin_delaunay.py"
+          ]
+        }
+      }
+    },
+    "stage": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "status",
+        "reason",
+        "message",
+        "wall_seconds",
+        "process_cpu_seconds",
+        "metrics"
+      ],
+      "properties": {
+        "name": {
+          "type": "string",
+          "minLength": 1
+        },
+        "status": {
+          "enum": [
+            "completed",
+            "failed",
+            "error"
+          ]
+        },
+        "reason": {
+          "type": "string",
+          "minLength": 1
+        },
+        "message": {
+          "$ref": "#/$defs/nullableString"
+        },
+        "wall_seconds": {
+          "$ref": "#/$defs/nonnegativeNumber"
+        },
+        "process_cpu_seconds": {
+          "$ref": "#/$defs/nonnegativeNumber"
+        },
+        "metrics": {
+          "type": "object"
+        }
+      }
+    },
+    "endpoint": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "available",
+        "coordinate_sha256",
+        "vertices"
+      ],
+      "properties": {
+        "available": {
+          "type": "boolean"
+        },
+        "coordinate_sha256": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/sha256"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "vertices": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/cp1Coordinates"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    "scriptNormalization": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "passes",
+        "ordered_anchors_match",
+        "positive_half_plane"
+      ],
+      "properties": {
+        "passes": {
+          "type": "boolean"
+        },
+        "ordered_anchors_match": {
+          "type": "boolean"
+        },
+        "positive_half_plane": {
+          "type": "boolean"
+        }
+      }
+    },
+    "audit": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "strict_pass",
+        "classification",
+        "errors",
+        "topology",
+        "normalization",
+        "chordal_distinctness",
+        "support",
+        "shear",
+        "bending",
+        "planar_embedding",
+        "spherical_embedding",
+        "qhull_agreement",
+        "script_normalization"
+      ],
+      "properties": {
+        "strict_pass": {
+          "type": "boolean"
+        },
+        "classification": {
+          "type": "string"
+        },
+        "errors": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "topology": {
+          "type": "object"
+        },
+        "normalization": {
+          "type": "object"
+        },
+        "chordal_distinctness": {
+          "type": "object"
+        },
+        "support": {
+          "type": "object"
+        },
+        "shear": {
+          "type": "object"
+        },
+        "bending": {
+          "type": "object"
+        },
+        "planar_embedding": {
+          "type": "object"
+        },
+        "spherical_embedding": {
+          "type": "object"
+        },
+        "qhull_agreement": {
+          "type": "object"
+        },
+        "script_normalization": {
+          "$ref": "#/$defs/scriptNormalization"
+        }
+      }
+    },
+    "coordinateError": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "metric",
+        "n_vertices",
+        "max_chordal",
+        "median_chordal",
+        "rms_chordal",
+        "worst_vertex"
+      ],
+      "properties": {
+        "metric": {
+          "const": "euclidean-chord-on-unit-sphere-label-aligned"
+        },
+        "n_vertices": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "max_chordal": {
+          "$ref": "#/$defs/nonnegativeNumber"
+        },
+        "median_chordal": {
+          "$ref": "#/$defs/nonnegativeNumber"
+        },
+        "rms_chordal": {
+          "$ref": "#/$defs/nonnegativeNumber"
+        },
+        "worst_vertex": {
+          "$ref": "#/$defs/integerLabel"
+        }
+      }
+    },
+    "maximalityAssessment": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "claimed",
+        "classification",
+        "scope",
+        "basis",
+        "formal_proof"
+      ],
+      "properties": {
+        "claimed": {
+          "type": "boolean"
+        },
+        "classification": {
+          "enum": [
+            "strict_audit_supported_fixed_combinatorics_maximum",
+            "not_claimed"
+          ]
+        },
+        "scope": {
+          "const": "fixed_combinatorics"
+        },
+        "basis": {
+          "type": "string",
+          "minLength": 1
+        },
+        "formal_proof": {
+          "const": false
+        }
+      }
+    },
+    "methodTiming": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "exclusive_wall_seconds",
+        "exclusive_process_cpu_seconds",
+        "dependency_wall_seconds",
+        "dependency_process_cpu_seconds",
+        "end_to_end_wall_seconds",
+        "end_to_end_process_cpu_seconds"
+      ],
+      "properties": {
+        "exclusive_wall_seconds": {
+          "$ref": "#/$defs/nonnegativeNumber"
+        },
+        "exclusive_process_cpu_seconds": {
+          "$ref": "#/$defs/nonnegativeNumber"
+        },
+        "dependency_wall_seconds": {
+          "$ref": "#/$defs/nonnegativeNumber"
+        },
+        "dependency_process_cpu_seconds": {
+          "$ref": "#/$defs/nonnegativeNumber"
+        },
+        "end_to_end_wall_seconds": {
+          "$ref": "#/$defs/nonnegativeNumber"
+        },
+        "end_to_end_process_cpu_seconds": {
+          "$ref": "#/$defs/nonnegativeNumber"
+        }
+      }
+    },
+    "method": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "method_id",
+        "label",
+        "status",
+        "reason",
+        "message",
+        "initialization",
+        "stages",
+        "solver",
+        "endpoint",
+        "audit",
+        "reference_error",
+        "maximality_assessment",
+        "timings"
+      ],
+      "properties": {
+        "method_id": {
+          "enum": [
+            "angle_optimize_realize",
+            "pole_link_tutte_direct",
+            "angle_then_polish",
+            "outer_face_tutte_direct"
+          ]
+        },
+        "label": {
+          "type": "string",
+          "minLength": 1
+        },
+        "status": {
+          "enum": [
+            "completed",
+            "failed",
+            "error",
+            "skipped"
+          ]
+        },
+        "reason": {
+          "type": "string",
+          "minLength": 1
+        },
+        "message": {
+          "$ref": "#/$defs/nullableString"
+        },
+        "initialization": {
+          "type": "object"
+        },
+        "stages": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/stage"
+          }
+        },
+        "solver": {
+          "type": "object"
+        },
+        "endpoint": {
+          "$ref": "#/$defs/endpoint"
+        },
+        "audit": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/audit"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "reference_error": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/coordinateError"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "maximality_assessment": {
+          "$ref": "#/$defs/maximalityAssessment"
+        },
+        "timings": {
+          "$ref": "#/$defs/methodTiming"
+        }
+      }
+    },
+    "comparison": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "left_method",
+        "right_method",
+        "coordinate_error",
+        "left_to_right_end_to_end_wall_time_ratio",
+        "left_to_right_end_to_end_process_cpu_time_ratio",
+        "timing_ratio_scope",
+        "same_strict_outcome"
+      ],
+      "properties": {
+        "left_method": {
+          "type": "string"
+        },
+        "right_method": {
+          "type": "string"
+        },
+        "coordinate_error": {
+          "$ref": "#/$defs/coordinateError"
+        },
+        "left_to_right_end_to_end_wall_time_ratio": {
+          "$ref": "#/$defs/nullableNumber"
+        },
+        "left_to_right_end_to_end_process_cpu_time_ratio": {
+          "$ref": "#/$defs/nullableNumber"
+        },
+        "timing_ratio_scope": {
+          "const": "single-run-end-to-end-implementation-including-core-and-independent-audits"
+        },
+        "same_strict_outcome": {
+          "type": "boolean"
+        }
+      }
+    },
+    "case": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "case_id",
+        "source_pointer",
+        "source_kind",
+        "input_summary",
+        "methods",
+        "comparisons",
+        "summary",
+        "timings"
+      ],
+      "properties": {
+        "case_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "source_pointer": {
+          "type": "string"
+        },
+        "source_kind": {
+          "enum": [
+            "arithmetic_configuration",
+            "strict_answer_key",
+            "simple_faces",
+            "simple_face_list"
+          ]
+        },
+        "input_summary": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "n_vertices",
+            "n_faces",
+            "faces_sha256",
+            "distinguished_face",
+            "reference_available",
+            "reference_coordinate_sha256"
+          ],
+          "properties": {
+            "n_vertices": {
+              "type": "integer",
+              "minimum": 4
+            },
+            "n_faces": {
+              "type": "integer",
+              "minimum": 4
+            },
+            "faces_sha256": {
+              "$ref": "#/$defs/sha256"
+            },
+            "distinguished_face": {
+              "$ref": "#/$defs/face"
+            },
+            "reference_available": {
+              "type": "boolean"
+            },
+            "reference_coordinate_sha256": {
+              "oneOf": [
+                {
+                  "$ref": "#/$defs/sha256"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            }
+          }
+        },
+        "methods": {
+          "type": "array",
+          "minItems": 3,
+          "maxItems": 4,
+          "items": {
+            "$ref": "#/$defs/method"
+          }
+        },
+        "comparisons": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/comparison"
+          }
+        },
+        "summary": {
+          "$ref": "#/$defs/caseSummary"
+        },
+        "timings": {
+          "$ref": "#/$defs/wallCpuTiming"
+        }
+      }
+    },
+    "caseSummary": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "method_count",
+        "completed_count",
+        "failed_count",
+        "strict_method_ids",
+        "all_required_methods_completed"
+      ],
+      "properties": {
+        "method_count": {
+          "type": "integer",
+          "minimum": 3,
+          "maximum": 4
+        },
+        "completed_count": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4
+        },
+        "failed_count": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4
+        },
+        "strict_method_ids": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "type": "string"
+          }
+        },
+        "all_required_methods_completed": {
+          "type": "boolean"
+        }
+      }
+    },
+    "runSummary": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "case_count",
+        "complete_case_count",
+        "strict_endpoint_count",
+        "status"
+      ],
+      "properties": {
+        "case_count": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "complete_case_count": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "strict_endpoint_count": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "status": {
+          "$ref": "#/$defs/runStatus"
+        }
+      }
+    }
+  }
+}

@@ -55,7 +55,7 @@ It does not currently implement ideal or ultra-ideal H^5 / H^6 simplices.
 Typical H^5 example
 -------------------
 import numpy as np
-from hyperbolic_5_6_simplex_volume import hyperbolic_5_simplex_data
+from ideal_poly_volume_toolkit.hyperbolic_5_6_simplex_volume import hyperbolic_5_simplex_data
 
 verts5 = np.vstack([np.zeros((1, 5)), 0.5 * np.eye(5)])
 res5 = hyperbolic_5_simplex_data(verts5)
@@ -65,7 +65,7 @@ print("direct QMC cross-check:", res5.volume_direct)
 Typical H^6 example
 -------------------
 import numpy as np
-from hyperbolic_5_6_simplex_volume import hyperbolic_6_simplex_data
+from ideal_poly_volume_toolkit.hyperbolic_5_6_simplex_volume import hyperbolic_6_simplex_data
 
 verts6 = np.vstack([np.zeros((1, 6)), 0.7 * np.eye(6)])
 res6 = hyperbolic_6_simplex_data(verts6)
@@ -76,8 +76,8 @@ print("w0, w2, w4:", res6.w0, res6.w2, res6.w4)
 Example with model conversion
 -----------------------------
 import numpy as np
-from hyperbolic_model_transforms import convert_vertices
-from hyperbolic_5_6_simplex_volume import hyperbolic_5_simplex_volume
+from ideal_poly_volume_toolkit.hyperbolic_model_transforms import convert_vertices
+from ideal_poly_volume_toolkit.hyperbolic_5_6_simplex_volume import hyperbolic_5_simplex_volume
 
 verts5_klein = np.vstack([np.zeros((1, 5)), 0.3 * np.eye(5)]).tolist()
 verts5_poincare = convert_vertices(verts5_klein, from_model="klein", to_model="poincare")

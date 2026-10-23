@@ -20,10 +20,10 @@ References:
 
 import numpy as np
 from scipy.optimize import linprog, minimize
-from scipy.sparse import diags
 from collections import defaultdict
 from typing import List, Tuple, Set, Dict, Optional
 import random
+import time
 
 
 def extract_boundary_vertices(triangles: List[Tuple[int, int, int]]) -> Set[int]:
@@ -130,6 +130,164 @@ def find_interior_edges(triangles: List[Tuple[int, int, int]]) -> List[Tuple[int
     return interior_edges
 
 
+def compute_rivin_angle_residuals(
+    triangles: List[Tuple[int, int, int]],
+    angles: np.ndarray,
+    boundary_vertices: Optional[Set[int]] = None,
+    *,
+    tolerance: float = 1e-6,
+) -> Dict:
+    """Compute primal and inequality residuals for a Rivin angle structure.
+
+    The returned margins use the convention that positive values are
+    feasible and negative values are violations.  In particular,
+    ``dihedral_margin`` is ``pi`` minus the two angles opposite an interior
+    edge, and ``boundary_margin`` is ``pi`` minus the angle sum at a boundary
+    vertex.
+
+    This helper intentionally reports both ordinary feasibility (allowing
+    equality up to ``tolerance``) and strict-interior status.  Callers that
+    construct arithmetic witnesses should apply their own, usually larger,
+    positive margin threshold rather than relying on floating-point equality.
+    """
+    if tolerance < 0 or not np.isfinite(tolerance):
+        raise ValueError("tolerance must be a finite nonnegative number")
+    if not triangles:
+        raise ValueError("triangles must be nonempty")
+
+    angle_array = np.asarray(angles, dtype=float)
+    expected_shape = (len(triangles), 3)
+    if angle_array.shape != expected_shape:
+        raise ValueError(
+            f"angles must have shape {expected_shape}; got {angle_array.shape}"
+        )
+    if not np.all(np.isfinite(angle_array)):
+        raise ValueError("angles must all be finite")
+
+    if boundary_vertices is None:
+        boundary_vertices = extract_boundary_vertices(triangles)
+    else:
+        boundary_vertices = set(boundary_vertices)
+
+    all_vertices = {vertex for tri in triangles for vertex in tri}
+    unknown_boundary = boundary_vertices - all_vertices
+    if unknown_boundary:
+        raise ValueError(
+            "boundary_vertices contains vertices absent from triangles: "
+            f"{sorted(unknown_boundary)}"
+        )
+    interior_vertices = all_vertices - boundary_vertices
+    vertex_angles = build_vertex_angle_incidence(triangles)
+    edge_opposite_angles = build_edge_adjacency(triangles)
+
+    triangle_residuals = np.sum(angle_array, axis=1) - np.pi
+    interior_vertex_residuals = {}
+    for vertex in sorted(interior_vertices):
+        angle_sum = sum(
+            angle_array[tri_id, corner_id]
+            for tri_id, corner_id in vertex_angles[vertex]
+        )
+        interior_vertex_residuals[vertex] = float(angle_sum - 2.0 * np.pi)
+
+    dihedral_margins = {}
+    for edge in sorted(edge_opposite_angles):
+        opposite_angles = edge_opposite_angles[edge]
+        if len(opposite_angles) == 2:
+            angle_sum = sum(
+                angle_array[tri_id, corner_id]
+                for tri_id, corner_id in opposite_angles
+            )
+            dihedral_margins[edge] = float(np.pi - angle_sum)
+
+    boundary_margins = {}
+    for vertex in sorted(boundary_vertices):
+        angle_sum = sum(
+            angle_array[tri_id, corner_id]
+            for tri_id, corner_id in vertex_angles[vertex]
+        )
+        boundary_margins[vertex] = float(np.pi - angle_sum)
+
+    max_triangle_residual = float(np.max(np.abs(triangle_residuals)))
+    max_vertex_residual = max(
+        (abs(value) for value in interior_vertex_residuals.values()),
+        default=0.0,
+    )
+    max_equality_residual = max(max_triangle_residual, max_vertex_residual)
+
+    worst_dihedral_edge = min(
+        dihedral_margins,
+        key=lambda edge: (dihedral_margins[edge], edge),
+        default=None,
+    )
+    min_dihedral_margin = (
+        dihedral_margins[worst_dihedral_edge]
+        if worst_dihedral_edge is not None
+        else None
+    )
+    worst_boundary_vertex = min(
+        boundary_margins,
+        key=lambda vertex: (boundary_margins[vertex], vertex),
+        default=None,
+    )
+    min_boundary_margin = (
+        boundary_margins[worst_boundary_vertex]
+        if worst_boundary_vertex is not None
+        else None
+    )
+
+    inequality_margins = [*dihedral_margins.values(), *boundary_margins.values()]
+    min_inequality_margin = min(inequality_margins, default=None)
+    min_angle = float(np.min(angle_array))
+    max_angle = float(np.max(angle_array))
+    feasible = (
+        max_equality_residual <= tolerance
+        and min_angle >= -tolerance
+        and (
+            min_inequality_margin is None
+            or min_inequality_margin >= -tolerance
+        )
+    )
+    strict_interior = (
+        max_equality_residual <= tolerance
+        and min_angle > tolerance
+        and (
+            min_inequality_margin is None
+            or min_inequality_margin > tolerance
+        )
+    )
+
+    return {
+        "feasible": bool(feasible),
+        "strict_interior": bool(strict_interior),
+        "tolerance": float(tolerance),
+        "min_angle": min_angle,
+        "max_angle": max_angle,
+        "max_triangle_sum_residual": max_triangle_residual,
+        "max_interior_vertex_sum_residual": float(max_vertex_residual),
+        "max_equality_residual": float(max_equality_residual),
+        "min_dihedral_margin": min_dihedral_margin,
+        "worst_dihedral_edge": worst_dihedral_edge,
+        "max_dihedral_angle": (
+            float(np.pi - min_dihedral_margin)
+            if min_dihedral_margin is not None
+            else None
+        ),
+        "min_boundary_margin": min_boundary_margin,
+        "worst_boundary_vertex": worst_boundary_vertex,
+        "max_boundary_angle_sum": (
+            float(np.pi - min_boundary_margin)
+            if min_boundary_margin is not None
+            else None
+        ),
+        "min_inequality_margin": min_inequality_margin,
+        "n_triangles": len(triangles),
+        "n_vertices": len(all_vertices),
+        "n_interior_vertices": len(interior_vertices),
+        "n_boundary_vertices": len(boundary_vertices),
+        "n_interior_edges": len(dihedral_margins),
+    }
+
+
 def flip_edge(triangles: List[Tuple[int, int, int]], edge: Tuple[int, int]) -> Optional[List[Tuple[int, int, int]]]:
     """
     Perform an edge flip in a triangulation.
@@ -174,14 +332,36 @@ def flip_edge(triangles: List[Tuple[int, int, int]], edge: Tuple[int, int]) -> O
     # Extract the two triangles
     tri1, tri2 = edge_triangles
 
-    # Find the vertices: edge vertices are b, c; opposite vertices are a, d
-    b, c = edge_sorted
-    tri1_set = set(tri1)
-    tri2_set = set(tri2)
+    # Preserve the cyclic orientation of tri1.  Rotate it to (u, v, a),
+    # where u-v is the directed shared edge.  A consistently oriented tri2
+    # must then have cyclic form (v, u, d).  Refuse to repair inconsistent
+    # input locally: silently doing so can hide a non-orientable or otherwise
+    # malformed triangulation from callers that use ``flip_edge`` directly.
+    u = v = a = None
+    for i in range(3):
+        candidate_u = tri1[i]
+        candidate_v = tri1[(i + 1) % 3]
+        if tuple(sorted((candidate_u, candidate_v))) == edge_sorted:
+            u = candidate_u
+            v = candidate_v
+            a = tri1[(i + 2) % 3]
+            break
+    if u is None or v is None or a is None:
+        return None
 
-    # Find opposite vertices (not on the edge)
-    a = (tri1_set - {b, c}).pop()
-    d = (tri2_set - {b, c}).pop()
+    tri2_u = tri2_v = d = None
+    for i in range(3):
+        candidate_u = tri2[i]
+        candidate_v = tri2[(i + 1) % 3]
+        if tuple(sorted((candidate_u, candidate_v))) == edge_sorted:
+            tri2_u = candidate_u
+            tri2_v = candidate_v
+            d = tri2[(i + 2) % 3]
+            break
+    if tri2_u != v or tri2_v != u or d is None:
+        return None
+    if a == d:
+        return None
 
     # CRITICAL CHECK (from cubic-graph-optimizer):
     # Verify the new edge (a, d) doesn't already exist
@@ -197,9 +377,11 @@ def flip_edge(triangles: List[Tuple[int, int, int]], edge: Tuple[int, int]) -> O
             # Edge already exists - flip would create invalid triangulation
             return None
 
-    # Create new triangles with flipped edge (a, d)
-    new_tri1 = (a, b, d)
-    new_tri2 = (a, d, c)
+    # Create new triangles with flipped edge (a, d), preserving tri1's local
+    # cyclic orientation.  For tri1=(u,v,a), tri2=(v,u,d), the consistently
+    # oriented replacements are (a,u,d) and (a,d,v).
+    new_tri1 = (a, u, d)
+    new_tri2 = (a, d, v)
 
     # Return new triangulation
     return other_triangles + [new_tri1, new_tri2]
@@ -438,7 +620,7 @@ def check_delaunay_realizability(triangles: List[Tuple[int, int, int]],
         print(f"  Equality constraints: {A_eq.shape[0]}")
         print(f"    - Triangle angle sum = 1: {n_triangles}")
         print(f"    - Interior vertex angle sum = 2: {len(interior_vertices)}")
-        print(f"\n  Edge classification:")
+        print("\n  Edge classification:")
         print(f"    - Interior edges: {len(interior_edges)}")
         print(f"    - Boundary edges: {len(boundary_edges)}")
 
@@ -455,7 +637,7 @@ def check_delaunay_realizability(triangles: List[Tuple[int, int, int]],
                     bounds=bounds, method='highs')
 
     if verbose:
-        print(f"\nOptimization result:")
+        print("\nOptimization result:")
         print(f"  Status: {result.status} - {result.message}")
         print(f"  Success: {result.success}")
         if result.success:
@@ -572,7 +754,9 @@ def lobachevsky_function(theta: float) -> float:
     if theta <= 0 or theta >= np.pi:
         return 0.0
 
-    integrand = lambda t: -np.log(2 * np.sin(t)) if np.sin(t) > 1e-10 else 0.0
+    def integrand(t):
+        return -np.log(2 * np.sin(t)) if np.sin(t) > 1e-10 else 0.0
+
     result, _ = quad(integrand, 0, theta, limit=100)
     return result
 
@@ -618,7 +802,7 @@ def _newton_in_nullspace(x, N, verbose=False, tol=1e-12, max_iter=50, label=""):
     Only uses Λ'(θ) = -log(2 sin θ) and Λ''(θ) = -cot θ.
     No Lobachevsky function evaluations.
 
-    Returns (x, n_iter, converged).
+    Returns ``(x, n_iter, converged, reduced_gradient_norm)``.
     """
     EPS = 1e-6
 
@@ -662,7 +846,12 @@ def _newton_in_nullspace(x, N, verbose=False, tol=1e-12, max_iter=50, label=""):
             alpha *= 0.5
         x = x + alpha * delta_x
 
-    return x, it + 1, converged
+    # Report the residual at the returned iterate.  On an exhausted Newton
+    # loop the last update happens after the norm above was computed.
+    x = np.clip(x, EPS, np.pi - EPS)
+    final_gradient = -np.log(2.0 * np.sin(x))
+    reduced_gradient_norm = float(np.linalg.norm(N.T @ final_gradient))
+    return x, it + 1, converged, reduced_gradient_norm
 
 
 def optimize_hyperbolic_volume(triangles: List[Tuple[int, int, int]],
@@ -748,7 +937,10 @@ def optimize_hyperbolic_volume(triangles: List[Tuple[int, int, int]],
                 'volume': None,
                 'message': 'Triangulation is not Delaunay realizable',
                 'n_active_constraints': 0,
+                'active_constraint_labels': [],
                 'n_iterations': 0,
+                'reduced_gradient_norm': None,
+                'residuals': None,
             }
         initial_angles = lp_result['angles_radians']
 
@@ -797,6 +989,7 @@ def optimize_hyperbolic_volume(triangles: List[Tuple[int, int, int]],
     active_indices = []      # indices into ineq_rows that are pinned at π
     total_iters = 0
     converged = False
+    reduced_gradient_norm = None
     MAX_ACTIVE_ROUNDS = len(ineq_rows) + 1  # can't activate more than all
 
     # RHS for base equality constraints
@@ -824,6 +1017,7 @@ def optimize_hyperbolic_volume(triangles: List[Tuple[int, int, int]],
         if N.shape[1] == 0:
             # Fully determined — no free dimensions left
             converged = True
+            reduced_gradient_norm = 0.0
             if verbose:
                 print(f"  No free dimensions (round {active_round}), "
                       f"system fully determined")
@@ -839,7 +1033,7 @@ def optimize_hyperbolic_volume(triangles: List[Tuple[int, int, int]],
                       f"{len(active_indices)} pinned, "
                       f"{N.shape[1]} free dims")
 
-        x, n_it, converged = _newton_in_nullspace(
+        x, n_it, converged, reduced_gradient_norm = _newton_in_nullspace(
             x, N, verbose=verbose,
             label=f"[r{active_round}] " if active_round > 0 else "")
         total_iters += n_it
@@ -869,21 +1063,32 @@ def optimize_hyperbolic_volume(triangles: List[Tuple[int, int, int]],
         # maximum is a boundary (cocircular-tie) maximum, which can never
         # be zero-shear certified — bail out now rather than converge.
         if require_interior and worst_idx < n_dihedral_rows:
+            rejected_angles = x.reshape(n_triangles, 3)
+            angle_residuals = compute_rivin_angle_residuals(
+                triangles,
+                rejected_angles,
+                boundary_vertices,
+            )
             if verbose:
                 print(f"  REJECT (require_interior): {ineq_labels[worst_idx]} "
                       f"hit π (excess {np.degrees(worst_violation):.2f}°) — "
                       f"boundary maximum, not zero-shear certifiable")
             return {
                 'success': False,
-                'angles': x.reshape(n_triangles, 3),
+                'angles': rejected_angles,
                 'volume': None,
                 'max_dihedral_angle': float(ineq_rows[worst_idx] @ x),
                 'n_active_constraints': len(active_indices),
+                'active_constraint_labels': [
+                    ineq_labels[index] for index in active_indices
+                ],
                 'message': (f'Rejected: cocircular tie active '
                             f'({ineq_labels[worst_idx]}) — boundary maximum '
                             f'(require_interior)'),
                 'rejected_tie': True,
                 'n_iterations': total_iters,
+                'reduced_gradient_norm': reduced_gradient_norm,
+                'residuals': angle_residuals,
             }
 
         # Pin the most-violated constraint at equality
@@ -907,6 +1112,11 @@ def optimize_hyperbolic_volume(triangles: List[Tuple[int, int, int]],
         max_dihedral = max(max_dihedral, dihedral)
 
     success = converged and (max_dihedral <= np.pi + 1e-6)
+    angle_residuals = compute_rivin_angle_residuals(
+        triangles,
+        optimal_angles,
+        boundary_vertices,
+    )
 
     # Asymptotically tight tie (converged onto the boundary without a pin):
     # equally not zero-shear certifiable.
@@ -917,10 +1127,15 @@ def optimize_hyperbolic_volume(triangles: List[Tuple[int, int, int]],
             'volume': volume,
             'max_dihedral_angle': max_dihedral,
             'n_active_constraints': len(active_indices),
+            'active_constraint_labels': [
+                ineq_labels[index] for index in active_indices
+            ],
             'message': ('Rejected: dihedral within 1e-9 of π at convergence '
                         '— boundary maximum (require_interior)'),
             'rejected_tie': True,
             'n_iterations': total_iters,
+            'reduced_gradient_norm': reduced_gradient_norm,
+            'residuals': angle_residuals,
         }
 
     if verbose:
@@ -936,9 +1151,348 @@ def optimize_hyperbolic_volume(triangles: List[Tuple[int, int, int]],
         'volume': volume,
         'max_dihedral_angle': max_dihedral,
         'n_active_constraints': len(active_indices),
+        'active_constraint_labels': [
+            ineq_labels[index] for index in active_indices
+        ],
         'message': 'Converged' if success else 'Did not converge',
         'n_iterations': total_iters,
+        'reduced_gradient_norm': reduced_gradient_norm,
+        'residuals': angle_residuals,
     }
+
+
+def legalize_to_interior_maximum(
+    triangles: List[Tuple[int, int, int]],
+    boundary_vertices: Optional[Set[int]] = None,
+    *,
+    max_flips: int = 64,
+    margin_tolerance: float = 1e-4,
+    constraint_tolerance: float = 1e-6,
+    verbose: bool = False,
+) -> Dict:
+    """Legalize a finite Delaunay disk toward a strict Rivin maximum.
+
+    A rejected unconstrained maximum identifies an interior edge whose
+    opposite-angle sum reaches or exceeds ``pi``.  Flipping the worst such
+    edge and resolving is the angle-structure analogue of deterministic
+    Delaunay legalization.  The process is bounded by ``max_flips`` and by
+    orientation-independent cycle detection.
+
+    Acceptance is deliberately stronger than
+    ``optimize_hyperbolic_volume(..., require_interior=True)``: the optimizer
+    must converge with no active constraints, equality residuals and angle
+    positivity must satisfy ``constraint_tolerance``, and both interior-edge
+    and boundary-vertex margins must be at least ``margin_tolerance``.  The
+    boundary test certifies strictness after the disk is coned to its implicit
+    vertex at infinity.
+
+    Returns a structured dictionary.  ``finite_triangulation`` always holds
+    the last valid oriented disk, including on failure.  ``termination_reason``
+    is one of ``accepted``, ``max_flips``, ``cycle_detected``, ``lp_failure``,
+    ``optimizer_failure``, ``residual_failure``, ``insufficient_margin``, or
+    ``unflippable_edge``.
+    """
+    if isinstance(max_flips, bool) or int(max_flips) != max_flips or max_flips < 0:
+        raise ValueError("max_flips must be a nonnegative integer")
+    max_flips = int(max_flips)
+    for name, value in (
+        ("margin_tolerance", margin_tolerance),
+        ("constraint_tolerance", constraint_tolerance),
+    ):
+        if not np.isfinite(value) or value < 0:
+            raise ValueError(f"{name} must be a finite nonnegative number")
+
+    current = []
+    for face in triangles:
+        if len(face) != 3:
+            raise ValueError(f"each triangle must contain three vertices: {face}")
+        normalized_face = []
+        for vertex in face:
+            if isinstance(vertex, bool) or int(vertex) != vertex or vertex < 0:
+                raise ValueError(
+                    f"triangle vertices must be nonnegative integers: {face}"
+                )
+            normalized_face.append(int(vertex))
+        oriented_face = tuple(normalized_face)
+        if len(set(oriented_face)) != 3:
+            raise ValueError(f"triangle vertices must be distinct: {face}")
+        current.append(oriented_face)
+    if not current:
+        raise ValueError("triangles must be nonempty")
+
+    canonical_faces = [tuple(sorted(face)) for face in current]
+    if len(set(canonical_faces)) != len(canonical_faces):
+        raise ValueError("triangles contains a duplicate face")
+
+    all_vertices = {vertex for face in current for vertex in face}
+    n_finite_vertices = len(all_vertices)
+    if all_vertices != set(range(n_finite_vertices)):
+        raise ValueError(
+            "triangle vertex labels must be contiguous from 0 through "
+            f"{n_finite_vertices - 1}"
+        )
+
+    # The boundary-completion service owns the project's strict finite-disk
+    # validation: one connected boundary cycle, Euler characteristic one,
+    # manifold vertex links, face connectivity, and orientability.  Its
+    # finite prefix is also a coherently wound copy of the input disk.
+    # Import locally to keep this legacy numerical module independent at
+    # import time.
+    from .optimization import complete_boundary_triangulation
+
+    completed = complete_boundary_triangulation(
+        np.asarray(current, dtype=np.int64),
+        n_finite_vertices,
+    )
+    current = [
+        tuple(map(int, face)) for face in completed[:len(current)]
+    ]
+    actual_boundary = extract_boundary_vertices(current)
+
+    if boundary_vertices is None:
+        fixed_boundary = actual_boundary
+    else:
+        fixed_boundary = set()
+        for vertex in boundary_vertices:
+            if isinstance(vertex, bool) or int(vertex) != vertex or vertex < 0:
+                raise ValueError(
+                    "boundary_vertices must contain nonnegative integer labels"
+                )
+            fixed_boundary.add(int(vertex))
+        if fixed_boundary != actual_boundary:
+            raise ValueError(
+                "boundary_vertices must exactly match the triangulated disk "
+                f"boundary {sorted(actual_boundary)}"
+            )
+
+    start_time = time.perf_counter()
+    lp_seconds = 0.0
+    optimization_seconds = 0.0
+    history = []
+    seen_states = set()
+    flips_completed = 0
+    final_optimization = None
+    final_residuals = None
+
+    def finish(reason, message, *, optimization=None, residuals=None):
+        result_angles = None if optimization is None else optimization.get("angles")
+        result_volume = None if optimization is None else optimization.get("volume")
+        return {
+            "success": reason == "accepted",
+            "termination_reason": reason,
+            "message": message,
+            "finite_triangulation": list(current),
+            "angles": result_angles,
+            "volume": result_volume,
+            "n_flips": flips_completed,
+            "n_states": len(history),
+            "residuals": residuals,
+            "optimization_result": optimization,
+            "history": history,
+            "timings": {
+                "total_seconds": float(time.perf_counter() - start_time),
+                "lp_seconds": float(lp_seconds),
+                "optimization_seconds": float(optimization_seconds),
+            },
+        }
+
+    while True:
+        state_key = tuple(sorted(tuple(sorted(face)) for face in current))
+        if state_key in seen_states:
+            return finish(
+                "cycle_detected",
+                "Legalization revisited a previously evaluated triangulation",
+            )
+        seen_states.add(state_key)
+
+        step = flips_completed
+        lp_start = time.perf_counter()
+        lp_result = check_delaunay_realizability(
+            current,
+            boundary_vertices=fixed_boundary,
+            verbose=False,
+        )
+        lp_elapsed = time.perf_counter() - lp_start
+        lp_seconds += lp_elapsed
+        history_row = {
+            "step": step,
+            "lp_realizable": bool(lp_result["realizable"]),
+            "lp_min_angle": float(lp_result.get("min_angle", 0.0)),
+            "lp_slack": (
+                float(lp_result["slack"])
+                if lp_result.get("slack") is not None
+                else None
+            ),
+            "lp_seconds": float(lp_elapsed),
+            "optimizer_success": None,
+            "optimizer_message": None,
+            "optimizer_iterations": None,
+            "optimizer_active_constraints": None,
+            "optimizer_reduced_gradient_norm": None,
+            "optimizer_rejected_tie": False,
+            "optimization_seconds": 0.0,
+            "residuals": None,
+            "flipped_edge": None,
+            "status": None,
+        }
+        if not lp_result["realizable"]:
+            history_row["status"] = "lp_failure"
+            history.append(history_row)
+            return finish(
+                "lp_failure",
+                f"Rivin feasibility LP failed: {lp_result['message']}",
+            )
+
+        optimization_start = time.perf_counter()
+        optimization_result = optimize_hyperbolic_volume(
+            current,
+            initial_angles=lp_result["angles_radians"],
+            boundary_vertices=fixed_boundary,
+            verbose=False,
+            require_interior=True,
+        )
+        optimization_elapsed = time.perf_counter() - optimization_start
+        optimization_seconds += optimization_elapsed
+        optimized_angles = optimization_result.get("angles")
+        if optimized_angles is not None:
+            # Always recompute with the caller's tolerance.  Optimizer-owned
+            # residuals use its default tolerance and must not decide this
+            # higher-level acceptance contract when the caller overrides it.
+            final_residuals = compute_rivin_angle_residuals(
+                current,
+                optimized_angles,
+                fixed_boundary,
+                tolerance=constraint_tolerance,
+            )
+            optimization_result = {
+                **optimization_result,
+                "residuals": final_residuals,
+            }
+        else:
+            final_residuals = None
+        final_optimization = optimization_result
+
+        history_row.update({
+            "optimizer_success": bool(optimization_result["success"]),
+            "optimizer_message": optimization_result.get("message"),
+            "optimizer_iterations": optimization_result.get("n_iterations"),
+            "optimizer_active_constraints": optimization_result.get(
+                "n_active_constraints"
+            ),
+            "optimizer_reduced_gradient_norm": optimization_result.get(
+                "reduced_gradient_norm"
+            ),
+            "optimizer_rejected_tie": bool(
+                optimization_result.get("rejected_tie", False)
+            ),
+            "optimization_seconds": float(optimization_elapsed),
+            "residuals": final_residuals,
+        })
+
+        if optimization_result["success"]:
+            equality_ok = (
+                final_residuals is not None
+                and final_residuals["max_equality_residual"]
+                <= constraint_tolerance
+                and final_residuals["min_angle"] > constraint_tolerance
+            )
+            if not equality_ok:
+                history_row["status"] = "residual_failure"
+                history.append(history_row)
+                return finish(
+                    "residual_failure",
+                    "Optimizer converged but equality or angle residuals failed",
+                    optimization=final_optimization,
+                    residuals=final_residuals,
+                )
+
+            dihedral_margin = final_residuals["min_dihedral_margin"]
+            boundary_margin = final_residuals["min_boundary_margin"]
+            margins_ok = (
+                (dihedral_margin is None or dihedral_margin >= margin_tolerance)
+                and (boundary_margin is None or boundary_margin >= margin_tolerance)
+                and optimization_result.get("n_active_constraints", 0) == 0
+            )
+            if not margins_ok:
+                history_row["status"] = "insufficient_margin"
+                history.append(history_row)
+                return finish(
+                    "insufficient_margin",
+                    "Optimizer converged without the requested strict margins",
+                    optimization=final_optimization,
+                    residuals=final_residuals,
+                )
+
+            history_row["status"] = "accepted"
+            history.append(history_row)
+            if verbose:
+                print(
+                    f"Accepted strict interior maximum after "
+                    f"{flips_completed} flip(s)"
+                )
+            return finish(
+                "accepted",
+                "Strict interior Rivin maximum found",
+                optimization=final_optimization,
+                residuals=final_residuals,
+            )
+
+        if not optimization_result.get("rejected_tie", False):
+            history_row["status"] = "optimizer_failure"
+            history.append(history_row)
+            return finish(
+                "optimizer_failure",
+                f"Volume optimizer failed: {optimization_result.get('message')}",
+                optimization=final_optimization,
+                residuals=final_residuals,
+            )
+
+        worst_edge = (
+            None
+            if final_residuals is None
+            else final_residuals.get("worst_dihedral_edge")
+        )
+        if worst_edge is None:
+            history_row["status"] = "optimizer_failure"
+            history.append(history_row)
+            return finish(
+                "optimizer_failure",
+                "Tie rejection did not identify an interior edge",
+                optimization=final_optimization,
+                residuals=final_residuals,
+            )
+        if flips_completed >= max_flips:
+            history_row["status"] = "max_flips"
+            history.append(history_row)
+            return finish(
+                "max_flips",
+                f"Reached the maximum of {max_flips} edge flips",
+                optimization=final_optimization,
+                residuals=final_residuals,
+            )
+
+        flipped = flip_edge(current, worst_edge)
+        history_row["flipped_edge"] = worst_edge
+        if flipped is None:
+            history_row["status"] = "unflippable_edge"
+            history.append(history_row)
+            return finish(
+                "unflippable_edge",
+                f"Worst violating edge {worst_edge} is not flippable",
+                optimization=final_optimization,
+                residuals=final_residuals,
+            )
+
+        history_row["status"] = "flipped"
+        history.append(history_row)
+        current = flipped
+        flips_completed += 1
+        if verbose:
+            margin = final_residuals.get("min_dihedral_margin")
+            print(
+                f"Flip {flips_completed}/{max_flips}: edge {worst_edge}, "
+                f"dihedral margin {margin:.3e}"
+            )
 
 
 def compute_triangle_angle(p1: np.ndarray, p2: np.ndarray, p3: np.ndarray) -> float:
@@ -951,14 +1505,26 @@ def compute_triangle_angle(p1: np.ndarray, p2: np.ndarray, p3: np.ndarray) -> fl
     Returns:
         Angle at p1 in radians
     """
-    # Vectors from p1 to p2 and p3
-    v1 = p2 - p1
-    v2 = p3 - p1
+    # Normalize each ray before taking dot and cross products.  ``hypot`` is
+    # scale-stable for very small and very large coordinates, while arccos of
+    # a rounded cosine loses near-collinear angles.  A zero-length ray is a
+    # degenerate triangle; returning zero keeps optimization penalties finite
+    # and makes that behavior explicit rather than relying on atan2(0, 0).
+    v1 = np.asarray(p2, dtype=float) - np.asarray(p1, dtype=float)
+    v2 = np.asarray(p3, dtype=float) - np.asarray(p1, dtype=float)
+    if v1.shape != (2,) or v2.shape != (2,):
+        raise ValueError("triangle points must be two-dimensional vectors")
 
-    # Compute angle using atan2 for robustness
-    cos_angle = np.dot(v1, v2) / (np.linalg.norm(v1) * np.linalg.norm(v2) + 1e-10)
-    cos_angle = np.clip(cos_angle, -1.0, 1.0)  # Numerical safety
-    return np.arccos(cos_angle)
+    norm1 = float(np.hypot(v1[0], v1[1]))
+    norm2 = float(np.hypot(v2[0], v2[1]))
+    if norm1 == 0.0 or norm2 == 0.0:
+        return 0.0
+
+    unit1 = v1 / norm1
+    unit2 = v2 / norm2
+    cross = float(unit1[0] * unit2[1] - unit1[1] * unit2[0])
+    dot = float(np.dot(unit1, unit2))
+    return float(np.arctan2(abs(cross), dot))
 
 
 def realize_angles_as_points(triangles: List[Tuple[int, int, int]],
@@ -988,6 +1554,11 @@ def realize_angles_as_points(triangles: List[Tuple[int, int, int]],
     """
     if boundary_vertices is None:
         boundary_vertices = extract_boundary_vertices(triangles)
+    target_angle_residuals = compute_rivin_angle_residuals(
+        triangles,
+        target_angles,
+        boundary_vertices,
+    )
 
     # Get all vertices
     all_vertices = set()
@@ -1000,7 +1571,7 @@ def realize_angles_as_points(triangles: List[Tuple[int, int, int]],
     vertex_to_idx = {v: i for i, v in enumerate(vertex_list)}
 
     if verbose:
-        print(f"Reconstructing geometry from angles...")
+        print("Reconstructing geometry from angles...")
         print(f"  Vertices: {n_vertices}")
         print(f"  Triangles: {len(triangles)}")
 
@@ -1027,7 +1598,7 @@ def realize_angles_as_points(triangles: List[Tuple[int, int, int]],
     # Incremental graph-based construction
     # Place vertices one by one using angle constraints from already-placed neighbors
     if verbose:
-        print(f"  Constructing geometry incrementally using angle constraints...")
+        print("  Constructing geometry incrementally using angle constraints...")
 
     from scipy.spatial import Delaunay as scipy_Delaunay
     expected_triangulation_set = set(tuple(sorted(tri)) for tri in triangles)
@@ -1065,8 +1636,6 @@ def realize_angles_as_points(triangles: List[Tuple[int, int, int]],
             for k in range(3):
                 e = tuple(sorted((tri[k], tri[(k + 1) % 3])))
                 edge_tris.setdefault(e, []).append((tid, tri[(k + 2) % 3]))
-
-        tri_index = {tuple(tri): tid for tid, tri in enumerate(triangles)}
 
         def angle_at(tid, v):
             tri = triangles[tid]
@@ -1154,7 +1723,7 @@ def realize_angles_as_points(triangles: List[Tuple[int, int, int]],
     if points_constructed is None:
         # Construction failed
         if verbose:
-            print(f"    ✗ Incremental construction failed")
+            print("    ✗ Incremental construction failed")
         return {
             'success': False,
             'points': None,
@@ -1163,6 +1732,20 @@ def realize_angles_as_points(triangles: List[Tuple[int, int, int]],
             'triangulation_preserved': False,
             'angle_error': None,
             'angle_error_degrees': None,
+            'max_angle_error': None,
+            'max_angle_error_degrees': None,
+            'closure_error': None,
+            'orientation_consistent': False,
+            'min_abs_oriented_area': None,
+            'residuals': {
+                'rms_angle_error': None,
+                'max_angle_error': None,
+                'closure_error': None,
+                'orientation_consistent': False,
+                'min_abs_oriented_area': None,
+                'target_angle_structure': target_angle_residuals,
+                'realized_angle_structure': None,
+            },
             'message': 'Incremental construction failed',
             'n_iterations': 0,
         }
@@ -1196,9 +1779,7 @@ def realize_angles_as_points(triangles: List[Tuple[int, int, int]],
             return False
         # actual corner angles from the layout
         def corner(pa, pb, pc):
-            u = pb - pa; v = pc - pa
-            cosang = np.dot(u, v) / (np.linalg.norm(u)*np.linalg.norm(v))
-            return float(np.arccos(np.clip(cosang, -1.0, 1.0)))
+            return compute_triangle_angle(pa, pb, pc)
         # (2) local Delaunay per interior edge
         edge_opp = {}
         for tid, (a, b, c) in enumerate(triangles):
@@ -1236,14 +1817,14 @@ def realize_angles_as_points(triangles: List[Tuple[int, int, int]],
         if not initial_tri_correct and triangulation_is_delaunay(points):
             initial_tri_correct = True
             if verbose:
-                print(f"    ✓ Target triangulation is Delaunay for the layout "
-                      f"(scipy picked other diagonals on cocircular ties)")
+                print("    ✓ Target triangulation is Delaunay for the layout "
+                      "(scipy picked other diagonals on cocircular ties)")
         elif verbose and initial_tri_correct:
-            print(f"    ✓ Initial geometry has correct triangulation!")
+            print("    ✓ Initial geometry has correct triangulation!")
         elif verbose:
-            print(f"    ⚠ Initial triangulation mismatch:")
+            print("    ⚠ Initial triangulation mismatch:")
             print(f"    Expected {len(expected_triangulation_set)} triangles, got {len(current_triangles)}")
-            print(f"    Will refine using optimization...")
+            print("    Will refine using optimization...")
     except Exception as e:
         if verbose:
             print(f"    ⚠ Triangulation check failed: {e}")
@@ -1252,7 +1833,7 @@ def realize_angles_as_points(triangles: List[Tuple[int, int, int]],
     # Refine using optimization (if triangulation not perfect)
     if not initial_tri_correct:
         if verbose:
-            print(f"  Refining geometry with optimization...")
+            print("  Refining geometry with optimization...")
 
         # Extract initial coordinates for free vertices
         initial_coords = np.zeros(n_free * 2)
@@ -1298,7 +1879,7 @@ def realize_angles_as_points(triangles: List[Tuple[int, int, int]],
                     penalty = 1000.0 * (n_missing + n_extra)  # Strong penalty
                 else:
                     penalty = 0.0
-            except:
+            except Exception:
                 penalty = 10000.0
 
             return angle_err + penalty
@@ -1327,13 +1908,13 @@ def realize_angles_as_points(triangles: List[Tuple[int, int, int]],
             current_triangles.add(tuple(sorted([v0, v1, v2])))
         triangulation_correct = (current_triangles == expected_triangulation_set) \
             or triangulation_is_delaunay(points)
-    except:
+    except Exception:
         triangulation_correct = False
-
-    result = type('Result', (), {'success': True, 'nit': 0})()  # Dummy result
 
     # Compute angle error and volume
     angle_errors = []
+    angle_differences = []
+    realized_angles = np.zeros_like(np.asarray(target_angles, dtype=float))
     final_volume = 0.0
 
     for tri_id, (v0, v1, v2) in enumerate(triangles):
@@ -1347,7 +1928,10 @@ def realize_angles_as_points(triangles: List[Tuple[int, int, int]],
 
         actual = np.array([angle0, angle1, angle2])
         target = target_angles[tri_id]
-        angle_errors.extend((actual - target)**2)
+        difference = actual - target
+        realized_angles[tri_id] = actual
+        angle_differences.extend(difference)
+        angle_errors.extend(difference**2)
 
         # Compute volume
         final_volume += lobachevsky_function(angle0)
@@ -1355,9 +1939,35 @@ def realize_angles_as_points(triangles: List[Tuple[int, int, int]],
         final_volume += lobachevsky_function(angle2)
 
     rms_error = np.sqrt(np.mean(angle_errors))
+    max_angle_error = float(np.max(np.abs(angle_differences)))
+
+    signed_double_areas = []
+    for v0, v1, v2 in triangles:
+        p0 = points[vertex_to_idx[v0]]
+        p1 = points[vertex_to_idx[v1]]
+        p2 = points[vertex_to_idx[v2]]
+        signed_double_areas.append(
+            float(
+                (p1[0] - p0[0]) * (p2[1] - p0[1])
+                - (p1[1] - p0[1]) * (p2[0] - p0[0])
+            )
+        )
+    orientation_signs = {
+        int(np.sign(area)) for area in signed_double_areas if abs(area) > 1e-14
+    }
+    orientation_consistent = (
+        len(orientation_signs) == 1
+        and all(abs(area) > 1e-14 for area in signed_double_areas)
+    )
+    min_abs_oriented_area = 0.5 * min(map(abs, signed_double_areas))
+    realized_angle_residuals = compute_rivin_angle_residuals(
+        triangles,
+        realized_angles,
+        boundary_vertices,
+    )
 
     if verbose:
-        print(f"  Construction: complete")
+        print("  Construction: complete")
         print(f"  Achieved volume: {final_volume:.6f}")
         print(f"  Triangulation preserved: {'✓' if triangulation_correct else '✗'}")
         print(f"  RMS angle error: {rms_error:.6f} rad = {np.degrees(rms_error):.2f}°")
@@ -1374,7 +1984,20 @@ def realize_angles_as_points(triangles: List[Tuple[int, int, int]],
         'triangulation_preserved': triangulation_correct,
         'angle_error': rms_error,
         'angle_error_degrees': np.degrees(rms_error),
+        'max_angle_error': max_angle_error,
+        'max_angle_error_degrees': float(np.degrees(max_angle_error)),
         'closure_error': closure_error[0],
+        'orientation_consistent': orientation_consistent,
+        'min_abs_oriented_area': float(min_abs_oriented_area),
+        'residuals': {
+            'rms_angle_error': float(rms_error),
+            'max_angle_error': max_angle_error,
+            'closure_error': float(closure_error[0]),
+            'orientation_consistent': orientation_consistent,
+            'min_abs_oriented_area': float(min_abs_oriented_area),
+            'target_angle_structure': target_angle_residuals,
+            'realized_angle_structure': realized_angle_residuals,
+        },
         'message': 'Developing-map construction completed',
         'n_iterations': 0,
     }
@@ -1418,11 +2041,10 @@ def refine_geometry_for_volume(initial_points: np.ndarray,
     free_indices = [i for i in range(n_vertices) if i not in fixed_indices]
 
     if verbose:
-        print(f"Refining geometry via direct volume optimization...")
+        print("Refining geometry via direct volume optimization...")
         print(f"  Vertices: {n_vertices} ({len(free_indices)} free)")
 
     # Check initial triangulation
-    from scipy.spatial import Delaunay as scipy_Delaunay
     try:
         tri_initial = scipy_Delaunay(initial_points)
         initial_triangles = set()
@@ -1434,10 +2056,10 @@ def refine_geometry_for_volume(initial_points: np.ndarray,
 
         if initial_triangles != expected_set:
             if verbose:
-                print(f"  ⚠ Warning: Initial triangulation does not match expected!")
+                print("  ⚠ Warning: Initial triangulation does not match expected!")
                 print(f"    Expected {len(expected_set)} triangles, got {len(initial_triangles)}")
-                print(f"    Refinement may not preserve triangulation")
-    except:
+                print("    Refinement may not preserve triangulation")
+    except Exception:
         pass
 
     # Initial coordinates for free vertices
@@ -1487,12 +2109,11 @@ def refine_geometry_for_volume(initial_points: np.ndarray,
 
             return -volume  # Minimize negative volume
 
-        except Exception as e:
+        except Exception:
             # Degenerate configuration
             return 1e10
 
     # Optimize using L-BFGS-B
-    from scipy.optimize import minimize
 
     result = minimize(
         objective,

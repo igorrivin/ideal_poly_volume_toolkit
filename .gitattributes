@@ -1,2 +1,16 @@
-*.png filter=lfs diff=lfs merge=lfs -text
-*.json filter=lfs diff=lfs merge=lfs -text
+# Research artifacts currently stored through Git LFS. Keep this list scoped to
+# established artifact locations so package metadata and future JSON contracts
+# remain ordinary, reviewable Git blobs.
+bin/results/**/*.json filter=lfs diff=lfs merge=lfs -text
+examples/**/*.json filter=lfs diff=lfs merge=lfs -text
+examples/**/*.png filter=lfs diff=lfs merge=lfs -text
+paper/**/*.png filter=lfs diff=lfs merge=lfs -text
+results/**/*.json filter=lfs diff=lfs merge=lfs -text
+results/**/*.png filter=lfs diff=lfs merge=lfs -text
+tests/**/*.json filter=lfs diff=lfs merge=lfs -text
+
+# Canonical provenance inputs and the repository manifest must be
+# human-reviewable without Git LFS. Later rules override the scoped patterns.
+results/manifest.json !filter !diff !merge text
+results/data/optimal_d4_symmetry_analysis.json !filter !diff !merge text
+results/data/optimal_d5_d6_symmetry_analysis.json !filter !diff !merge text

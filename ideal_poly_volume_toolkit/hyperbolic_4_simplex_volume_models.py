@@ -55,7 +55,10 @@ from typing import Any, Dict, List, Optional, Sequence, Tuple
 
 import mpmath as mp
 
-from hyperbolic_model_transforms import HALFSPACE_INFINITY, convert_vertices
+if __package__:
+    from .hyperbolic_model_transforms import HALFSPACE_INFINITY, convert_vertices
+else:  # pragma: no cover - direct-script compatibility
+    from hyperbolic_model_transforms import HALFSPACE_INFINITY, convert_vertices
 
 
 Vector4 = Sequence[float | int | mp.mpf]

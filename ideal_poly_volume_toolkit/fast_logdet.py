@@ -9,12 +9,25 @@ For a cubic graph on N vertices:
   - Full eigendecomposition: O(N^3)
   - Incremental update: O(N^2) for Cholesky update, O(1) for det ratio
 
-With numba JIT, the inner loops run at compiled speed.
+With numba installed, the inner loops run at compiled speed; otherwise the
+same implementation remains available through a pure-Python fallback.
 """
 
 import numpy as np
-import numba as nb
-from numba import float64, int32, boolean
+
+try:
+    import numba as nb
+    from numba import float64
+except ImportError:  # pragma: no cover - exercised in minimal installations
+    class _NumbaFallback:
+        @staticmethod
+        def njit(*args, **kwargs):
+            if args and callable(args[0]):
+                return args[0]
+            return lambda function: function
+
+    nb = _NumbaFallback()
+    float64 = np.float64
 
 
 # =====================================================================
@@ -109,6 +122,56 @@ def _edge_swap_laplacian_vectors(u1, v1, u2, v2, N):
     return remove_vec, add_vec
 
 
+def _is_connected(adj: np.ndarray) -> bool:
+    """Return whether an adjacency-list graph is connected."""
+    N = len(adj)
+    if N == 0:
+        return False
+    seen = np.zeros(N, dtype=bool)
+    seen[0] = True
+    stack = [0]
+    while stack:
+        vertex = stack.pop()
+        for neighbour in adj[vertex]:
+            neighbour = int(neighbour)
+            if neighbour < 0 or neighbour >= N:
+                return False
+            if not seen[neighbour]:
+                seen[neighbour] = True
+                stack.append(neighbour)
+    return bool(seen.all())
+
+
+def _swapped_adjacency(adj: np.ndarray, removed_edges, added_edges):
+    """Build and validate the adjacency list after a simple-graph 2-switch."""
+    N = len(adj)
+    neighbours = [set(int(u) for u in row) for row in adj]
+    if any(len(row) != 3 for row in neighbours):
+        return None
+
+    for u, v in removed_edges:
+        u, v = int(u), int(v)
+        if not (0 <= u < N and 0 <= v < N):
+            return None
+        if v not in neighbours[u] or u not in neighbours[v]:
+            return None
+        neighbours[u].remove(v)
+        neighbours[v].remove(u)
+
+    for u, v in added_edges:
+        u, v = int(u), int(v)
+        if not (0 <= u < N and 0 <= v < N) or u == v:
+            return None
+        if v in neighbours[u] or u in neighbours[v]:
+            return None
+        neighbours[u].add(v)
+        neighbours[v].add(u)
+
+    if any(len(row) != 3 for row in neighbours):
+        return None
+    return np.asarray([sorted(row) for row in neighbours], dtype=adj.dtype)
+
+
 # =====================================================================
 # The main class
 # =====================================================================
@@ -121,7 +184,7 @@ class IncrementalLogDet:
         log_tau = ild.log_spanning_trees()  # O(1) from cached Cholesky
 
         # Test an edge swap without committing
-        delta = ild.swap_delta(remove_e1, remove_e2, add_e1, add_e2)
+        delta = ild.swap_log_det_ratio(remove_e1, remove_e2, add_e1, add_e2)
 
         # Commit the swap
         ild.apply_swap(remove_e1, remove_e2, add_e1, add_e2)  # O(N^2)
@@ -131,17 +194,9 @@ class IncrementalLogDet:
         """Initialize from adjacency list (N, 3) of a cubic graph."""
         self.N = len(adj)
         self.adj = adj.copy()
-        n = self.N - 1
-
-        # Build reduced Laplacian and Cholesky
-        L_red = _build_reduced_laplacian(adj.astype(np.int32), self.N)
-        try:
-            self._chol = np.linalg.cholesky(L_red)
-        except np.linalg.LinAlgError:
-            # Graph might be disconnected; fall back
-            self._chol = np.eye(n)
-
-        self._log_det = _log_det_from_cholesky(self._chol)
+        self._chol = None
+        self._log_det = -np.inf
+        self._rebuild()
 
     def log_spanning_trees(self) -> float:
         """Return log(spanning tree count) = log(det(L_reduced))."""
@@ -157,43 +212,18 @@ class IncrementalLogDet:
         Returns delta = log_det_new - log_det_old.
         Uses a temporary copy of the Cholesky factor.
         """
-        chol_tmp = self._chol.copy()
-        n = self.N - 1
-
-        # Remove e1: downdate by (e_a - e_b)
-        a, b = e1
-        vec = np.zeros(n)
-        if a < n: vec[a] += 1.0
-        if b < n: vec[b] -= 1.0
-        ok = _cholesky_rank1_update(chol_tmp, vec, -1.0)
-        if not ok:
+        candidate = _swapped_adjacency(
+            self.adj, (e1, e2), (new_e1, new_e2))
+        if candidate is None or not _is_connected(candidate):
             return -np.inf
 
-        # Remove e2: downdate by (e_c - e_d)
-        c, d = e2
-        vec = np.zeros(n)
-        if c < n: vec[c] += 1.0
-        if d < n: vec[d] -= 1.0
-        ok = _cholesky_rank1_update(chol_tmp, vec, -1.0)
-        if not ok:
-            return -np.inf
-
-        # Add new_e1: update by (e_u - e_v)
-        u, v = new_e1
-        vec = np.zeros(n)
-        if u < n: vec[u] += 1.0
-        if v < n: vec[v] -= 1.0
-        ok = _cholesky_rank1_update(chol_tmp, vec, 1.0)
-        if not ok:
-            return -np.inf
-
-        # Add new_e2
-        u, v = new_e2
-        vec = np.zeros(n)
-        if u < n: vec[u] += 1.0
-        if v < n: vec[v] -= 1.0
-        ok = _cholesky_rank1_update(chol_tmp, vec, 1.0)
-        if not ok:
+        chol_tmp = self._incremental_swap_cholesky(e1, e2, new_e1, new_e2)
+        if chol_tmp is None:
+            # A valid final graph can have a singular intermediate graph after
+            # the two removals.  Fall back to a direct factorization rather
+            # than incorrectly rejecting that swap.
+            chol_tmp = self._factor_adjacency(candidate)
+        if chol_tmp is None:
             return -np.inf
 
         new_log_det = _log_det_from_cholesky(chol_tmp)
@@ -205,60 +235,60 @@ class IncrementalLogDet:
 
         Returns True if successful.
         """
-        n = self.N - 1
-
-        # Remove e1
-        a, b = e1
-        vec = np.zeros(n)
-        if a < n: vec[a] += 1.0
-        if b < n: vec[b] -= 1.0
-        ok = _cholesky_rank1_update(self._chol, vec, -1.0)
-        if not ok:
-            self._rebuild()
+        candidate = _swapped_adjacency(
+            self.adj, (e1, e2), (new_e1, new_e2))
+        if candidate is None or not _is_connected(candidate):
             return False
 
-        # Remove e2
-        c, d = e2
-        vec = np.zeros(n)
-        if c < n: vec[c] += 1.0
-        if d < n: vec[d] -= 1.0
-        ok = _cholesky_rank1_update(self._chol, vec, -1.0)
-        if not ok:
-            self._rebuild()
+        chol_tmp = self._incremental_swap_cholesky(e1, e2, new_e1, new_e2)
+        if chol_tmp is None:
+            chol_tmp = self._factor_adjacency(candidate)
+        if chol_tmp is None:
             return False
 
-        # Add new_e1
-        u, v = new_e1
-        vec = np.zeros(n)
-        if u < n: vec[u] += 1.0
-        if v < n: vec[v] -= 1.0
-        ok = _cholesky_rank1_update(self._chol, vec, 1.0)
-        if not ok:
-            self._rebuild()
-            return False
-
-        # Add new_e2
-        u, v = new_e2
-        vec = np.zeros(n)
-        if u < n: vec[u] += 1.0
-        if v < n: vec[v] -= 1.0
-        ok = _cholesky_rank1_update(self._chol, vec, 1.0)
-        if not ok:
-            self._rebuild()
-            return False
-
-        self._log_det = _log_det_from_cholesky(self._chol)
+        # Commit the factor and graph together.  _rebuild() now reconstructs
+        # this accepted graph rather than silently reverting to the initial one.
+        self.adj = candidate
+        self._chol = chol_tmp
+        self._log_det = _log_det_from_cholesky(chol_tmp)
         return True
+
+    def _incremental_swap_cholesky(self, e1, e2, new_e1, new_e2):
+        """Return the updated factor without mutating state, or None."""
+        if self._chol is None:
+            return None
+        chol_tmp = self._chol.copy()
+        n = self.N - 1
+        for (u, v), sign in (
+            (e1, -1.0), (e2, -1.0),
+            (new_e1, 1.0), (new_e2, 1.0),
+        ):
+            vec = np.zeros(n)
+            if u < n:
+                vec[u] += 1.0
+            if v < n:
+                vec[v] -= 1.0
+            if not _cholesky_rank1_update(chol_tmp, vec, sign):
+                return None
+        return chol_tmp
+
+    def _factor_adjacency(self, adj):
+        """Factor a connected graph's reduced Laplacian, or return None."""
+        if not _is_connected(adj):
+            return None
+        L_red = _build_reduced_laplacian(adj.astype(np.int32), self.N)
+        try:
+            return np.linalg.cholesky(L_red)
+        except np.linalg.LinAlgError:
+            return None
 
     def _rebuild(self):
         """Rebuild Cholesky from scratch (fallback after failed update)."""
-        n = self.N - 1
-        L_red = _build_reduced_laplacian(self.adj.astype(np.int32), self.N)
-        try:
-            self._chol = np.linalg.cholesky(L_red)
-        except np.linalg.LinAlgError:
-            self._chol = np.eye(n)
-        self._log_det = _log_det_from_cholesky(self._chol)
+        self._chol = self._factor_adjacency(self.adj)
+        self._log_det = (
+            _log_det_from_cholesky(self._chol)
+            if self._chol is not None else -np.inf
+        )
 
 
 # =====================================================================
@@ -272,7 +302,7 @@ def benchmark(N_values=None):
     if N_values is None:
         N_values = [20, 40, 80, 160, 320]
 
-    from .rl_cages import random_cubic_graph, adj_list_to_edge_set, edge_swap
+    from .rl.cage.task import adj_list_to_edge_set, random_cubic_graph
 
     print(f"{'N':>5s} {'full eigvalsh':>14s} {'incremental':>14s} {'speedup':>8s}")
     print("-" * 45)
